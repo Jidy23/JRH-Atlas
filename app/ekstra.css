@@ -1,65 +1,113 @@
 
-/* ===== Tambahan: glosarium, panduan, pencarian ===== */
+/* ===== Kartu istilah Indonesia di panel detail viewer 3D ===== */
 
-.cari {
-  width: 100%;
-  padding: 12px 14px;
-  margin-bottom: 16px;
-  border: 1px solid var(--jrh-garis);
-  border-radius: 11px;
-  background: #0f172a;
-  color: var(--jrh-teks);
-  font-size: 14px;
+.structure-alias {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  font-style: italic;
+  color: #6f7f9c;
 }
-.cari::placeholder { color: #6d7d9c; }
 
-.glos {
-  border: 1px solid var(--jrh-garis);
+.id-card {
+  margin: 14px 0 16px;
+  padding: 14px;
+  border: 1px solid rgba(34, 211, 238, 0.28);
   border-radius: 12px;
-  overflow: hidden;
-  background: var(--jrh-kartu);
+  background: rgba(34, 211, 238, 0.06);
 }
-.glos-head {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  padding: 10px 14px;
-  background: #0f172a;
-  border-bottom: 1px solid var(--jrh-garis);
-  font-size: 11px;
+
+.id-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  color: var(--jrh-aksen, #22d3ee);
+}
+.id-card-head strong {
+  font-size: 14px;
+  color: #e8eefc;
+}
+.id-card-head span {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.14);
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--jrh-redup);
 }
-.glos-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+
+.id-card > p {
+  margin: 0 0 8px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: #cfdbf3;
+}
+.id-card > p.id-fungsi {
+  color: #a9bad8;
+  font-size: 12px;
+}
+
+.id-card ul {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #a9bad8;
+}
+.id-card ul li { margin-bottom: 3px; }
+
+.id-card .id-mitos {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-left: 2px solid #f59e0b;
+  border-radius: 0 6px 6px 0;
+  background: rgba(245, 158, 11, 0.1);
+  font-size: 11.5px;
+  color: #f2d9a8;
+}
+
+/* Chip istilah untuk struktur yang tidak punya entri kurikulum */
+.istilah-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0;
+}
+.istilah-chips .eyebrow {
+  width: 100%;
+  margin-bottom: 2px;
+}
+.istilah-chip {
+  padding: 4px 10px;
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.08);
+  font-size: 11.5px;
+  color: #bfeaf5;
+}
+
+/* Hasil pencarian: tampilkan padanan Indonesia */
+.search-result-id {
+  display: block;
+  margin-top: 1px;
+  font-size: 11px;
+  font-style: italic;
+  color: #7f8fac;
+}
+
+/* Tombol menuju model 3D dari Mode Belajar */
+.tombol.lihat-3d {
+  width: 100%;
+  margin-top: 12px;
   padding: 10px 14px;
-  border-bottom: 1px solid rgba(36, 48, 77, 0.55);
-  font-size: 13.5px;
-  line-height: 1.5;
+  border-color: rgba(34, 211, 238, 0.35);
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--jrh-aksen, #22d3ee);
+  font-size: 12.5px;
 }
-.glos-row:last-child { border-bottom: 0; }
-.glos-row:hover { background: #16203a; }
-.glos-row .en { color: var(--jrh-redup); font-style: italic; }
-.glos-row .id { color: var(--jrh-teks); font-weight: 600; }
+.tombol.lihat-3d:hover { background: rgba(34, 211, 238, 0.18); }
 
-.panduan { display: grid; gap: 10px; }
-.panduan-item {
-  padding: 16px;
-  border: 1px solid var(--jrh-garis);
-  border-left: 3px solid var(--jrh-aksen);
-  border-radius: 0 12px 12px 0;
-  background: var(--jrh-kartu);
-}
-.panduan-item h3 { margin: 0 0 6px; font-size: 15px; }
-.panduan-item p { margin: 0; font-size: 13.5px; line-height: 1.65; color: #c3d1ea; }
-
-@media (max-width: 640px) {
-  .glos-head, .glos-row { grid-template-columns: 1fr; gap: 2px; padding: 10px 12px; }
-  .glos-head span:last-child { display: none; }
-  .glos-row .en { font-size: 11.5px; }
-  .glos-row .id { font-size: 14px; }
-}
+.jbtn-tagline { opacity: 0.75; }

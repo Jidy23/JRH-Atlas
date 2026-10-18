@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import Home from './page';
+import Home, { type Sorotan } from './page';
 import { Akademi } from './akademi';
 import { Glosarium, Panduan } from './halaman';
+import { turUntuk, organLangkah } from './belajar';
+import type { Jenjang } from './kurikulum';
 import './ekstra.css';
 
 type Tab = 'jelajah' | 'belajar' | 'kuis' | 'flashcard' | 'glosarium' | 'panduan';
@@ -20,8 +22,21 @@ function tabDariUrl(): Tab {
   return p && TAB.some((t) => t.id === p) ? p : 'jelajah';
 }
 
+/** Jenjang aktif untuk tur — dibaca dari ?jenjang= */
+function jenjangDariUrl(): Jenjang {
+  const p = new URLSearchParams(location.search).get('jenjang');
+  return p === 'smp' || p === 'sma' ? p : 'sd';
+}
+
+function jenjangKeUrl(j: Jenjang) {
+  const url = new URL(location.href);
+  url.searchParams.set('jenjang', j);
+  history.replaceState(null, '', url);
+}
+
 export default function Cangkang() {
   const [tab, setTab] = useState<Tab>('jelajah');
+  const [sorotan, setSorotan] = useState<Sorotan | null>(null);
 
   useEffect(() => {
     setTab(tabDariUrl());
@@ -36,6 +51,28 @@ export default function Cangkang() {
     url.searchParams.set('tab', t);
     history.pushState(null, '', url);
     window.scrollTo({ top: 0 });
+  }
+
+  /**
+   * Dari Mode Belajar ke viewer 3D.
+   * Tur menyimpan organ; di sini organ itu diterjemahkan menjadi sistem yang
+   * disorot + kuota organ, lalu tab pindah ke Jelajah 3D.
+   */
+  function lihatDi3D(jenjang: Jenjang, indeksLangkah: number) {
+    const tur = turUntuk(jenjang);
+    const l = tur.langkah[indeksLangkah];
+    const organ = organLangkah(l);
+    if (!organ) return;
+
+    // Nama konsep di atlas.json memakai bahasa Inggris; ambil empat kata pertama
+    // supaya pencocokan tetap longgar (mis. "heart" dari "Heart").
+    setSorotan({ sistem: l.sorot, organ: organ.key });
+    pilih('jelajah');
+  }
+
+  function keBelajar() {
+    setSorotan(null);
+    pilih('belajar');
   }
 
   const akademi = tab === 'belajar' || tab === 'kuis' || tab === 'flashcard';
@@ -65,17 +102,24 @@ export default function Cangkang() {
           <>
             <div className="info-jelajah">
               <span>
-                <b>Jelajah 3D</b> — ketuk bagian tubuh untuk melihat nama dan penjelasannya.
+                <b>Jelajah 3D</b> — ketuk bagian tubuh untuk nama dan penjelasannya. Bisa dicari dengan kata Indonesia.
               </span>
-              <button type="button" className="tautan" onClick={() => pilih('belajar')}>
-                Baru pertama kali? Buka <b>Mode Belajar</b>
+              <button type="button" className="tautan" onClick={keBelajar}>
+                Belum tahu mulai dari mana? Buka <b>Mode Belajar</b>
               </button>
             </div>
-            <Home />
+            <Home sorotan={sorotan} />
           </>
         )}
 
-        {akademi && <Akademi awal={tab as 'belajar' | 'kuis' | 'flashcard'} />}
+        {akademi && (
+          <Akademi
+            awal={tab as 'belajar' | 'kuis' | 'flashcard'}
+            awalJenjang={jenjangDariUrl()}
+            onJenjang={jenjangKeUrl}
+            onLihat3D={lihatDi3D}
+          />
+        )}
         {tab === 'glosarium' && <div className="akademi-wrap"><Glosarium /></div>}
         {tab === 'panduan' && <div className="akademi-wrap"><Panduan /></div>}
       </main>

@@ -23,7 +23,7 @@ function PilihJenjang({ nilai: v, ubah }: { nilai: Jenjang; ubah: (j: Jenjang) =
         >
           <b>{j.name}</b>
           <small>{j.umur}</small>
-          <small>{j.tagline}</small>
+          <small className="jbtn-tagline">{j.tagline}</small>
         </button>
       ))}
     </div>
@@ -32,8 +32,15 @@ function PilihJenjang({ nilai: v, ubah }: { nilai: Jenjang; ubah: (j: Jenjang) =
 
 /* ------------------------------ BELAJAR ------------------------------ */
 
-export function Belajar() {
-  const [jenjang, setJenjang] = useState<Jenjang>('sd');
+export function Belajar({
+  jenjang,
+  setJenjang,
+  onLihat3D,
+}: {
+  jenjang: Jenjang;
+  setJenjang: (j: Jenjang) => void;
+  onLihat3D?: (j: Jenjang, i: number) => void;
+}) {
   const [i, setI] = useState(0);
   const tur = useMemo(() => turUntuk(jenjang), [jenjang]);
 
@@ -43,7 +50,7 @@ export function Belajar() {
 
   function pindah(n: number) {
     setI(Math.max(0, Math.min(tur.langkah.length - 1, n)));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0 });
   }
 
   function gantiJenjang(j: Jenjang) {
@@ -83,6 +90,15 @@ export function Belajar() {
               {organ.fakta.slice(0, 2).map((f) => <li key={f}>{f}</li>)}
             </ul>
             {organ.mitos && <p className="mitos"><b>Mitos vs Fakta:</b> {organ.mitos}</p>}
+            {onLihat3D && (
+              <button
+                type="button"
+                className="tombol lihat-3d"
+                onClick={() => onLihat3D(jenjang, i)}
+              >
+                Lihat {organ.id} di model 3D
+              </button>
+            )}
           </div>
         )}
 
@@ -118,8 +134,13 @@ export function Belajar() {
 
 /* -------------------------------- KUIS -------------------------------- */
 
-export function Kuis() {
-  const [jenjang, setJenjang] = useState<Jenjang>('smp');
+export function Kuis({
+  jenjang,
+  setJenjang,
+}: {
+  jenjang: Jenjang;
+  setJenjang: (j: Jenjang) => void;
+}) {
   const [mulai, setMulai] = useState(false);
   const [soal, setSoal] = useState<Soal[]>([]);
   const [n, setN] = useState(0);
@@ -311,7 +332,7 @@ export function Flashcard() {
 
       <div className="navigasi">
         <button type="button" className="tombol" onClick={() => geser(-1)} aria-label="Kartu sebelumnya">Sebelumnya</button>
-        <span className="chip">{(i % total) + 1} / {total}</span>
+        <span className="chip">{i % total + 1} / {total}</span>
         <button type="button" className="tombol" onClick={() => geser(1)} aria-label="Kartu berikutnya">Berikutnya</button>
       </div>
 
@@ -330,8 +351,24 @@ export function Flashcard() {
 
 /* ------------------------------- WADAH ------------------------------- */
 
-export function Akademi({ awal }: { awal: Mode }) {
+export function Akademi({
+  awal,
+  awalJenjang = 'sd',
+  onJenjang,
+  onLihat3D,
+}: {
+  awal: Mode;
+  awalJenjang?: Jenjang;
+  onJenjang?: (j: Jenjang) => void;
+  onLihat3D?: (j: Jenjang, i: number) => void;
+}) {
   const [mode, setMode] = useState<Mode>(awal);
+  const [jenjang, setJenjang] = useState<Jenjang>(awalJenjang);
+
+  function ganti(j: Jenjang) {
+    setJenjang(j);
+    onJenjang?.(j);
+  }
 
   const JUDUL: Record<Mode, string> = {
     belajar: 'Belajar',
@@ -355,8 +392,8 @@ export function Akademi({ awal }: { awal: Mode }) {
         ))}
       </nav>
 
-      {mode === 'belajar' && <Belajar />}
-      {mode === 'kuis' && <Kuis />}
+      {mode === 'belajar' && <Belajar jenjang={jenjang} setJenjang={ganti} onLihat3D={onLihat3D} />}
+      {mode === 'kuis' && <Kuis jenjang={jenjang} setJenjang={ganti} />}
       {mode === 'flashcard' && <Flashcard />}
     </div>
   );
@@ -382,7 +419,7 @@ export function DetailOrgan({ nama }: { nama: string }) {
   );
 }
 
-/** Ringkasan jumlah organ per jenjang — dipakai di beranda */
+/** Ringkasan jumlah organ per jenjang */
 export function RingkasanJenjang() {
   return (
     <div className="ringkasan">
