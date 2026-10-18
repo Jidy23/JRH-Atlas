@@ -16,6 +16,12 @@
 .app-rebuild .glos-row{overflow-wrap:anywhere}
 .explorer-frame .loading{max-width:calc(100% - 32px);z-index:60}
 .explorer-frame .loading.error{flex-wrap:wrap}
+/* Keep palette text on an opaque theme surface. Selection uses its border,
+   not a legacy literal foreground or translucent accent background. */
+:root[data-tema] .app-rebuild .tema .palet{background:var(--jrh-kartu);color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .tema .palet .palet-nama{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .tema .palet .palet-asal{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .tema .palet.aktif{border:2px solid var(--aksen);background:var(--jrh-kartu)}
 @media(min-width:901px){.explorer-frame .mobile-only{display:none}.explorer-frame .desktop-only{display:flex}}
 @media(max-width:900px){.explorer-frame .desktop-only{display:none}.explorer-frame .layers-panel.mobile-open{background:var(--jrh-kartu);box-shadow:0 12px 40px #0004}.explorer-frame .system-list{overflow-y:auto;overscroll-behavior:contain}.explorer-frame .system-row{min-height:44px}.explorer-frame .search-panel{background:var(--jrh-kartu)}}
 @media(max-width:480px){.explorer-frame .bottom-dock{gap:8px;padding:12px}.explorer-frame .dock-reset{min-width:44px}.explorer-frame .dock-reset span{display:none}.explorer-frame .explode-control{min-width:0}.app-rebuild .app-navigation a{overflow-wrap:anywhere}}
