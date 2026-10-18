@@ -1,4 +1,4 @@
-name: Audit fix v3
+name: Audit fix v4
 
 on :
   push:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   fix:
-    name: Fix vuln v3
+    name: Fix vuln v4
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,8 +27,6 @@ jobs:
           npm install
           echo "----- AUDIT -----"
           npm audit || true
-          echo "----- VERSI -----"
-          node -p "['fflate','tinypool','oxfmt'].map(n=>n,'=',((require('./package-lock.json').packages['node_modules/'+n])||{}).version)).join(' ')"
       - name: Commit hasil
         run: |
           git config user.name "jidy"
@@ -37,6 +35,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Tidak change"
           else
-            git commit -m "chore: audit fix + overrides (fflate, tinypool, oxfmt)"
+            git commit -m "chore: audit fix + overrides (flflate, tinypool, oxfmt)"
             git push origin HEAD:chore/audit-fix
           fi
