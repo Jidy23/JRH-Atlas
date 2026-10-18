@@ -3,10 +3,10 @@
  * Jalankan: npm run audit:kontras
  * Keluar dengan kode 1 bila ada pasangan yang gagal AA (4.5:1).
  */
-import { periksa, type StatusKontras } from '../app/kontras.ts';
+import { periksa, type StatusKontras } from '../app/kontras.js';
 
-type Palet = { id: string; nama: string; terang: Pasangan; gelap: Pasangan };
 type Pasangan = { latar: string; teks: string; redup: string; aksen: string; garis: string };
+type Palet = { id: string; nama: string; terang: Pasangan; gelap: Pasangan };
 
 const PALET: Palet[] = [
   { id: 'nusantara', nama: 'Nusantara',
