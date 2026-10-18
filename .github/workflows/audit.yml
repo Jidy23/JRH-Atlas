@@ -1,0 +1,20 @@
+name: Audit vulnerability
+
+on:
+  push:
+    branches: [chore/audit-report]
+  workflow_dispatch:
+
+jobs:
+  audit:
+    name: Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: npm audit
+        run: |
+          npm audit --json > audit.json || true
+          npm audit || true
