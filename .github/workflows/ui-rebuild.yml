@@ -6,6 +6,9 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: ui-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   browser:
     runs-on: ubuntu-latest
@@ -17,6 +20,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm audit
       - run: npm run check
       - run: npm run audit:kontras
       - run: npm run build
@@ -38,6 +42,8 @@ jobs:
           if(reports.length!==12||failures.length){console.error(JSON.stringify(failures,null,2));process.exit(1);}
           console.log('12 page/viewport states: zero axe WCAG violations, zero runtime errors.');
           JS
+      - name: Theme palettes, Auto, persistence and keyboard focus
+        run: node scripts/ui-theme-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
