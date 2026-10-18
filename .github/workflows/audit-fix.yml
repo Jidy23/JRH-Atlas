@@ -1,0 +1,36 @@
+name: Audit fix (npm audit fix)
+
+on :
+  push:
+    branches: [chore/audit-fix]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit-fix:
+    name: Audit fix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: List upgrades
+        run: |
+          npm install
+          npm audit fix --dry || true
+          npm install
+          git diff --name-only
+      - name: Commit hasil audit fix
+        run: |
+          git config user.name "jidy"
+          git config user.email "zahraamanda302@gmail.com"
+          git add package-lock.json package.json
+          if git diff --cached --quiet; then
+            echo "Tidak change"
+          else
+            git commit -m "chore: npm audit fix (non-breaking)"
+            git push origin HEAD:chore/audit-fix
+          fi
