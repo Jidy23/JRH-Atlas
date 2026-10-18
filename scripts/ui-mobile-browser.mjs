@@ -22,12 +22,15 @@ try {
   page.on('request',r=>{if(r.url().includes('/models/'))models.push(r.url());});
   const report={browser:test.name,touch:test.touch,pages:[],errors};reports.push(report);
   const activate=locator=>test.touch?locator.tap():locator.click();
+  // Match the page heading, not a same-named section heading (e.g. Flashcard).
+  const pageHeading=label=>page.getByRole('heading',{name:label,exact:true,level:1});
   try {
    await page.goto('http://localhost:3016/?tab=belajar&jenjang=smp',{waitUntil:'networkidle'});
    const nav=page.getByRole('navigation',{name:'Navigasi utama'});
    for(const [tab,label] of [['belajar','Belajar'],['kuis','Kuis'],['flashcard','Flashcard'],['glosarium','Glosarium'],['panduan','Panduan']]){
     if(tab!=='belajar')await activate(nav.getByRole('link',{name:label,exact:true}));
-    const heading=page.getByRole('heading',{name:label,exact:true});await heading.waitFor();
+    const heading=pageHeading(label);await heading.waitFor();
+    assert.equal(await heading.count(),1,'Exactly one matching page heading');
     assert.equal(new URL(page.url()).searchParams.get('tab'),tab);
     assert.equal(await nav.getByRole('link',{name:label,exact:true}).getAttribute('aria-current'),'page');
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Horizontal overflow');
@@ -36,8 +39,8 @@ try {
     report.pages.push({tab,violations:result.violations});
     assert.equal(result.violations.length,0,`${test.name}/${tab}: axe violations`);
    }
-   await page.goBack();await page.getByRole('heading',{name:'Glosarium',exact:true}).waitFor();
-   await page.goForward();await page.getByRole('heading',{name:'Panduan',exact:true}).waitFor();
+   await page.goBack();await pageHeading('Glosarium').waitFor();
+   await page.goForward();await pageHeading('Panduan').waitFor();
    assert.equal(new URL(page.url()).searchParams.get('jenjang'),'smp');
    const trigger=page.getByRole('button',{name:'Atur tampilan dan warna',exact:true});
    const dialog=page.getByRole('dialog',{name:'Pengaturan tampilan'});
@@ -50,7 +53,7 @@ try {
    await page.reload({waitUntil:'networkidle'});
    assert.equal(await page.locator('html').getAttribute('data-tema'),'gelap');
    assert.equal(await page.locator('html').getAttribute('data-palet'),'koral');
-   await activate(trigger);await activate(page.getByRole('heading',{name:'Panduan',exact:true}));
+   await activate(trigger);await activate(pageHeading('Panduan'));
    assert.equal(await dialog.count(),0,'Outside pointer closes theme panel');
    assert.equal(models.length,0,'Educational routes must not fetch anatomy models');
    assert.deepEqual(errors,[]);
