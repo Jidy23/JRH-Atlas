@@ -66,7 +66,7 @@ export function Belajar({
         <span className="lencana">Mode Belajar · {tur.durasi}</span>
         <h2>{tur.judul}</h2>
         <p>{tur.tujuan}</p>
-        <div className="progres" aria-label={`Langkah ${i + 1} dari ${tur.langkah.length}`}>
+        <div className="progres" role="progressbar" aria-valuemin={1} aria-valuemax={tur.langkah.length} aria-valuenow={i + 1} aria-label={`Langkah ${i + 1} dari ${tur.langkah.length}`}>
           <div className="progres-isi" style={{ width: `${((i + 1) / tur.langkah.length) * 100}%` }} />
         </div>
       </div>
