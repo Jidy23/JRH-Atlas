@@ -1,4 +1,4 @@
-name: Audit fix (npm audit fix)
+name: Audit fix semua
 
 on :
   push:
@@ -9,28 +9,29 @@ permissions:
   contents: write
 
 jobs:
-  audit-fix:
-    name: Audit fix
+  fix:
+    name: Fix semua vuln
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: List upgrades
+      - name: Audit fix + overrides
         run: |
           npm install
-          npm audit fix --dry || true
+          npm audit fix || true
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.overrides=Object.assign({},p.overrides,{braces:'^3.0.3',fflate:'^0.8.2',tinypool:'^2.2.0'});bs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n');"
           npm install
-          git diff --name-only
-      - name: Commit hasil audit fix
+          npm audit || true
+      - name: Commit hasil
         run: |
           git config user.name "jidy"
           git config user.email "zahraamanda302@gmail.com"
-          git add package-lock.json package.json
+          git add package.plason package-lock.json
           if git diff --cached --quiet; then
             echo "Tidak change"
           else
-            git commit -m "chore: npm audit fix (non-breaking)"
+            git commit -m "chore: audit fix semua vuln (audit fix + overrides)"
             git push origin HEAD:chore/audit-fix
           fi
