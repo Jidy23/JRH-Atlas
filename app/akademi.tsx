@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { JENJANG, ORGAN, organByName, type Jenjang } from './kurikulum';
 import { TUR, organLangkah, turUntuk } from './belajar';
 import { acak, bankSoal, deck, nilai, predikat, type Soal } from './kuis';
@@ -6,32 +6,36 @@ import './akademi.css';
 
 type Mode = 'belajar' | 'kuis' | 'flashcard';
 
-/** Kartu label jenjang — reusable */
+/* --------------------------- Komponen kecil --------------------------- */
+
 function PilihJenjang({ nilai: v, ubah }: { nilai: Jenjang; ubah: (j: Jenjang) => void }) {
   return (
     <div className="jenjang" role="radiogroup" aria-label="Pilih jenjang">
       {JENJANG.map((j) => (
         <button
           key={j.id}
+          type="button"
           role="radio"
           aria-checked={v === j.id}
           className={v === j.id ? 'jbtn aktif' : 'jbtn'}
-          style={{ '--w': j.warna } as React.CSSProperties}
+          style={{ '--w': j.warna } as CSSProperties}
           onClick={() => ubah(j.id)}
         >
           <b>{j.name}</b>
           <small>{j.umur}</small>
+          <small>{j.tagline}</small>
         </button>
       ))}
     </div>
   );
 }
 
-/* ---------------------------- BELAJAR ---------------------------- */
+/* ------------------------------ BELAJAR ------------------------------ */
+
 export function Belajar() {
   const [jenjang, setJenjang] = useState<Jenjang>('sd');
-  const tur = useMemo(() => turUntuk(jenjang), [jenjang]);
   const [i, setI] = useState(0);
+  const tur = useMemo(() => turUntuk(jenjang), [jenjang]);
 
   const l = tur.langkah[i];
   const organ = organLangkah(l);
@@ -42,80 +46,68 @@ export function Belajar() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  function gantiJenjang(j: Jenjang) {
+    setJenjang(j);
+    setI(0);
+  }
+
   return (
     <section className="akademi">
-      <PilihJenjang
-        nilai={jenjang}
-        ubah={(j) => {
-          setJenjang(j);
-          setI(0);
-        }}
-      />
+      <PilihJenjang nilai={jenjang} ubah={gantiJenjang} />
 
       <div className="tur-kepala">
-        <div>
-          <span className="lencana">Mode Belajar · {tur.durasi}</span>
-          <h2>{tur.judul}</h2>
-          <p>{tur.tujuan}</p>
-        </div>
+        <span className="lencana">Mode Belajar · {tur.durasi}</span>
+        <h2>{tur.judul}</h2>
+        <p>{tur.tujuan}</p>
         <div className="progres" aria-label={`Langkah ${i + 1} dari ${tur.langkah.length}`}>
           <div className="progres-isi" style={{ width: `${((i + 1) / tur.langkah.length) * 100}%` }} />
         </div>
       </div>
 
-      <article className="kartu-besar" key={i}>
-        <span className="langkah-ke">Langkah {i + 1} / {tur.langkah.length}</span>
+      <article className="kartu-besar" key={`${tur.id}-${i}`}>
+        <span className="langkah-ke">Langkah {i + 1} dari {tur.langkah.length}</span>
         <h3>{l.judul}</h3>
         <p className="isi">{l.isi}</p>
 
         {organ && (
           <div className="organ-ringkas">
             <div className="organ-nama">
-              <span className="emoji" aria-hidden>🫀</span>
+              <span className="emoji" aria-hidden>{'🫀'}</span>
               <div>
                 <strong>{organ.id}</strong>
                 <small>{organ.inti}</small>
               </div>
-              {l.tampilan && <span className="chip">Tampilan: {l.tampilan}</span>}
+              {l.tampilan && <span className="chip">Tampilan {l.tampilan}</span>}
             </div>
             <ul className="fakta">
-              {organ.fakta.slice(0, 2).map((f) => (
-                <li key={f}>{f}</li>
-              ))}
+              {organ.fakta.slice(0, 2).map((f) => <li key={f}>{f}</li>)}
             </ul>
-            {organ.mitos && (
-              <p className="mitos">
-                <b>Mitos vs Fakta:</b> {organ.mitos}
-              </p>
-            )}
+            {organ.mitos && <p className="mitos"><b>Mitos vs Fakta:</b> {organ.mitos}</p>}
           </div>
         )}
 
-        {l.refleksi && (
-          <p className="refleksi">
-            <b>Pikirkan:</b> {l.refleksi}
-          </p>
-        )}
+        {l.refleksi && <p className="refleksi"><b>Pikirkan:</b> {l.refleksi}</p>}
 
         <div className="navigasi">
-          <button className="tombol" onClick={() => pindah(i - 1)} disabled={i === 0}>
-            ← Sebelumnya
+          <button type="button" className="tombol" onClick={() => pindah(i - 1)} disabled={i === 0}>
+            Sebelumnya
           </button>
           <button
+            type="button"
             className="tombol utama"
             onClick={() => (terakhir ? setI(0) : pindah(i + 1))}
           >
-            {terakhir ? 'Ulangi tur' : 'Lanjut →'}
+            {terakhir ? 'Ulangi tur' : 'Lanjut'}
           </button>
         </div>
       </article>
 
       <details className="daftar-tur">
-        <summary>Tur lain</summary>
+        <summary>Daftar tur yang tersedia</summary>
         <ul>
           {TUR.map((t) => (
             <li key={t.id}>
-              <b>{t.judul}</b> — {t.jenjang.toUpperCase()} · {t.durasi}
+              <b>{t.judul}</b> · {t.jenjang.toUpperCase()} · {t.durasi}
             </li>
           ))}
         </ul>
@@ -124,7 +116,8 @@ export function Belajar() {
   );
 }
 
-/* ------------------------------ KUIS ------------------------------ */
+/* -------------------------------- KUIS -------------------------------- */
+
 export function Kuis() {
   const [jenjang, setJenjang] = useState<Jenjang>('smp');
   const [mulai, setMulai] = useState(false);
@@ -135,8 +128,7 @@ export function Kuis() {
   const [selesai, setSelesai] = useState(false);
 
   function mulaiKuis() {
-    const bank = acak(bankSoal(jenjang));
-    setSoal(bank);
+    setSoal(acak(bankSoal(jenjang)));
     setN(0);
     setBenar(0);
     setPilih(null);
@@ -162,9 +154,12 @@ export function Kuis() {
     return (
       <section className="akademi">
         <h2>Kuis Anatomi</h2>
-        <p className="leads">Pilih jenjang. Soal dibuat langsung dari kurikulum, jadi jumlahnya mengikuti jumlah organ.</p>
+        <p className="leads">
+          Soal diambil langsung dari kurikulum, jadi setiap jenjang punya set pertanyaan berbeda.
+          Jawaban salah tetap diberi penjelasan, supaya kamu belajar dari kesalahan.
+        </p>
         <PilihJenjang nilai={jenjang} ubah={setJenjang} />
-        <button className="tombol utama besar" onClick={mulaiKuis}>
+        <button type="button" className="tombol utama besar" onClick={mulaiKuis}>
           Mulai kuis · {bankSoal(jenjang).length} soal
         </button>
       </section>
@@ -183,8 +178,8 @@ export function Kuis() {
           <p>{benar} benar dari {soal.length} soal</p>
           <p className="leads">{p.pesan}</p>
           <div className="navigasi">
-            <button className="tombol" onClick={mulaiKuis}>Ulangi</button>
-            <button className="tombol utama" onClick={() => setMulai(false)}>Ganti jenjang</button>
+            <button type="button" className="tombol" onClick={mulaiKuis}>Ulangi</button>
+            <button type="button" className="tombol utama" onClick={() => setMulai(false)}>Ganti jenjang</button>
           </div>
         </div>
       </section>
@@ -195,11 +190,11 @@ export function Kuis() {
   return (
     <section className="akademi">
       <div className="kuis-head">
-        <span className="lencana">Soal {n + 1} / {soal.length}</span>
+        <span className="lencana">Soal {n + 1} dari {soal.length}</span>
         <span className="chip">{s.organ}</span>
       </div>
 
-      <article className="kartu-besar">
+      <article className="kartu-besar" key={s.id}>
         <h3>{s.pertanyaan}</h3>
         <div className="pilihan">
           {s.pilihan.map((p, idx) => {
@@ -209,7 +204,7 @@ export function Kuis() {
               else if (idx === pilih) kelas += ' salah';
             }
             return (
-              <button key={p} className={kelas} onClick={() => jawab(idx)} disabled={pilih !== null}>
+              <button key={p} type="button" className={kelas} onClick={() => jawab(idx)} disabled={pilih !== null}>
                 <span className="huruf">{String.fromCharCode(65 + idx)}</span>
                 {p}
               </button>
@@ -219,9 +214,12 @@ export function Kuis() {
 
         {pilih !== null && (
           <div className="umpan">
-            <p><b>{pilih === s.jawaban ? 'Benar! ' : 'Belum tepat. '}</b>{s.alasan}</p>
-            <button className="tombol utama" onClick={lanjut}>
-              {n + 1 >= soal.length ? 'Lihat hasil' : 'Soal berikutnya →'}
+            <p>
+              <b>{pilih === s.jawaban ? 'Benar. ' : 'Belum tepat. '}</b>
+              {s.alasan}
+            </p>
+            <button type="button" className="tombol utama" onClick={lanjut}>
+              {n + 1 >= soal.length ? 'Lihat hasil' : 'Soal berikutnya'}
             </button>
           </div>
         )}
@@ -230,73 +228,113 @@ export function Kuis() {
   );
 }
 
-/* --------------------------- FLASHCARD --------------------------- */
+/* ----------------------------- FLASHCARD ----------------------------- */
+
 const MODE = [
   { id: 'nama', label: 'Tebak nama organ' },
   { id: 'fungsi', label: 'Tebak fungsi' },
   { id: 'fakta', label: 'Tebak fakta' },
 ] as const;
 
+type ModeKartu = (typeof MODE)[number]['id'];
+
 export function Flashcard() {
   const [jenjang, setJenjang] = useState<Jenjang | 'semua'>('semua');
-  const [mode, setMode] = useState<(typeof MODE)[number]['id']>('nama');
+  const [mode, setMode] = useState<ModeKartu>('nama');
   const [i, setI] = useState(0);
   const [balik, setBalik] = useState(false);
-  const [hafal, setHafal] = useState(0);
+  const [dihafal, setDihafal] = useState(0);
 
   const kartu = useMemo(
     () => deck(jenjang === 'semua' ? undefined : jenjang, mode),
     [jenjang, mode]
   );
-  const k = kartu[i % kartu.length];
+
+  const total = kartu.length;
+  const k = kartu[i % total];
 
   function geser(arah: 1 | -1) {
     setBalik(false);
-    setI((x) => (x + arah + kartu.length) % kartu.length);
+    setI((x) => (x + arah + total) % total);
+  }
+
+  function tandai(hafal: boolean) {
+    if (hafal) setDihafal((h) => h + 1);
+    geser(1);
   }
 
   return (
     <section className="akademi">
       <h2>Flashcard</h2>
-      <p className="leads">Tap kartu untuk melihat jawaban. Tandai "hafal" bila sudah bisa menjawab tanpa membuka.</p>
+      <p className="leads">
+        Ketuk kartu untuk membuka jawaban. Tandai “sudah hafal” hanya jika kamu bisa menjawab
+        tanpa membukanya. Pengulangan berjeda membuat ingatan bertahan lebih lama.
+      </p>
 
       <div className="filter">
-        <select value={jenjang} onChange={(e) => { setJenjang(e.target.value as Jenjang | 'semua'); setI(0); setBalik(false); }}>
+        <select
+          aria-label="Pilih jenjang"
+          value={jenjang}
+          onChange={(e) => {
+            setJenjang(e.target.value as Jenjang | 'semua');
+            setI(0);
+            setBalik(false);
+          }}
+        >
           <option value="semua">Semua jenjang</option>
           {JENJANG.map((j) => <option key={j.id} value={j.id}>{j.name}</option>)}
         </select>
-        <select value={mode} onChange={(e) => { setMode(e.target.value as typeof mode); setI(0); setBalik(false); }}>
+
+        <select
+          aria-label="Pilih jenis kartu"
+          value={mode}
+          onChange={(e) => {
+            setMode(e.target.value as ModeKartu);
+            setI(0);
+            setBalik(false);
+          }}
+        >
           {MODE.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
         </select>
       </div>
 
-      <button className={balik ? 'kartu balik' : 'kartu'} onClick={() => setBalik((b) => !b)} aria-live="polite">
+      <button
+        type="button"
+        className={balik ? 'kartu balik' : 'kartu'}
+        onClick={() => setBalik((b) => !b)}
+        aria-live="polite"
+      >
         <span className="kartu-sisi">{balik ? 'JAWABAN' : 'PERTANYAAN'}</span>
         <strong>{balik ? k.belakang : k.depan}</strong>
-        <small>{balik ? 'tap untuk menutup' : 'tap untuk membuka'}</small>
+        <small>{balik ? 'ketuk untuk menutup' : 'ketuk untuk membuka'}</small>
       </button>
 
       <div className="navigasi">
-        <button className="tombol" onClick={() => geser(-1)}>←</button>
-        <span className="chip">{(i % kartu.length) + 1} / {kartu.length}</span>
-        <button className="tombol" onClick={() => geser(1)}>→</button>
+        <button type="button" className="tombol" onClick={() => geser(-1)} aria-label="Kartu sebelumnya">Sebelumnya</button>
+        <span className="chip">{(i % total) + 1} / {total}</span>
+        <button type="button" className="tombol" onClick={() => geser(1)} aria-label="Kartu berikutnya">Berikutnya</button>
       </div>
 
       <div className="navigasi">
-        <button className="tombol" onClick={() => { setHafal((h) => h + 1); geser(1); }}>Belum hafal</button>
-        <button className="tombol utama" onClick={() => { setHafal((h) => h + 1); geser(1); }}>Sudah hafal</button>
+        <button type="button" className="tombol" onClick={() => tandai(false)}>Belum hafal</button>
+        <button type="button" className="tombol utama" onClick={() => tandai(true)}>Sudah hafal</button>
       </div>
-      <p className="catatan-kecil">Kartu ditandai hafal bisa diulang besok lagi — pengulangan berjeda membantu ingatan jangka panjang.</p>
+
+      <p className="catatan-kecil">
+        {dihafal > 0 ? `${dihafal} kartu ditandai hafal sesi ini. ` : ''}
+        Ulangi besok untuk mengunci ingatan.
+      </p>
     </section>
   );
 }
 
-/* --------------------------- WADAH --------------------------- */
+/* ------------------------------- WADAH ------------------------------- */
+
 export function Akademi({ awal }: { awal: Mode }) {
   const [mode, setMode] = useState<Mode>(awal);
 
   const JUDUL: Record<Mode, string> = {
-    belajar: 'Belajar terpandu',
+    belajar: 'Belajar',
     kuis: 'Kuis',
     flashcard: 'Flashcard',
   };
@@ -307,9 +345,10 @@ export function Akademi({ awal }: { awal: Mode }) {
         {(Object.keys(JUDUL) as Mode[]).map((m) => (
           <button
             key={m}
+            type="button"
             className={mode === m ? 'sub aktif' : 'sub'}
             onClick={() => setMode(m)}
-            aria-current={mode === m}
+            aria-current={mode === m ? 'page' : undefined}
           >
             {JUDUL[m]}
           </button>
@@ -323,10 +362,12 @@ export function Akademi({ awal }: { awal: Mode }) {
   );
 }
 
-/** Panel detail organ (dipakai viewer 3D) */
+/* ------------------- Panel detail organ (viewer 3D) ------------------- */
+
 export function DetailOrgan({ nama }: { nama: string }) {
   const o = organByName(nama);
   if (!o) return null;
+
   return (
     <div className="detail-organ">
       <span className="chip">{o.id}</span>
@@ -337,6 +378,24 @@ export function DetailOrgan({ nama }: { nama: string }) {
       </ul>
       {o.mitos && <p className="mitos"><b>Mitos vs Fakta:</b> {o.mitos}</p>}
       <p className="catatan-kecil">Dibahas di jenjang {o.jenjang.toUpperCase()}.</p>
+    </div>
+  );
+}
+
+/** Ringkasan jumlah organ per jenjang — dipakai di beranda */
+export function RingkasanJenjang() {
+  return (
+    <div className="ringkasan">
+      {JENJANG.map((j) => {
+        const n = ORGAN.filter((o) => o.jenjang === j.id).length;
+        return (
+          <div key={j.id} className="ringkas-kartu" style={{ '--w': j.warna } as CSSProperties}>
+            <b>{j.name}</b>
+            <span>{n} organ</span>
+            <small>{j.tagline}</small>
+          </div>
+        );
+      })}
     </div>
   );
 }
