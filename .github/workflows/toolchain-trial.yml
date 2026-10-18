@@ -26,14 +26,13 @@ jobs:
       - name: Atlas validation
         run: node scripts/validate-atlas.mjs
       - name: Interaction contracts (not browser E2E)
-        run: node --experimental-strip-types --experimental-specifier-resolution=node scripts/validate-interactions.mjs
+        run: node --experimental-strip-types scripts/validate-interactions.mjs
       - name: Production build
         run: npm run build
       - name: Audit and dependency evidence
         if: always()
         run: |
           mkdir -p evidence
-          node --version > evidence/node-version.txt
           npm explain braces > evidence/braces-chain.txt 2>&1 || true
           set +e
           npm audit --json > evidence/audit.json
