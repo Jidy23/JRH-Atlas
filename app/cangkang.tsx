@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Home from './page';
 import { Akademi } from './akademi';
 import { Glosarium, Panduan } from './halaman';
+import './ekstra.css';
 
 type Tab = 'jelajah' | 'belajar' | 'kuis' | 'flashcard' | 'glosarium' | 'panduan';
 
@@ -34,7 +35,7 @@ export default function Cangkang() {
     const url = new URL(location.href);
     url.searchParams.set('tab', t);
     history.pushState(null, '', url);
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    window.scrollTo({ top: 0 });
   }
 
   const akademi = tab === 'belajar' || tab === 'kuis' || tab === 'flashcard';

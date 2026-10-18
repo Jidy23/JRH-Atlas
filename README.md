@@ -1,61 +1,103 @@
-# JRH&#x20;&#x20;Atlas
+# JRH Atlas
 
-## 3&#x200;&#x200;Atus 頓敋 - JRH&#x20;&#x200;Atlas
+**Atlas anatomi 3D interaktif berbahasa Indonesia** — untuk pelajar SD, SMP, SMA, dan siapa saja yang ingin memahami tubuh manusia.
 
-JRH Atlas adalah explorer anatomi 3D interaktif: **2,234 mesh BodyParts3D** yang bisa dipilih satu per satu, **15 sistem anatomi**, dan **3,432 konsep ternama** untuk dicari.
+Dibangun di atas [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d/) (CC BY 4.0) dan engine 3D dari proyek open-source [human-atlas](https://github.com/ashemag/human-atlas).
 
-**[Buka demo live](https://code.coreinterface.app)**
+---
 
-## Fitur
+## Apa yang bisa dilakukan
 
-- Orbit, zoom, dan pilih struktur langsung di tubuh.
-- Toggle tiap sistem atau paka preset skeleton -> organ.
-- Pindah dari anatomi terakit ke inventaris yang dijauhkan.
-- Cari nama anatomi dan identitas sumber.
-- Isolasi struktur terpilih lalu baca detailnya.
-- Kontrol kompak + panel detail untuk mobile.
+| Tab | Fungsi |
+|---|---|
+| 🧭 **Jelajah 3D** | 2.234 mesh dapat dipilih, 15 sistem organ, pencarian, exploded view |
+| 📖 **Belajar** | Tur terpandu 5–8 menit, terpisah per jenjang SD / SMP / SMA |
+| 🎯 **Kuis** | Soal pilihan ganda dengan penjelasan di setiap jawaban |
+| 🃏 **Flashcard** | Tiga mode: tebak nama, fungsi, atau fakta organ |
+| 📚 **Glosarium** | Kamus istilah anatomi Inggris → Indonesia + pencarian dua bahasa |
+| ℹ️ **Panduan** | Cara pakai, alur belajar, dan catatan penting |
 
-### Forker
-https://github.com/Jidy23/JRH-Atlas
+Setiap tab punya URL sendiri, misal `?tab=kuis` atau `?tab=belajar`.
 
-## Jalankan lokal
+---
 
-Wajib Node.js 22.13 or lebih. Taidak butuh API key atau akun.
+## Mengapa dibuat
+
+Materi anatomi di sekolah memakai istilah ilmiah (bahasa Inggris/Latin), sedangkan aplikasi atlas populer juga berbahasa Inggris. JRH Atlas menutup celah itu:
+
+- **Bahasa Indonesia baku** di seluruh antarmuka dan penjelasan.
+- **Disusun per jenjang**, mengikuti kapan materi itu muncul di sekolah.
+- **Menggunakan satuan dan contoh lokal** (liter, °C, m²).
+- **Gratis, tanpa akun, tanpa iklan, tanpa pelacakan.**
+
+---
+
+## Menjalankan lokal
+
+Butuh Node.js 22.13 atau lebih baru.
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Buka http://localhost:3016. Untuk build site statis, `$npm run build`; output ada di `dist/`.
+Buka http://localhost:3016.
+
+Build statis:
+
+```sh
+npm run build   # output di dist/
+```
+
+---
+
+## Struktur lapisan belajar
+
+```
+app/
+  kurikulum.ts   data organ: istilah Indonesia, jenjang, fungsi, fakta, mitos, soal
+  belajar.ts     3 tur terpandu (SD, SMP, SMA)
+  kuis.ts        bank soal, penilaian, predikat, deck flashcard
+  istilah.ts     kamus Inggris-Indonesia + pencarian dua bahasa
+  akademi.tsx    UI Belajar / Kuis / Flashcard
+  halaman.tsx    halaman Glosarium dan Panduan
+  cangkang.tsx   tab bar dan routing ?tab=
+  akademi.css    gaya ruang belajar
+  ekstra.css     gaya glosarium, pencarian, panduan
+```
+
+Lapisan ini terpisah dari viewer 3D (`page.tsx`, `scene.tsx`), jadi update pembelajaran
+ tidak menyentuh engine render.
+
+---
+
+## Menambah materi
+
+1. Tambahkan entri di `app/kurikulum.ts` (satu objek per organ).
+2. Soal kuis dan kartu flashcard dibuat otomatis dari entri tersebut.
+3. Untuk tur baru, tambahkan objek di `app/belajar.ts`.
+4. Untuk istilah baru, tambahkan pasangan di `app/istilah.ts`.
+
+---
 
 ## Validasi
 
 ```sh
 npm run check
-node scripts/validate-atlas.mjs
-node scripts/validate-interactions.mjs
-inpm run build
+npm run build
 ```
 
-Validasi mencakup mesh buffer, nama dan kekonsep, layout exploded tanja overlap zat desktop dan mobile, kontrak search dan inspeksi, serta tap-vs-drag. Cek interaksi browser mencakup pemilihan, kontrol sistem, search, isolasi, rotasi, dan layout 390×844, 320568, dan 844×390. Performa divice fisik dan multitouch belum diceba.
+---
 
-## Data anatomi
+## Lisensi & atribusi
 
-Viewer ini memakai **BodyParts3D 4.0**, referensi anatomi laki-laki dewasa, licensi **CC BY 4.0**. Tidak mewakili semua struktur ataq variasi manusia. Setiap mesh sumber berbeda dari konsep ternama yang bisa menggrup bekapa mesh. Deskripsi membedakan konteks sistem umum dari penjelasan organ individual.
+- **Kode aplikasi:** MIT (lihat [LICENSE](LICENSE)).
+- **Data anatomi BodyParts3D:** CC BY 4.0 — atribusi wajib dipertahankan.
+  Detail di [public/ATTRIBUTION.md](public/ATTRIBUTION.md).
 
-Geometri disimplifiras untuk performa browser tapi tetap menyimpan semua mesh sumber. Paket model berisi 2,288,268 triangle dan unduh sekitar 33 MB geometri kompresi. Kredit lengkap, link sumber, dan detail adaptasi ada di [ATTRIBUTION.md](public/ATTRIBUTION.md).
+---
 
-Ini explorer edukasi, bukan alat diagnosis atau bedah bedah.
+## Catatan
 
-## Cara kerja
-
-Geometri digabung ke batch. Tekstur GPU per-struktur mengatur translasi, visibilitas, dan pemilihan, sementara geometri komponen mendukung picking yang akurat. Layout exploded mengemas only bagian tampak. Render update ketika scene berubah; kontrol orbit tetap responsif tanpa ribuan draw call terpisah.
-
-Tool WebMCP opsional membuka search dan inspeksi anatomi di browser yang cocok. Interface tampak tetap berjalan tanpa tool tersebut.
-
-## Lisensi
-
-Kode aplikasi awal dirilis di bawah [MIT License](LICENSE). **Data anatomi mempunyai lisensi CC BY 4.0 tersendiri**; pertahankan atribusi saat mendistribusikannya. Dependensi pihak ketiga memahan lisensi masing-masing.
-
-Issue dan pull request diterima. Sertakan langkah reproduksi dan detail browser/device untuk masalah interaksi.
+JRH Atlas adalah **alat belajar**, bukan alat diagnosis. Untuk keluhan kesehatan,
+konsultasikan ke tenaga medis.
