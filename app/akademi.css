@@ -1,0 +1,50 @@
+import { useEffect, useState } from 'react';
+import { Akademi } from './akademi';
+import Home from './page';
+
+type Tab = 'jelajah' | 'belajar' | 'kuis' | 'flashcard';
+
+const TAB: { id: Tab; label: string; ikon: string }[] = [
+  { id: 'jelajah', label: 'Jelajah 3D', ikon: '🧭' },
+  { id: 'belajar', label: 'Belajar', ikon: '📖' },
+  { id: 'kuis', label: 'Kuis', ikon: '🎯' },
+  { id: 'flashcard', label: 'Flashcard', ikon: '🃏' },
+];
+
+export default function Cangkang() {
+  const [tab, setTab] = useState<Tab>('jelajah');
+
+  useEffect(() => {
+    const p = new URLSearchParams(location.search).get('tab') as Tab | null;
+    if (p && TAB.some((t) => t.id === p)) setTab(p);
+  }, []);
+
+  function pilih(t: Tab) {
+    setTab(t);
+    const url = new URL(location.href);
+    url.searchParams.set('tab', t);
+    history.replaceState(null, '', url);
+  }
+
+  return (
+    <div className="cangkang">
+      <nav className="tabbar" role="tablist" aria-label="Bagian JRH Atlas">
+        {TAB.map((t) => (
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id}
+            className={tab === t.id ? 'tab aktif' : 'tab'}
+            onClick={() => pilih(t.id)}
+          >
+            <span aria-hidden>{t.ikon}</span> {t.label}
+          </button>
+        ))}
+      </nav>
+
+      <main className="isi">
+        {tab === 'jelajah' ? <Home /> : <Akademi awal={tab} />}
+      </main>
+    </div>
+  );
+}

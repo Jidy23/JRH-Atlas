@@ -1,4 +1,4 @@
 import {createRoot} from 'react-dom/client';
-import Home from '../app/page';
+import Cangkang from '../app/cangkang';
 import '../app/globals.css';
-createRoot(document.getElementById('root')!).render(<Home/>);
+createRoot(document.getElementById('root')!).render(<Cangkang/>);
