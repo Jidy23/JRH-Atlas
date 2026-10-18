@@ -8,7 +8,7 @@ on:
 
 jobs:
   cek:
-    name: Typecheck
+    name: Typecheck & audit
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,3 +19,5 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run check
+      - name: Audit kontras WCAG
+        run: npm run audit:kontras

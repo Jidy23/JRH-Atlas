@@ -1,5 +1,6 @@
 /** JRH Atlas — Kuis & Flashcard (logika murni, mudah diuji) */
 import { ORGAN, type Jenjang, type OrganInfo } from './kurikulum';
+import { soalUntuk, type Soal as SoalTambahan } from './soal-tambahan';
 
 export type Soal = {
   id: string;
@@ -8,10 +9,12 @@ export type Soal = {
   jawaban: number;
   alasan: string;
   organ: string;
+  /** Diisi untuk soal dari bank tambahan; kosong untuk soal turunan kurikulum. */
+  jenjang?: Jenjang;
 };
 
-/** Ambil soal dari kurikulum; jenjang=undefined berarti semua jenjang. */
-export function bankSoal(jenjang?: Jenjang): Soal[] {
+/** Soal turunan kurikulum — satu butir per organ. */
+function soalKurikulum(jenjang?: Jenjang): Soal[] {
   return ORGAN.filter((o) => !jenjang || o.jenjang === jenjang).map((o) => ({
     id: o.key,
     pertanyaan: o.quiz.pertanyaan,
@@ -19,7 +22,35 @@ export function bankSoal(jenjang?: Jenjang): Soal[] {
     jawaban: o.quiz.jawaban,
     alasan: o.quiz.alasan,
     organ: o.id,
+    jenjang: o.jenjang,
   }));
+}
+
+function dariBank(b: SoalTambahan): Soal {
+  return {
+    id: b.key,
+    pertanyaan: b.pertanyaan,
+    pilihan: b.pilihan,
+    jawaban: b.jawaban,
+    alasan: b.alasan,
+    organ: b.organ,
+    jenjang: b.jenjang,
+  };
+}
+
+/**
+ * Bank soal gabungan: kurikulum + bank tambahan, tanpa duplikat id.
+ * jenjang=undefined berarti semua jenjang.
+ */
+export function bankSoal(jenjang?: Jenjang): Soal[] {
+  const gabung = [...soalKurikulum(jenjang), ...soalUntuk(jenjang).map(dariBank)];
+  const terlihat = new Set<string>();
+  return gabung.filter((s) => (terlihat.has(s.id) ? false : (terlihat.add(s.id), true)));
+}
+
+/** Ambil hanya soal dari bank tambahan — berguna untuk mode latihan baru. */
+export function bankTambahan(jenjang?: Jenjang): Soal[] {
+  return soalUntuk(jenjang).map(dariBank);
 }
 
 /** Fisher–Yates — acak tanpa bias. */
