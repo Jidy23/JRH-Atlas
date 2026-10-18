@@ -4,29 +4,17 @@ on:
     branches: [feat/ui-ux-rebuild]
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: feat/ui-ux-rebuild
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - name: Apply guarded interaction fixes
-        run: |
-          python scripts/ui-rebuild-patch.py
-          if ! git diff --quiet; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add app/page.tsx app/akademi.tsx
-            git commit -m 'fix: unique flashcard progress, viewer semantics and keyboard dismissal'
-            git push origin HEAD:feat/ui-ux-rebuild
-          fi
       - run: npm ci
       - run: npm run check
       - run: npm run audit:kontras
@@ -38,11 +26,10 @@ jobs:
       - name: Browser regression and accessibility report
         run: |
           npm run dev > /tmp/vite-ui.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3016/ > /dev/null && break; sleep 1; done
           node scripts/ui-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ui-browser-evidence
-          path: |
-            ui-evidence/
-            /tmp/vite-ui.log
+          path: ui-evidence/
