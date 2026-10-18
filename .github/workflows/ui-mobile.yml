@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   mobile:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -22,13 +22,17 @@ jobs:
       - name: Install browser engines
         run: |
           npm install --prefix /tmp/ui-browser --no-package-lock playwright @axe-core/playwright
-          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium webkit firefox
+          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium webkit firefox > /tmp/browser-install.log 2>&1 || { tail -80 /tmp/browser-install.log; exit 1; }
       - name: Test touch and narrow-screen navigation on built assets
         run: |
           npx vite preview --host 127.0.0.1 --port 3016 > /tmp/vite-mobile.log 2>&1 &
           for i in $(seq 1 60); do curl -fsS http://localhost:3016/ > /dev/null && break; sleep 1; done
           curl -fsS http://localhost:3016/ > /dev/null
           node scripts/ui-mobile-browser.mjs
+      - name: Publish diagnostic report
+        if: always()
+        run: |
+          if test -f ui-evidence/mobile-report.json; then cat ui-evidence/mobile-report.json; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
