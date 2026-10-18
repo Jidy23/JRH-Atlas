@@ -2,9 +2,10 @@ name: UI rebuild browser checks
 on:
   push:
     branches: [feat/ui-ux-rebuild]
+  pull_request:
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
   browser:
     runs-on: ubuntu-latest
@@ -15,26 +16,6 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - name: Correct progress semantics
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('app/akademi.tsx')
-          s = p.read_text()
-          old = '<div className="progres" aria-label='
-          new = '<div className="progres" role="progressbar" aria-valuemin={1} aria-valuemax={tur.langkah.length} aria-valuenow={i + 1} aria-label='
-          if old in s:
-              p.write_text(s.replace(old, new, 1))
-          elif new not in s:
-              raise RuntimeError('Progress source not found')
-          PY
-          if ! git diff --quiet; then
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add app/akademi.tsx
-            git commit -m 'fix: expose study progress value to assistive technology'
-            git push origin HEAD:feat/ui-ux-rebuild
-          fi
       - run: npm ci
       - run: npm run check
       - run: npm run audit:kontras
