@@ -1,4 +1,4 @@
-import {Component,Suspense,lazy,useEffect,useRef,useState,type ReactNode} from 'react';
+import {Component,Suspense,lazy,useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
 import type {Sorotan} from './page';
 import {Akademi} from './akademi';
 import {Glosarium,Panduan} from './halaman';
@@ -20,8 +20,11 @@ function readLevel():Jenjang{const value=new URLSearchParams(location.search).ge
 export default function Cangkang(){
  const [tab,setTab]=useState<Tab>(readTab),[level,setLevel]=useState<Jenjang>(readLevel),[sorotan,setSorotan]=useState<Sorotan|null>(null);
  const heading=useRef<HTMLHeadingElement>(null);
+ const previousTab=useRef(tab);
+ // Focus only after React commits a route change; also covers back/forward.
+ useLayoutEffect(()=>{if(previousTab.current===tab)return;previousTab.current=tab;window.scrollTo({top:0});heading.current?.focus({preventScroll:true});},[tab]);
  useEffect(()=>{const pop=()=>{setTab(readTab());setLevel(readLevel());};addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop);},[]);
- function navigate(next:Tab){if(next===tab)return;const url=new URL(location.href);url.searchParams.set('tab',next);history.pushState(null,'',url);setTab(next);window.scrollTo({top:0});requestAnimationFrame(()=>heading.current?.focus());}
+ function navigate(next:Tab){if(next===tab)return;const url=new URL(location.href);url.searchParams.set('tab',next);history.pushState(null,'',url);setTab(next);}
  function changeLevel(next:Jenjang){setLevel(next);const url=new URL(location.href);url.searchParams.set('jenjang',next);history.replaceState(null,'',url);}
  function show3D(j:Jenjang,index:number){const step=turUntuk(j).langkah[index];if(!step)return;const organ=organLangkah(step);if(!organ)return;setSorotan({sistem:step.sorot,organ:organ.key});navigate('jelajah');}
  const current=TABS.find(t=>t.id===tab)!;
