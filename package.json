@@ -2,7 +2,9 @@
   "name": "anatomy-studio",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": ">=22.13.0" },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3016",
     "build": "vite build",
@@ -44,7 +46,7 @@
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.38",
     "meshoptimizer": "^1.2.0",
-    "oxfmt": "0.62.0",
+    "oxfmt": "^0.73.0",
     "oxlint": "1.77.0",
     "oxlint-tsgolint": "7.0.2002",
     "tailwindcss": "4.2.1",
@@ -53,5 +55,9 @@
     "wrangler": "4.151.0"
   },
   "type": "module",
-  "license": "MIT"
+  "license": "MIT",
+  "overrides": {
+    "fflate": "^0.8.2",
+    "tinypool": "^2.2.0"
+  }
 }
