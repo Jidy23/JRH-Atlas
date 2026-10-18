@@ -3,8 +3,12 @@
 .app-rebuild .brand{color:var(--jrh-teks)}
 .app-rebuild .tema-tombol{min-height:44px;min-width:44px}
 :root[data-tema=terang] :is(.lencana,.tautan,.istilah-chip,.id-card-head,.mode.aktif){color:#263b48}
-:root[data-tema=terang] .jbtn.aktif b{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .jbtn.aktif b{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .chip{color:var(--jrh-teks)}
 :root[data-tema=terang] :is(.top-actions button.active,.view-controls button.active,.layer-presets button[aria-pressed=true]){color:#263b48}
+:root[data-tema] .explorer-frame .layer-presets button{color:var(--jrh-teks)}
+:root[data-tema] .explorer-frame .panel-heading .small-number{color:var(--jrh-teks);background:var(--jrh-bg)}
+.app-rebuild .akademi .kartu-besar{animation:none;color:var(--jrh-teks)}
 .app-rebuild .pilih:disabled{opacity:1;cursor:default}
 .app-rebuild .pilih.benar{border:2px solid var(--jrh-benar)}
 .app-rebuild .pilih.salah{border:2px solid var(--jrh-salah)}

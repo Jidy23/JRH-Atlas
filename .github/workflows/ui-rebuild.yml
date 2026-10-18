@@ -4,7 +4,7 @@ on:
     branches: [feat/ui-ux-rebuild]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   browser:
     runs-on: ubuntu-latest
@@ -15,6 +15,26 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      - name: Correct progress semantics
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('app/akademi.tsx')
+          s = p.read_text()
+          old = '<div className="progres" aria-label='
+          new = '<div className="progres" role="progressbar" aria-valuemin={1} aria-valuemax={tur.langkah.length} aria-valuenow={i + 1} aria-label='
+          if old in s:
+              p.write_text(s.replace(old, new, 1))
+          elif new not in s:
+              raise RuntimeError('Progress source not found')
+          PY
+          if ! git diff --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git add app/akademi.tsx
+            git commit -m 'fix: expose study progress value to assistive technology'
+            git push origin HEAD:feat/ui-ux-rebuild
+          fi
       - run: npm ci
       - run: npm run check
       - run: npm run audit:kontras
@@ -28,6 +48,15 @@ jobs:
           npm run dev > /tmp/vite-ui.log 2>&1 &
           for i in $(seq 1 60); do curl -fsS http://localhost:3016/ > /dev/null && break; sleep 1; done
           node scripts/ui-browser.mjs
+      - name: Require zero WCAG violations in tested states
+        run: |
+          node --input-type=module - <<'JS'
+          import {readFileSync} from 'node:fs';
+          const reports=JSON.parse(readFileSync('ui-evidence/report.json','utf8'));
+          const failures=reports.filter(r=>r.violations.length||r.errors.length);
+          if(reports.length!==12||failures.length){console.error(JSON.stringify(failures,null,2));process.exit(1);}
+          console.log('12 page/viewport states: zero axe WCAG violations, zero runtime errors.');
+          JS
       - uses: actions/upload-artifact@v4
         if: always()
         with:
