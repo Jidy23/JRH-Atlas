@@ -12,7 +12,7 @@ import AnatomyScene from './scene';
 import {DEFAULT_VISIBLE,SYSTEMS,EXPLANATIONS,explanation,type Atlas,type Concept,type SceneState,type SystemId,type View} from './anatomy';
 import {keIndonesia,istilahDalam,cocok} from './istilah';
 import {organByName} from './kurikulum';
-const initial:SceneState={explode:0,visible:DEFAULT_VISIBLE,selected:[],isolate:false,view:'three-quarter',rotate:false,reset:0};
+const initial:SceneState={explode:0,visible:DEFAULT_VISIBLE,selected:[],isolate:false,view:'three-quarter',rotate:false,reset:0,inspectorOpen:false};
 
 /** Sorotan dari Mode Belajar: sistem yang ditampilkan + organ yang dipilih. */
 export type Sorotan={sistem?:string[];organ?:string};
