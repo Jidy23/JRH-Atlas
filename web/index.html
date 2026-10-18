@@ -3,13 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <meta name="theme-color" content="#0b1020" />
+    <meta name="theme-color" content="#0a0f1c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
     <meta name="description" content="JRH Atlas — atlas anatomi 3D interaktif berbahasa Indonesia. Jelajah 2.234 bagian tubuh, ikuti mode belajar SD/SMP/SMA, lalu uji dengan kuis dan flashcard." />
     <meta property="og:title" content="JRH Atlas — Belajar Anatomi Tubuh Manusia" />
     <meta property="og:description" content="Atlas anatomi 3D interaktif berbahasa Indonesia untuk pelajar SD, SMP, dan SMA." />
     <meta property="og:type" content="website" />
     <title>JRH Atlas — Belajar Anatomi Tubuh Manusia</title>
     <link rel="icon" href="/favicon.svg" />
+    <script>
+      // Set tema sebelum paint pertama: cegah kilatan putih/ hitam.
+      (function () {
+        try {
+          var mode = localStorage.getItem('jrh-atlas-tema') || 'auto';
+          var palet = localStorage.getItem('jrh-atlas-palet') || 'nusantara';
+          var gelap = mode === 'gelap' || (mode === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+          var h = document.documentElement;
+          h.dataset.palet = palet;
+          h.dataset.tema = gelap ? 'gelap' : 'terang';
+          h.style.colorScheme = gelap ? 'dark' : 'light';
+          if (gelap) h.classList.add('dark');
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

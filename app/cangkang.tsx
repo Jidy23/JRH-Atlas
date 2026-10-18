@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import Home, { type Sorotan } from './page';
 import { Akademi } from './akademi';
 import { Glosarium, Panduan } from './halaman';
+import Tema from './tombol-tema';
+import { terapkanTema, bacaTema } from './tema';
 import { turUntuk, organLangkah } from './belajar';
 import type { Jenjang } from './kurikulum';
 import './ekstra.css';
@@ -22,7 +24,6 @@ function tabDariUrl(): Tab {
   return p && TAB.some((t) => t.id === p) ? p : 'jelajah';
 }
 
-/** Jenjang aktif untuk tur — dibaca dari ?jenjang= */
 function jenjangDariUrl(): Jenjang {
   const p = new URLSearchParams(location.search).get('jenjang');
   return p === 'smp' || p === 'sma' ? p : 'sd';
@@ -39,6 +40,10 @@ export default function Cangkang() {
   const [sorotan, setSorotan] = useState<Sorotan | null>(null);
 
   useEffect(() => {
+    // Tema diterapkan sedini mungkin supaya tidak ada kilatan warna.
+    const t = bacaTema();
+    terapkanTema(t.mode, t.palet);
+
     setTab(tabDariUrl());
     const onPop = () => setTab(tabDariUrl());
     addEventListener('popstate', onPop);
@@ -53,19 +58,12 @@ export default function Cangkang() {
     window.scrollTo({ top: 0 });
   }
 
-  /**
-   * Dari Mode Belajar ke viewer 3D.
-   * Tur menyimpan organ; di sini organ itu diterjemahkan menjadi sistem yang
-   * disorot + kuota organ, lalu tab pindah ke Jelajah 3D.
-   */
+  /** Dari Mode Belajar ke viewer 3D. */
   function lihatDi3D(jenjang: Jenjang, indeksLangkah: number) {
     const tur = turUntuk(jenjang);
     const l = tur.langkah[indeksLangkah];
     const organ = organLangkah(l);
     if (!organ) return;
-
-    // Nama konsep di atlas.json memakai bahasa Inggris; ambil empat kata pertama
-    // supaya pencocokan tetap longgar (mis. "heart" dari "Heart").
     setSorotan({ sistem: l.sorot, organ: organ.key });
     pilih('jelajah');
   }
@@ -95,6 +93,7 @@ export default function Cangkang() {
             <span aria-hidden>{t.ikon}</span> {t.label}
           </button>
         ))}
+        <Tema />
       </nav>
 
       <main className="isi">
