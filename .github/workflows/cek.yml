@@ -21,5 +21,5 @@ jobs:
         run: npm run check
       - name: Audit kontras WCAG
         run: npm run audit:kontras
-      - name: Audit dependensi (kritis & tinggi)
-        run: npm audit --audit-level=critical || true
+      - name: Laporan dependensi
+        run: npm audit || true
