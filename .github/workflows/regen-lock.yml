@@ -1,4 +1,4 @@
-name: Regen lockfile (versi 2)
+name: Regen lockfile (versi 3)
 
 on :
   push:
@@ -26,6 +26,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Lockfile tidak berubah"
           else
-            git commit -m "chore: regen package-lock.json usern upgraded deps"
-            git push origin HEADS:chore/security-upgrade
+            git commit -m "chore: regen package-lock.json usern upgrade deps"
+            git push origin HEAD:chore/security-upgrade
           fi
