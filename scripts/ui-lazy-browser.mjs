@@ -1,0 +1,55 @@
+import {createRequire} from 'node:module';
+import {readdir,readFile,writeFile,mkdir} from 'node:fs/promises';
+import {gzipSync} from 'node:zlib';
+import assert from 'node:assert/strict';
+const require=createRequire('/tmp/ui-browser/package.json');
+const {chromium}=require('playwright');
+await mkdir('ui-evidence',{recursive:true});
+const assets=await readdir('dist/assets');
+const sizes=[];
+for(const name of assets.filter(n=>n.endsWith('.js'))){const bytes=await readFile('dist/assets/'+name);sizes.push({name,bytes:bytes.length,gzip:gzipSync(bytes).length});}
+console.log('Production JavaScript chunks',JSON.stringify(sizes));
+const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const report={sizes,states:[]};
+try {
+ const context=await browser.newContext({viewport:{width:390,height:900}});
+ const page=await context.newPage();
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const scripts=new Set();const models=[];
+ page.on('request',r=>{if(r.resourceType()==='script')scripts.add(new URL(r.url()).pathname);if(r.url().includes('/models/'))models.push(r.url());});
+ await page.goto('http://localhost:3016/?tab=belajar&jenjang=smp',{waitUntil:'networkidle'});
+ await page.getByRole('heading',{name:'Belajar',exact:true}).waitFor();
+ assert.equal(models.length,0,'Learning route must not fetch anatomy models');
+ const initialScripts=[...scripts];
+ const initialBytes=initialScripts.reduce((sum,p)=>sum+(sizes.find(s=>p.endsWith('/'+s.name))?.bytes??0),0);
+ assert.ok(initialBytes>0&&initialBytes<500000,`Initial JavaScript exceeds 500 kB: ${initialBytes}`);
+ const nav=page.getByRole('navigation',{name:'Navigasi utama'});
+ await nav.getByRole('link',{name:'Glosarium',exact:true}).click();
+ await page.getByRole('heading',{name:'Glosarium',exact:true}).waitFor();
+ assert.equal(models.length,0);
+ assert.equal(scripts.size,initialScripts.length,'Non-3D navigation must not load viewer');
+ await page.goBack();
+ await page.getByRole('heading',{name:'Belajar',exact:true}).waitFor();
+ assert.equal(new URL(page.url()).searchParams.get('jenjang'),'smp');
+ await nav.getByRole('link',{name:'Jelajah 3D',exact:true}).click();
+ await page.getByRole('button',{name:'Cari struktur anatomi',exact:true}).waitFor();
+ await page.waitForFunction(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('/models/atlas.json')));
+ assert.ok(scripts.size>initialScripts.length,'Viewer chunk must load on demand');
+ await page.goBack();
+ await page.getByRole('heading',{name:'Belajar',exact:true}).waitFor();
+ report.states.push({initialScripts,initialBytes,viewerScripts:[...scripts].filter(p=>!initialScripts.includes(p)),errors});
+ assert.deepEqual(errors,[]);
+ await context.close();
+ // A failed chunk must show a recoverable alert, not erase navigation.
+ const failed=await browser.newContext();const failurePage=await failed.newPage();
+ await failurePage.route('**/assets/*.js',route=>new URL(route.request().url()).pathname.split('/').pop().startsWith('page-')?route.abort():route.continue());
+ await failurePage.goto('http://localhost:3016/?tab=jelajah',{waitUntil:'networkidle'});
+ await failurePage.getByRole('alert').filter({hasText:'Penjelajah 3D tidak dapat dimuat'}).waitFor();
+ await failurePage.getByRole('navigation',{name:'Navigasi utama'}).getByRole('link',{name:'Belajar',exact:true}).click();
+ await failurePage.getByRole('heading',{name:'Belajar',exact:true}).waitFor();
+ report.chunkFailureRecovery=true;
+ await failed.close();
+} finally {
+ await writeFile('ui-evidence/lazy-report.json',JSON.stringify(report,null,2));
+ await browser.close();
+}
