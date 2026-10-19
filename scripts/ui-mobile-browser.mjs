@@ -53,8 +53,17 @@ try {
    await page.reload({waitUntil:'networkidle'});
    assert.equal(await page.locator('html').getAttribute('data-tema'),'gelap');
    assert.equal(await page.locator('html').getAttribute('data-palet'),'koral');
-   await activate(trigger);await activate(pageHeading('Panduan'));
+   await activate(trigger);
+   // Dismiss via a point proven to sit outside the panel; the panel overlays the heading.
+   const panelBox=await dialog.boundingBox();
+   assert.ok(panelBox,'Theme panel must be measurable');
+   const view=page.viewportSize();
+   const point={x:6,y:view.height-6};
+   const inside=point.x>=panelBox.x&&point.x<=panelBox.x+panelBox.width&&point.y>=panelBox.y&&point.y<=panelBox.y+panelBox.height;
+   assert.equal(inside,false,'Dismissal point must be outside the theme panel');
+   if(test.touch)await page.touchscreen.tap(point.x,point.y);else await page.mouse.click(point.x,point.y);
    assert.equal(await dialog.count(),0,'Outside pointer closes theme panel');
+   assert.equal(new URL(page.url()).searchParams.get('tab'),'panduan','Outside dismissal must not navigate');
    assert.equal(models.length,0,'Educational routes must not fetch anatomy models');
    assert.deepEqual(errors,[]);
    await page.screenshot({path:`ui-evidence/${test.name}.png`,fullPage:true});
