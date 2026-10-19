@@ -14,13 +14,14 @@ const cases=[
 try {
  for(const test of cases){
   const browser=await test.engine.launch();
+  const version=browser.version();
   const context=await browser.newContext({...test.options,colorScheme:'light',reducedMotion:'reduce'});
   const page=await context.newPage();
   page.setDefaultTimeout(15000);
   const errors=[],models=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('request',r=>{if(r.url().includes('/models/'))models.push(r.url());});
-  const report={browser:test.name,touch:test.touch,pages:[],errors};reports.push(report);
+  const report={browser:test.name,engine:test.engine.name(),version,touch:test.touch,pages:[],errors};reports.push(report);
   const activate=locator=>test.touch?locator.tap():locator.click();
   // Match the page heading, not a same-named section heading (e.g. Flashcard).
   const pageHeading=label=>page.getByRole('heading',{name:label,exact:true,level:1});
@@ -72,4 +73,7 @@ try {
   finally{await context.close();await browser.close();}
  }
  assert.equal(reports.length,3);assert.ok(reports.every(r=>r.passed));
+ // Prove three distinct engines actually ran, instead of trusting configuration.
+ assert.equal(new Set(reports.map(r=>r.engine)).size,3,'Three distinct browser engines must execute');
+ assert.ok(reports.every(r=>r.version),'Each engine must report a version');
 }finally{await writeFile('ui-evidence/mobile-report.json',JSON.stringify(reports,null,2));}
