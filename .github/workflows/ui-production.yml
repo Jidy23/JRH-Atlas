@@ -1,7 +1,7 @@
 name: Production lazy loading checks
 on:
   push:
-    branches: [feat/ui-ux-rebuild]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 permissions:
