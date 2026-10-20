@@ -92,8 +92,11 @@ pil", jadi tombol dan kartu tidak memakainya.
 `var(--sp-*)`/`var(--r-*)`/`--t-*`/`--e-*`/`--z-*`/`--d-*` yang dipakai benar-benar
 terdefinisi, dan bahwa `skala.css` adalah impor CSS pertama di `web/main.tsx`.
 Skrip itu juga **mencetak** jumlah nilai px ajaib per berkas sebagai utang migrasi.
-Angka itu belum menjadi ratchet; ratchet dipasang setelah migrasi Fase 2 selesai,
-karena baseline harus diukur, bukan ditebak.
+Angka itu sekarang **menjadi ratchet**: CI gagal kalau total px langsung naik di atas
+`scripts/baseline-skala.json`, atau kalau jumlah deklarasi `font-family` literal naik di
+atas batasnya. Baseline diukur dari log CI, bukan ditebak. Ratchet hanya mencegah naik;
+sisa nilai px yang belum cocok dengan token tetap dicatat sebagai utang di
+`scripts/laporan-migrasi-px.json`.
 
 ## Premium dan compact
 
