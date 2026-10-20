@@ -7,15 +7,33 @@ sebagai "draft without direction" dan memaksa dial ENERGY 1 / RHYTHM 1 / MOTION 
 
 Reading this as: **penjelajah anatomi 3D** untuk **pelajar Indonesia SD sampai SMA**
 (usia 9 sampai 18 tahun, banyak yang membuka dari ponsel kelas menengah), gaya
-**studio ilmiah yang tenang dan rapi**, dial **ENERGY 2 / RHYTHM 2 / MOTION 1**.
+**studio ilmiah yang berani secara visual dan tenang secara gerak**, dial
+**ENERGY 3 / RHYTHM 3 / MOTION 1**.
 
 ## Dial
 
 | Dial | Nilai | Alasan |
 |---|---|---|
-| ENERGY | 2 (Balanced) | Objek utamanya model 3D yang rumit. UI harus tenang supaya mata fokus ke anatomi, tapi tidak boleh sekosong GOV.UK karena audiensnya pelajar. |
-| RHYTHM | 2 (konsisten + sedikit break) | Panel kiri, kanvas tengah, kontrol kanan mengikuti ritme tetap. Satu break disengaja: viewer full-bleed tanpa padding supaya model terasa besar. |
-| MOTION | 1 (hover saja) | Animasi pada aplikasi belajar berisiko mengalihkan perhatian dan memicu mabuk gerak. Hanya transisi 150ms pada hover dan fokus. `prefers-reduced-motion` mematikan semuanya. |
+| ENERGY | 3 (Bold) | Objeknya model 3D yang rumit, jadi UI harus tegas memisahkan diri dari kanvas: kontras tinggi, garis jujur, tipografi berani. Energi tidak boleh datang dari gerak atau cahaya. |
+| RHYTHM | 3 (tetap dengan satu break tegas) | Panel kiri, kanvas tengah, kontrol kanan mengikuti ritme tetap, dengan satu break yang disengaja: viewer full-bleed tanpa padding supaya model terasa besar. |
+| MOTION | 1 (hover saja) | Gerak adalah sumber utama rasa tidak stabil dan tidak nyaman. Hanya transisi 150ms pada hover dan fokus. `prefers-reduced-motion` mematikan semuanya. |
+
+### Kenapa ENERGY naik tetapi MOTION tidak
+
+Permintaan terakhir meminta dua hal yang menarik ke arah berlawanan: "premium,
+playful, warna tebal jelas, detail" di satu sisi, dan "nyaman, smooth, stabil" di
+sisi lain. Penyelesaiannya bukan kompromi di tengah, tetapi memisahkan sumbu:
+
+- **Keberanian dipindahkan ke bentuk statis** — kontras, ukuran huruf, ketebalan
+garis, kepadatan informasi. Ini yang membuat antarmuka terasa premium dan playful
+tanpa bergerak.
+- **Gerak tetap di MOTION 1.** Animasi masuk, auto-rotate, dan parallax adalah
+tiga hal yang paling cepat membuat aplikasi terasa murah sekaligus memicu mabuk
+gerak pada pengguna muda.
+
+Konsekuensi yang harus diterima: aplikasi ini tidak akan terasa "hidup" karena
+animasi. Kalau suatu saat gerak dibutuhkan, naikkan MOTION ke 2 secara sadar dan
+perbarui tabel ini — jangan menambah animasi diam-diam di satu komponen.
 
 ## Palet dan psikologi warna
 
@@ -50,6 +68,49 @@ Ikon navigasi digambar sebagai SVG satu keluarga: viewBox 24, stroke 1,7px,
 punya bobot dan baseline berbeda-beda, sehingga bar navigasi terbaca tidak sejajar
 walaupun ukurannya sama.
 
+## Skala
+
+Satu sumber untuk spasi, radius, ukuran huruf, elevasi, z-index, dan gerak:
+`app/skala.css`. Dimuat paling awal dari `web/main.tsx`.
+
+| Kelompok | Token | Nilai |
+|---|---|---|
+| Spasi | `--sp-1` … `--sp-12` | 4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 80, 96px |
+| Radius | `--r-1` … `--r-5`, `--r-pil` | 8, 12, 16, 20, 28px, 999px |
+| Huruf | `--t-1` … `--t-10` | 10, 11, 12, 13, 14, 16, 20, 26, 32, 40px |
+| Line-height | `--lh-ketat` … `--lh-longgar` | 1.15, 1.3, 1.6, 1.75 |
+| Tracking | `--tr-ketat` … `--tr-kaps` | -0.02em, 0, 0.08em, 0.14em |
+| Elevasi | `--e-1` … `--e-4` | empat tingkat, tanpa glow |
+| Z-index | `--z-dasar` … `--z-lompat` | 0, 10, 30, 40, 100, 950, 2000 |
+| Gerak | `--d-instan` … `--d-lambat` | 80, 150, 200, 300ms |
+| Tata letak | `--header-h`, `--nav-w`, `--pad-konten`, `--lebar-baca` | 64px, clamp, clamp, 68ch |
+
+`--r-pil` hanya untuk chip dan status. DESIGN.md melarang "semua elemen berbentuk
+pil", jadi tombol dan kartu tidak memakainya.
+
+`scripts/audit-skala.mjs` memeriksa tiga hal di CI: kelengkapan token, bahwa setiap
+`var(--sp-*)`/`var(--r-*)`/`--t-*`/`--e-*`/`--z-*`/`--d-*` yang dipakai benar-benar
+terdefinisi, dan bahwa `skala.css` adalah impor CSS pertama di `web/main.tsx`.
+Skrip itu juga **mencetak** jumlah nilai px ajaib per berkas sebagai utang migrasi.
+Angka itu belum menjadi ratchet; ratchet dipasang setelah migrasi Fase 2 selesai,
+karena baseline harus diukur, bukan ditebak.
+
+## Premium dan compact
+
+Dua kata ini sering bertengkar: "premium" mendorong padding 32px, "compact"
+mendorong 12px. Penyelesaiannya memisahkan **level**:
+
+- **Kepadatan antar-kelompok tetap lega** — 24px atau 32px antar blok. Ini yang
+membuat halaman terasa mahal.
+- **Kepadatan di dalam kelompok dinaikkan** — baris data 36px (bukan 44px), label
+11px, ikon 16px. Ini yang membuat informasi terasa banyak tanpa sesak.
+- **Premium dibawa detail mikro**, bukan hiasan: tracking negatif konsisten pada
+judul, `tabular-nums` pada setiap angka yang berubah, garis 1px yang jujur,
+radius yang konsisten, dan font yang di-host sendiri.
+
+Yang tidak boleh: memotong padding antar-kelompok demi "compact", atau menambah
+glow dan bayangan berlapis demi "premium".
+
 ## Aturan yang mengikat
 
 1. Setiap warna dibaca dari token `tema.css`, tidak pernah literal di komponen. Ini
@@ -58,7 +119,8 @@ yang membuat lima palet dan dua mode bekerja tanpa menduplikasi CSS.
 Gradien hanya diizinkan di sana, dan hanya lewat token `--gradien-fokus` supaya
 setiap ujungnya bisa diaudit.
 3. Tidak ada glow, tidak ada bayangan dekoratif berlapis. Hierarki dibawa oleh
-kontras, ukuran, dan spasi, bukan cahaya.
+kontras, ukuran, dan spasi, bukan cahaya. ENERGY 3 dicapai lewat ketebalan garis
+dan kontras, bukan lewat pendaran.
 4. Teks sekunder selalu memakai `--muted-foreground`, token yang sudah diaudit
 kontrasnya. Tidak ada abu literal di komponen.
 5. Target sentuh minimum 44px, dan ini diuji otomatis di `scripts/ui-mobile-browser.mjs`.
@@ -68,6 +130,12 @@ pola ada di `cangkang.tsx` (`ViewerBoundary` untuk gagal, `Suspense` untuk memua
 progres, ibu jari scrollbar, batas bidang input) memakai `--aksen-nonteks` atau
 `--v-kontrol-garis`, **tidak pernah** `--aksen` mentah. Aksen mentah `#22d3ee`
 hanya 1,63:1 di latar terang dan gagal ambang 3:1. Audit menegakkan ini.
+8. Setiap nilai spasi, radius, ukuran huruf, elevasi, z-index, dan durasi dibaca
+dari `app/skala.css`. Nilai px baru yang ditulis langsung di komponen adalah
+utang, bukan pilihan.
+9. Tidak ada berkas CSS yang mendeklarasikan `font-family` sendiri. Semua membaca
+`--font-sans`. Ditegakkan `scripts/audit-skala.mjs`.
+10. `app/skala.css` tidak boleh memuat warna. Rumah warna adalah `tema.css`.
 
 ## Yang sengaja tidak dipakai
 
@@ -77,9 +145,11 @@ hanya 1,63:1 di latar terang dan gagal ambang 3:1. Audit menegakkan ini.
 - Semua elemen berbentuk pil.
 - Side-tab border berwarna di tepi kiri kartu.
 - Bounce atau elastic easing.
+- Animasi masuk, auto-rotate sebagai default, dan parallax.
 
 ## Berkas acuan
 
+- `app/skala.css`: spasi, radius, tipografi, elevasi, z-index, gerak.
 - `app/tema.css`: token palet dan mode.
 - `app/globals.css`: tata letak viewer 3D.
 - `app/akademi.css`: ruang belajar.
