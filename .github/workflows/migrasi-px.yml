@@ -1,0 +1,109 @@
+name: Migrasi px bertahap sekali-jalan
+
+# Workflow ini menghapus dirinya sendiri di akhir.
+# Ada karena REST API hanya bisa menulis berkas utuh, sedangkan globals.css
+# 32 KB dan hampir satu baris — menulis ulang manual berisiko.
+# Runner yang mengedit berkas asli, bukan model.
+
+on:
+  push:
+    branches: [feat/premium-skala]
+
+permissions:
+  contents: write
+
+jobs:
+  migrasi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/premium-skala
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Siapkan git
+        run: |
+          git config user.name "jidy"
+          git config user.email "zahraamanda302@gmail.com"
+
+      - name: Lewati kalau sudah pernah jalan
+        id: cek
+        run: |
+          if [ -f scripts/laporan-migrasi-px.json ]; then
+            echo "sudah=ya" >> "$GITHUB_OUTPUT"
+          else
+            echo "sudah=tidak" >> "$GITHUB_OUTPUT"
+          fi
+
+      # commit() hanya membuat commit kalau memang ada perubahan,
+      # supaya tahap yang tidak menyentuh apa pun tidak menggagalkan job.
+      - name: Tahap 1 - globals.css
+        if: steps.cek.outputs.sudah == 'tidak'
+        run: |
+          node scripts/migrasi-px.mjs --tahap=1
+          git add -A app scripts
+          if git diff --cached --quiet; then
+            echo "tahap 1: tidak ada perubahan"
+          else
+            git commit -m "refactor(skala): tahap 1 migrasi px globals.css ke token"
+          fi
+
+      - name: Tahap 2 - akademi.css dan redesign.css
+        if: steps.cek.outputs.sudah == 'tidak'
+        run: |
+          node scripts/migrasi-px.mjs --tahap=2
+          git add -A app scripts
+          if git diff --cached --quiet; then
+            echo "tahap 2: tidak ada perubahan"
+          else
+            git commit -m "refactor(skala): tahap 2 migrasi px akademi.css dan redesign.css"
+          fi
+
+      - name: Tahap 3 - tema, ekstra, interaction
+        if: steps.cek.outputs.sudah == 'tidak'
+        run: |
+          node scripts/migrasi-px.mjs --tahap=3
+          git add -A app scripts
+          if git diff --cached --quiet; then
+            echo "tahap 3: tidak ada perubahan"
+          else
+            git commit -m "refactor(skala): tahap 3 migrasi px tema, ekstra, interaction"
+          fi
+
+      - name: Kunci baseline ke angka terukur
+        if: steps.cek.outputs.sudah == 'tidak'
+        run: |
+          node scripts/migrasi-px.mjs --tulis-baseline
+          git add -A scripts
+          if git diff --cached --quiet; then
+            echo "baseline: tidak berubah"
+          else
+            git commit -m "chore(skala): kunci baseline px setelah migrasi bertahap"
+          fi
+
+      - name: Perbaiki DESIGN.md yang sudah tidak akurat
+        if: steps.cek.outputs.sudah == 'tidak'
+        run: |
+          node scripts/perbaiki-design-md.mjs
+          git add -A DESIGN.md
+          if git diff --cached --quiet; then
+            echo "DESIGN.md: tidak berubah"
+          else
+            git commit -m "docs(desain): perbaiki klaim ratchet di DESIGN.md"
+          fi
+
+      - name: Bukti audit
+        if: steps.cek.outputs.sudah == 'tidak'
+        run: |
+          node scripts/audit-skala.mjs
+          node scripts/audit-token.mjs
+
+      - name: Dorong lalu hapus diri sendiri
+        if: steps.cek.outputs.sudah == 'tidak'
+        run: |
+          git rm .github/workflows/migrasi-px.yml
+          git commit -m "chore(ci): hapus workflow migrasi px sekali-jalan"
+          git push origin HEAD:feat/premium-skala
