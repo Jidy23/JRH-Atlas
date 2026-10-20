@@ -9,7 +9,11 @@
                         Mode terang memakai versi yang digelapkan.
    - `--jrh-aksen-latar` + `--jrh-aksen-di`: pasangan siap pakai untuk elemen
                         berisi aksen (tab aktif, tombol terisi).
-   Semua pasangan diuji `scripts/audit-kontras.ts`, yang membaca file ini. */
+   Semua pasangan diuji `scripts/audit-kontras.ts`, yang membaca file ini.
+
+   Sejak audit 1.4.11, aksen mentah juga TIDAK dipakai untuk indikator non-teks
+   (cincin fokus, titik status). Aksen mentah #22d3ee di latar terang hanya
+   1,63:1, gagal ambang 3:1. Keduanya memakai --jrh-aksen-teks. */
 
 /* ---------- Palet: aksen per budaya Indonesia ---------- */
 :root {
@@ -62,6 +66,11 @@
   --input: rgba(24, 37, 54, 0.14);
   --ring: var(--aksen);
 
+  /* Indikator non-teks (WCAG 1.4.11, ambang 3:1). Aksen mentah tidak dipakai:
+     #22d3ee di atas --background hanya 1,63:1. */
+  --v-fokus: var(--jrh-aksen-teks);
+  --v-status: var(--jrh-aksen-teks);
+
   --kaca-bg: rgba(255, 255, 255, 0.92);
   --kaca-garis: rgba(37, 56, 74, 0.1);
   color-scheme: light;
@@ -103,6 +112,11 @@
   --input: rgba(148, 175, 220, 0.24);
   --ring: var(--aksen);
 
+  /* Di mode gelap --jrh-aksen-teks sudah sama dengan --aksen, dan aksen lolos
+     jauh di atas 3:1 terhadap latar malam. */
+  --v-fokus: var(--jrh-aksen-teks);
+  --v-status: var(--jrh-aksen-teks);
+
   --kaca-bg: rgba(14, 22, 38, 0.9);
   --kaca-garis: rgba(148, 175, 220, 0.16);
   color-scheme: dark;
@@ -137,7 +151,7 @@
   background: var(--aksen-lembut);
   color: var(--jrh-aksen-teks);
 }
-:root[data-tema] .status-dot { background: var(--aksen); }
+:root[data-tema] .status-dot { background: var(--v-status); }
 /* Satu-satunya gradien di aplikasi: aksi fokus (DESIGN.md aturan #2). */
 :root[data-tema] .dock-reset .primary-action,
 :root[data-tema] .primary-action {
