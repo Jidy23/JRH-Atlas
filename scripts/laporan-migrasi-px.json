@@ -1,0 +1,53 @@
+{
+  "catatan": "Laporan migrasi px bertahap. Angka diukur, bukan ditebak.",
+  "tahap": {
+    "1": [
+      {
+        "berkas": "globals.css",
+        "px_sebelum": 636,
+        "px_sesudah": 541,
+        "diganti": 95,
+        "dilewati_karena_fungsi": 0
+      }
+    ],
+    "2": [
+      {
+        "berkas": "akademi.css",
+        "px_sebelum": 195,
+        "px_sesudah": 119,
+        "diganti": 76,
+        "dilewati_karena_fungsi": 0
+      },
+      {
+        "berkas": "redesign.css",
+        "px_sebelum": 163,
+        "px_sesudah": 137,
+        "diganti": 26,
+        "dilewati_karena_fungsi": 0
+      }
+    ],
+    "3": [
+      {
+        "berkas": "tema.css",
+        "px_sebelum": 46,
+        "px_sesudah": 37,
+        "diganti": 9,
+        "dilewati_karena_fungsi": 0
+      },
+      {
+        "berkas": "ekstra.css",
+        "px_sebelum": 16,
+        "px_sesudah": 16,
+        "diganti": 0,
+        "dilewati_karena_fungsi": 0
+      },
+      {
+        "berkas": "interaction.css",
+        "px_sebelum": 18,
+        "px_sesudah": 17,
+        "diganti": 1,
+        "dilewati_karena_fungsi": 0
+      }
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+/* ===== JRH Atlas — skala tunggal =====
+   Satu sumber untuk spasi, radius, ukuran huruf, elevasi, z-index, dan gerak.
+   Dimuat PALING AWAL dari web/main.tsx, sebelum globals.css, supaya semua
+   lapisan (globals, akademi, redesign, ekstra, interaction, polish) bisa
+   membacanya. Urutan impor itu bukan gaya-gayaan: sebelumnya globals.css
+   dievaluasi setelah tema.css dan tata letak viewer bergantung pada kebetulan
+   spesifisitas, bukan urutan. Lihat catatan di kepala web/main.tsx.
+
+   Berkas ini TIDAK memuat warna (DESIGN.md aturan #10). Warna rumahnya
+   tema.css dan tetap diperiksa scripts/audit-token.mjs. Bayangan di bawah
+   memakai color-mix dari --foreground, bukan rgba literal.
+
+   Aturan pemakaian (DESIGN.md aturan #8): nilai baru di komponen wajib membaca
+   token di sini. Nilai px yang ditulis langsung di komponen dihitung
+   scripts/audit-skala.mjs dan dicetak sebagai utang migrasi.
+*/
+
+:root {
+  /* ---------- Spasi: kelipatan 4px ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  --sp-9: 48px;
+  --sp-10: 64px;
+  --sp-11: 80px;
+  --sp-12: 96px;
+
+  /* ---------- Radius: lima tingkat + pil ---------- */
+  /* --r-pil hanya untuk chip dan status. DESIGN.md melarang "semua elemen
+     berbentuk pil", jadi tombol dan kartu tidak memakainya. */
+  --r-1: 8px;
+  --r-2: 12px;
+  --r-3: 16px;
+  --r-4: 20px;
+  --r-5: 28px;
+  --r-pil: 999px;
+
+  /* ---------- Tipografi ---------- */
+  /* Skala ini menggantikan 24 ukuran huruf ad-hoc yang sebelumnya tersebar
+     (8, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16,
+     18, 20, 22, 23, 25, 28, 30, 31, 32, 38px). Batas bawah 10px: teks 8-9px
+     di .scene-caption dan .studio-footer tidak terbaca di ponsel. */
+  --t-1: 10px;
+  --t-2: 11px;
+  --t-3: 12px;
+  --t-4: 13px;
+  --t-5: 14px;
+  --t-6: 16px;
+  --t-7: 20px;
+  --t-8: 26px;
+  --t-9: 32px;
+  --t-10: 40px;
+
+  --lh-ketat: 1.15;
+  --lh-judul: 1.3;
+  --lh-isi: 1.6;
+  --lh-longgar: 1.75;
+
+  --tr-ketat: -0.02em;
+  --tr-normal: 0;
+  --tr-lebar: 0.08em;
+  --tr-kaps: 0.14em;
+
+  /* Satu stack font untuk seluruh aplikasi (DESIGN.md aturan #9).
+     globals.css mendeklarasikan Helvetica lalu Inter, akademi.css memasang
+     ui-sans-serif, redesign.css memasang Inter, dan polish.css menimpa
+     ketiganya. Token ini yang jadi satu-satunya sumber kebenaran.
+     "Noto Sans" ditambahkan karena ponsel Android lama tidak selalu punya
+     Segoe UI maupun Roboto versi baru. */
+  --font-sans: 'Inter Tight', Inter, ui-sans-serif, system-ui, 'Segoe UI', Roboto,
+    'Noto Sans', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+
+  /* ---------- Elevasi: empat tingkat, tanpa glow ---------- */
+  /* DESIGN.md aturan #3: hierarki dibawa kontras, ukuran, spasi — bukan
+     cahaya. Bayangan di sini hanya memisahkan permukaan mengambang dari
+     latar, tidak pernah untuk dekorasi. */
+  --e-1: 0 1px 2px color-mix(in srgb, var(--foreground) 6%, transparent);
+  --e-2: 0 2px 8px color-mix(in srgb, var(--foreground) 8%, transparent);
+  --e-3: 0 8px 24px color-mix(in srgb, var(--foreground) 10%, transparent);
+  --e-4: 0 20px 50px color-mix(in srgb, var(--foreground) 16%, transparent);
+
+  /* ---------- Z-index bernama ---------- */
+  /* Sebelumnya nilai z-index ditulis liar: 2, 20, 30, 40, 45, 50, 100, 900,
+     950, 2000. Tanpa nama, menambah satu lapisan berarti menebak. */
+  --z-dasar: 0;
+  --z-panel: 10;
+  --z-lengket: 30;
+  --z-sheet: 40;
+  --z-nav: 100;
+  --z-popover: 950;
+  --z-lompat: 2000;
+
+  /* ---------- Gerak: MOTION 1 ---------- */
+  /* Dial MOTION tetap 1 walaupun ENERGY naik ke 3. Gerak adalah sumber utama
+     rasa "tidak stabil" dan "tidak nyaman", dan dua kata itu yang diminta
+     dipertahankan. Durasi di sini pendek, dan tidak ada easing yang memantul
+     (DESIGN.md melarang bounce/elastic). */
+  --d-instan: 80ms;
+  --d-cepat: 150ms;
+  --d-normal: 200ms;
+  --d-lambat: 300ms;
+  --ease-keluar: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-masuk: cubic-bezier(0.4, 0, 1, 1);
+  --ease-linear: linear;
+
+  /* ---------- Tata letak ---------- */
+  /* --header-h 64px, bukan 76px: header lama berisi 66px sehingga 10px
+     terbuang. --pad-konten menggantikan padding 28px yang kaku di 4K. */
+  --header-h: 64px;
+  --nav-w: clamp(200px, 16vw, 248px);
+  --pad-konten: clamp(20px, 2.2vw, 40px);
+  --lebar-baca: 68ch;
+}

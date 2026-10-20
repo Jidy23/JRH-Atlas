@@ -1,6 +1,7 @@
 /* Lapisan polish: hasil audit Anti-Slop (38 aturan) + Impeccable (61 rule).
-   Dimuat paling akhir dari web/main.tsx, setelah globals.css dan seluruh CSS
-   yang ikut lewat cangkang.tsx (akademi, interaction, ekstra, redesign, tema).
+   Dimuat paling akhir dari web/main.tsx, setelah skala.css, globals.css dan
+   seluruh CSS yang ikut lewat cangkang.tsx (akademi, interaction, ekstra,
+   redesign, tema).
 
    PENTING soal spesifisitas: banyak aturan di tema.css memakai bentuk
    :root[data-tema] .x (0,3,0) atau :root[data-tema] .logo b (0,2,1). Selektor
@@ -10,13 +11,17 @@
 
    Setiap override wajib punya alasan tertulis, sesuai R-31. */
 
-/* R-06 satu stack font.
-   globals.css memasang Helvetica/Arial di :root lalu menimpanya dengan Inter
-   di tengah file. .cangkang (akademi.css) memasang ui-sans-serif, .app-rebuild
-   (redesign.css) memasang Inter. Selektor kelas menang atas :root, jadi versi
-   lama yang hanya menyasar :root tidak menyatukan apa pun. Sekarang ketiga
-   permukaan ditimpa sekaligus. */
-:root,.cangkang,.app-rebuild{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
+/* R-06 satu stack font — sekarang lewat token, bukan selektor.
+   Sebelumnya globals.css memasang Helvetica/Arial di :root lalu menimpanya
+   dengan Inter di tengah file, .cangkang memasang ui-sans-serif, .app-rebuild
+   memasang Inter, dan lapisan ini menimpa ketiganya dengan selektor :root,
+   .cangkang, .app-rebuild. Empat sumber untuk satu nilai.
+
+   Sejak Fase 1, --font-sans di app/skala.css adalah satu-satunya sumber, dan
+   aturan di sini hanya menegaskan pemakaiannya di tiga permukaan itu. Ini juga
+   yang dibaca scripts/audit-skala.mjs untuk melaporkan deklarasi font-family
+   yang belum pindah ke token. */
+:root,.cangkang,.app-rebuild{font-family:var(--font-sans)}
 
 /* R-13 tanpa glow dekoratif.
    Status sudah dibawa oleh warna titik (.status-dot) dan warna latar

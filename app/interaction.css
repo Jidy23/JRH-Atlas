@@ -24,7 +24,7 @@
 :root[data-tema] .app-rebuild .tema .palet.aktif{border:2px solid var(--aksen);background:var(--jrh-kartu)}
 @media(min-width:901px){.explorer-frame .mobile-only{display:none}.explorer-frame .desktop-only{display:flex}}
 @media(max-width:900px){.explorer-frame .desktop-only{display:none}.explorer-frame .layers-panel.mobile-open{background:var(--jrh-kartu);box-shadow:0 12px 40px var(--bayang-panel)}.explorer-frame .system-list{overflow-y:auto;overscroll-behavior:contain}.explorer-frame .system-row{min-height:44px}.explorer-frame .search-panel{background:var(--jrh-kartu)}}
-@media(max-width:480px){.explorer-frame .bottom-dock{gap:8px;padding:12px}.explorer-frame .dock-reset{min-width:44px}.explorer-frame .dock-reset span{display:none}.explorer-frame .explode-control{min-width:0}.app-rebuild .app-navigation a{overflow-wrap:anywhere}}
+@media(max-width:480px){.explorer-frame .bottom-dock{gap: var(--sp-2);padding:12px}.explorer-frame .dock-reset{min-width:44px}.explorer-frame .dock-reset span{display:none}.explorer-frame .explode-control{min-width:0}.app-rebuild .app-navigation a{overflow-wrap:anywhere}}
 
 /* The base sheet tints every plain button with a light-theme ink on hover
    (button:not([data-slot]):hover{color:#182536}). The level cards are plain

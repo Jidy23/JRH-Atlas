@@ -38,5 +38,12 @@ jobs:
       # dianggap "selesai" padahal ratusan warna literal masih tersebar.
       - name: Audit token warna
         run: npm run audit:token
+      # DESIGN.md aturan #8/#9/#10: spasi, radius, huruf, elevasi, z-index dan
+      # durasi dibaca dari app/skala.css; tidak ada font-family liar; skala.css
+      # dimuat paling awal dan bebas warna. Tanpa langkah ini, "skala tunggal"
+      # hanya niat, dan token hantu (var() tanpa definisi) tidak terdeteksi
+      # karena CSS tidak melempar galat untuk itu.
+      - name: Audit skala desain
+        run: npm run audit:skala
       - name: Laporan dependensi
         run: npm audit || true
