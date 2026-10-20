@@ -35,13 +35,25 @@
 // because it inspects the DOM, not the canvas pixels. The guard now pins the
 // real attribute names and explicitly rejects the invented English ones.
 //
+// IMPORTANT: the source is stripped of comments before these checks run. The
+// first attempt at this guard scanned the raw text, and the explanatory comment
+// above (`scene.tsx read dataset.theme`) made the "rejects dataset.theme" rule
+// fire on prose instead of code. A guard that cannot tell a comment from a
+// statement is the same class of bug it is supposed to catch.
+//
 // Usage: node scripts/verify-scene-controls.mjs
 import {readFileSync} from 'node:fs';
 import * as T from 'three';
 import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
 
 const scenePath = 'app/scene.tsx';
-const source = readFileSync(scenePath, 'utf8');
+const raw = readFileSync(scenePath, 'utf8');
+
+// Strip block and line comments so prose about a bug never counts as the bug.
+const source = raw
+  .replace(/\/\*[\s\S]*?\*\//g, '')
+  .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
+
 const problems = [];
 
 // OrbitControls assigns its API on the instance in the constructor, so build
@@ -90,7 +102,7 @@ if (!/getComputedStyle\(\s*document\.documentElement\s*\)/.test(source)) {
 // The attribute names are the whole bug: tema.ts writes data-tema / data-palet.
 if (/dataset\.(?:theme|palette)\b/.test(source)) {
   problems.push(
-    "scene.tsx reads dataset.theme / dataset.palette, but tema.ts writes data-tema / data-palet; " +
+    'scene.tsx reads dataset.theme / dataset.palette, but tema.ts writes data-tema / data-palet; ' +
       'the canvas would never follow the dark mode',
   );
 }
