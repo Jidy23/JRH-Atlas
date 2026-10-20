@@ -23,13 +23,17 @@ Lima palet ada karena satu warna tidak bisa melayani lima mood belajar yang berb
 Semua aksen dipilih pada kecerahan cukup tinggi agar kontras terhadap latar gelap
 maupun terang lolos WCAG AA (diverifikasi `scripts/audit-kontras.ts` di CI).
 
-| Palet | Aksen | Alasan psikologis |
-|---|---|---|
-| Bawaan (sian) | `#22d3ee` | Sian diasosiasikan dengan teknologi, kebersihan, dan klinis. Cocok untuk aplikasi medis tanpa terasa dingin seperti biru murni. |
-| Samudra | `#38bdf8` | Biru laut menurunkan arousal, membantu sesi belajar panjang dan membaca teks panjang. |
-| Senja | `#fb7185` | Merah muda hangat memberi rasa akrab dan personal, untuk pengguna yang merasa sains itu jauh. |
-| Zamrud | `#34d399` | Hijau menandakan pertumbuhan dan kesehatan, sejalan dengan tema tubuh manusia. |
-| Koral | `#f472b6` | Kontras tinggi terhadap latar gelap, untuk pengguna yang butuh pembeda visual kuat. |
+| Palet | Aksen dekoratif | Aksen non-teks | Alasan psikologis |
+|---|---|---|---|
+| Bawaan (sian) | `#22d3ee` | `#0891b2` | Sian diasosiasikan dengan teknologi, kebersihan, dan klinis. Cocok untuk aplikasi medis tanpa terasa dingin seperti biru murni. |
+| Samudra | `#38bdf8` | `#0284c7` | Biru laut menurunkan arousal, membantu sesi belajar panjang dan membaca teks panjang. |
+| Senja | `#fb7185` | `#e11d48` | Merah muda hangat memberi rasa akrab dan personal, untuk pengguna yang merasa sains itu jauh. |
+| Zamrud | `#34d399` | `#059669` | Hijau menandakan pertumbuhan dan kesehatan, sejalan dengan tema tubuh manusia. |
+| Koral | `#f472b6` | `#db2777` | Kontras tinggi terhadap latar gelap, untuk pengguna yang butuh pembeda visual kuat. |
+
+Aksen dekoratif boleh terang karena hanya dipakai untuk isian lembut dan gradien.
+Aksen non-teks dipakai untuk indikator yang harus terlihat sebagai bentuk, jadi
+wajib lolos WCAG 1.4.11 (3:1) dan dipilih lebih gelap di mode terang.
 
 Latar tidak memakai hitam atau putih murni. Mode Gelap memakai `#0a0f1c` (biru malam
 bertint) dan mode Terang memakai `#f7f5f0` (kertas hangat), karena hitam murni
@@ -41,12 +45,18 @@ Satu motif: **garis tipis 1px sebagai pemisah struktur**. Dipakai di panel, foot
 dan kartu. Alasan: meniru garis anatomi pada atlas kedokteran, dan menggantikan
 kebutuhan akan bayangan bertumpuk.
 
+Ikon navigasi digambar sebagai SVG satu keluarga: viewBox 24, stroke 1,7px,
+`stroke-linecap: round`, tanpa isian. Alasan: glyph tipografi (◎ ▤ ✓ ▱ Aa ?)
+punya bobot dan baseline berbeda-beda, sehingga bar navigasi terbaca tidak sejajar
+walaupun ukurannya sama.
+
 ## Aturan yang mengikat
 
 1. Setiap warna dibaca dari token `tema.css`, tidak pernah literal di komponen. Ini
 yang membuat lima palet dan dua mode bekerja tanpa menduplikasi CSS.
 2. Satu focal action per layar. Saat ini `.primary-action` dan `.tombol.utama`.
-Gradien hanya diizinkan di sana.
+Gradien hanya diizinkan di sana, dan hanya lewat token `--gradien-fokus` supaya
+setiap ujungnya bisa diaudit.
 3. Tidak ada glow, tidak ada bayangan dekoratif berlapis. Hierarki dibawa oleh
 kontras, ukuran, dan spasi, bukan cahaya.
 4. Teks sekunder selalu memakai `--muted-foreground`, token yang sudah diaudit
@@ -54,6 +64,10 @@ kontrasnya. Tidak ada abu literal di komponen.
 5. Target sentuh minimum 44px, dan ini diuji otomatis di `scripts/ui-mobile-browser.mjs`.
 6. Tiga state wajib untuk setiap tampilan berdata: kosong, memuat, gagal. Contoh
 pola ada di `cangkang.tsx` (`ViewerBoundary` untuk gagal, `Suspense` untuk memuat).
+7. Indikator non-teks (cincin fokus, titik status, indikator tab aktif, isian
+progres, ibu jari scrollbar, batas bidang input) memakai `--aksen-nonteks` atau
+`--v-kontrol-garis`, **tidak pernah** `--aksen` mentah. Aksen mentah `#22d3ee`
+hanya 1,63:1 di latar terang dan gagal ambang 3:1. Audit menegakkan ini.
 
 ## Yang sengaja tidak dipakai
 
@@ -69,4 +83,5 @@ pola ada di `cangkang.tsx` (`ViewerBoundary` untuk gagal, `Suspense` untuk memua
 - `app/tema.css`: token palet dan mode.
 - `app/globals.css`: tata letak viewer 3D.
 - `app/akademi.css`: ruang belajar.
+- `app/redesign.css`: tata letak aplikasi, bar navigasi, dan ikon.
 - `app/polish.css`: lapisan koreksi hasil audit, tiap baris punya alasan.
