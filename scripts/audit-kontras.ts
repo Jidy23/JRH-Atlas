@@ -9,7 +9,8 @@
  *
  * Batas yang jujur: warna yang dibuat lewat color-mix() atau rgba() transparan
  * tidak dihitung kompositnya di sini. Untuk itu dipakai token teks solid
- * (--jrh-aksen-teks) yang memang dirancang menggantikannya.
+ * (--jrh-aksen-teks) yang memang dirancang menggantikannya. Pasangan yang
+ * dilewati DICETAK, bukan diam-diam dianggap lolos.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -34,7 +35,11 @@ function deklarasi(isi: string): Deklarasi {
   return hasil;
 }
 
-const scope: Scope = { dasar: new Map(), palet: new Map(), mode: new Map() };
+const scope: Scope = {
+  dasar: new Map<string, string>(),
+  palet: new Map<string, Deklarasi>(),
+  mode: new Map<string, Deklarasi>(),
+};
 
 for (const blok of buangKomentar(TEMA).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
   const selektor = blok[1].trim().replace(/\s+/g, ' ');
@@ -45,14 +50,14 @@ for (const blok of buangKomentar(TEMA).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
   }
   const palet = selektor.match(/^:root\[data-palet='([\w-]+)'\]$/);
   if (palet) {
-    const lama = scope.palet.get(palet[1]) ?? new Map();
+    const lama = scope.palet.get(palet[1]) ?? new Map<string, string>();
     for (const [k, v] of isi) lama.set(k, v);
     scope.palet.set(palet[1], lama);
     continue;
   }
   const mode = selektor.match(/^:root\[data-tema='([\w-]+)'\]$/);
   if (mode) {
-    const lama = scope.mode.get(mode[1]) ?? new Map();
+    const lama = scope.mode.get(mode[1]) ?? new Map<string, string>();
     for (const [k, v] of isi) lama.set(k, v);
     scope.mode.set(mode[1], lama);
   }
@@ -62,17 +67,21 @@ for (const blok of buangKomentar(TEMA).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
 function tokenEfektif(palet: string, mode: string): Deklarasi {
   const gabung: Deklarasi = new Map();
   for (const [k, v] of scope.dasar) gabung.set(k, v);
-  for (const [k, v] of scope.palet.get(palet) ?? []) gabung.set(k, v);
-  for (const [k, v] of scope.mode.get(mode) ?? []) gabung.set(k, v);
+  for (const [k, v] of scope.palet.get(palet) ?? new Map<string, string>()) gabung.set(k, v);
+  for (const [k, v] of scope.mode.get(mode) ?? new Map<string, string>()) gabung.set(k, v);
 
   const selesai: Deklarasi = new Map();
   const selesaikan = (nama: string, jejak: Set<string>): string | null => {
-    if (selesai.has(nama)) return selesai.get(nama)!;
+    const sudah = selesai.get(nama);
+    if (sudah !== undefined) return sudah;
     if (jejak.has(nama)) throw new Error(`Rujukan var() melingkar: ${[...jejak, nama].join(' -> ')}`);
     const nilai = gabung.get(nama);
     if (nilai === undefined) return null;
     const ref = nilai.match(/^var\(\s*(--[\w-]+)\s*\)$/);
-    if (!ref) { selesai.set(nama, nilai); return nilai; }
+    if (!ref) {
+      selesai.set(nama, nilai);
+      return nilai;
+    }
     jejak.add(nama);
     const dalam = selesaikan(ref[1], jejak);
     jejak.delete(nama);
@@ -81,13 +90,14 @@ function tokenEfektif(palet: string, mode: string): Deklarasi {
     return dalam;
   };
 
-  for (const nama of gabung.keys()) selesaikan(nama, new Set());
+  for (const nama of [...gabung.keys()]) selesaikan(nama, new Set<string>());
   return selesai;
 }
 
 /** [token teks, token latar, keterangan] — semuanya harus lolos AA. */
 const UJI: Array<[string, string, string]> = [
   ['--jrh-teks', '--jrh-bg', 'teks utama di latar'],
+  ['--jrh-teks', '--jrh-kartu', 'teks utama di kartu'],
   ['--jrh-redup', '--jrh-bg', 'teks redup di latar'],
   ['--jrh-redup', '--jrh-kartu', 'teks redup di kartu'],
   ['--jrh-aksen-teks', '--jrh-bg', 'aksen sebagai teks di latar'],
