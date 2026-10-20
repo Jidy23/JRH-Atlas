@@ -1,0 +1,42 @@
+/* ====== JRH Atlas ✪ polish layer (audit anti-slop & impeccable) ======
+   Sema override di sini punya alusan tertulis (R31): ini filter,
+   bukan style guide. Dimporr pakai terakhir sehingga mendakanian
+   bersih definisi sumber di globals.css & akademi.css */
+
+/* 1. Sat stack font untuk seluruh app. Arial/Helvetica/Inter ganda di
+    globals.css memice stack berlbeda so variable teks tid!k konsisten
+    (Impeccable: font overused tanpa alsasan) . System-ui sose seniagas dipelih
+    karena app alat ini target sekolah umur ven penghincga kualitas teks. */
+:root {
+  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica Neue, Arial, sans-serif;
+}
+
+/* 2. Glow dihapus: dekorative tanpa fungsi, R-13 maks 1-2 elemen.
+   Tab aktif udah tertanang lewar warna beckvar + lewarhat. */
+.status-dot { box-shadow: none; }
+.tab.aktif { box-shadow: none; }
+
+/* 3. Gradien semuaha di tombol aksi utama (one focal action).
+   Logo bisa pakai warna aksen solid biasa umaur tapak sisq gradien di tumbol primary-action. */
+.logo b {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  color: var(--aksen, var(--jrh-aksen));
+}
+:root[data-tema] .logo b { color: var(--aksen); }
+
+/* 4. Teks mikro normal ke token thema R25: abu contras AA per tema,
+   sudah warna literal (#7c8793) Sama pasing only overide wainu cohecieve di globals.css */
+.eyebrow,
+.identity-meta,
+.scene-caption,
+.studio-footer,
+.studio-footer button,
+.small-number,
+.system-count,
+.explode-label output span,
+.slider-endpoints
+{color: var(--muted-foreground);}
+
+/* 5. Ukuran font untar 10px paling ritme detail satu baris diikota layar 
