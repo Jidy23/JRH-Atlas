@@ -245,9 +245,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   border: 1px solid var(--v-kontrol-garis);
-  border-radius: 999px;
+  border-radius: var(--r-pil);
   background: var(--jrh-kartu);
   color: var(--jrh-redup);
   font-size: 12.5px;
@@ -275,7 +275,7 @@
 .tema-bagian + .tema-bagian { margin-top: 14px; }
 .tema-judul {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -285,7 +285,7 @@
 .tema-mode { display: flex; gap: 5px; }
 .mode {
   flex: 1;
-  padding: 9px 4px;
+  padding: 9px var(--sp-1);
   border: 1px solid var(--v-kontrol-garis);
   border-radius: 9px;
   background: transparent;
@@ -300,8 +300,8 @@
 .palet {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 9px;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 9px;
   border: 1px solid var(--v-kontrol-garis);
   border-radius: 10px;
   background: transparent;
@@ -314,10 +314,10 @@
 .palet-nama { display: block; font-size: 11.5px; font-weight: 700; line-height: 1.2; }
 .palet-asal { display: block; font-size: 9.5px; color: var(--jrh-redup); line-height: 1.2; }
 
-.tema-catatan { margin: 12px 0 0; font-size: 10.5px; color: var(--jrh-redup); text-align: center; }
+.tema-catatan { margin: var(--sp-3) 0 0; font-size: 10.5px; color: var(--jrh-redup); text-align: center; }
 
 @media (max-width: 640px) {
   .tema-label { display: none; }
-  .tema-tombol { padding: 8px 10px; }
+  .tema-tombol { padding: var(--sp-2) 10px; }
   .tema-panel { width: min(288px, calc(100vw - 24px)); right: -4px; }
 }

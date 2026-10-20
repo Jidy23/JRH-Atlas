@@ -25,6 +25,29 @@
         "diganti": 26,
         "dilewati_karena_fungsi": 0
       }
+    ],
+    "3": [
+      {
+        "berkas": "tema.css",
+        "px_sebelum": 46,
+        "px_sesudah": 37,
+        "diganti": 9,
+        "dilewati_karena_fungsi": 0
+      },
+      {
+        "berkas": "ekstra.css",
+        "px_sebelum": 16,
+        "px_sesudah": 16,
+        "diganti": 0,
+        "dilewati_karena_fungsi": 0
+      },
+      {
+        "berkas": "interaction.css",
+        "px_sebelum": 18,
+        "px_sesudah": 17,
+        "diganti": 1,
+        "dilewati_karena_fungsi": 0
+      }
     ]
   }
 }
