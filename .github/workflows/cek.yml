@@ -33,5 +33,10 @@ jobs:
         run: npm run check
       - name: Audit kontras WCAG
         run: npm run audit:kontras
+      # DESIGN.md aturan #1: warna komponen harus dibaca dari token, bukan
+      # literal. Tanpa langkah ini aturan itu hanya prosa; polish.css sempat
+      # dianggap "selesai" padahal ratusan warna literal masih tersebar.
+      - name: Audit token warna
+        run: npm run audit:token
       - name: Laporan dependensi
         run: npm audit || true

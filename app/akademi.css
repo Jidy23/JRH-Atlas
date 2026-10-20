@@ -1,6 +1,8 @@
 
 /* ===== JRH Atlas — ruang belajar ===== */
 
+/* Blok ini satu-satunya tempat warna literal di file ini: definisi token
+   fallback. Nilai mode terang/gelap datang dari tema.css. */
 :root {
   --jrh-bg: #0b1020;
   --jrh-kartu: #131a2e;
@@ -9,9 +11,17 @@
   --jrh-redup: #9aa9c7;
   --jrh-aksen: #22d3ee;
   --jrh-aksen2: #f59e0b;
+  --jrh-aksen3: #67e8f9;
+  --jrh-di-aksen: #06121c;
+  --jrh-di-salah: #ffffff;
   --jrh-benar: #22c55e;
   --jrh-salah: #ef4444;
   --jrh-radius: 16px;
+  --bayang-kartu: rgba(0, 0, 0, 0.05);
+  --bayang-panel: rgba(0, 0, 0, 0.27);
+  --cetak-bg: #ffffff;
+  --cetak-teks: #000000;
+  --cetak-garis: #cccccc;
 }
 
 /* ---------- Kerangka halaman ---------- */
@@ -32,7 +42,7 @@
   position: sticky;
   top: 0;
   z-index: 900;
-  background: rgba(11, 16, 32, 0.9);
+  background: color-mix(in srgb, var(--jrh-bg) 90%, transparent);
   border-bottom: 1px solid var(--jrh-garis);
   backdrop-filter: blur(14px);
   overflow-x: auto;
@@ -53,11 +63,11 @@
   cursor: pointer;
   transition: 160ms ease;
 }
-.tab:hover { background: #1a2340; color: var(--jrh-teks); }
+.tab:hover { background: color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu)); color: var(--jrh-teks); }
 .tab.aktif {
-  color: #04121c;
-  background: linear-gradient(135deg, var(--jrh-aksen), #67e8f9);
-  box-shadow: 0 6px 18px rgba(34, 211, 238, 0.26);
+  color: var(--jrh-di-aksen);
+  background: linear-gradient(135deg, var(--jrh-aksen), var(--jrh-aksen3));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--jrh-aksen) 26%, transparent);
 }
 
 .isi { flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -75,7 +85,7 @@
   gap: 4px;
   padding: 4px;
   margin-bottom: 22px;
-  background: #101728;
+  background: color-mix(in srgb, var(--jrh-bg) 92%, var(--jrh-kartu));
   border: 1px solid var(--jrh-garis);
   border-radius: 12px;
 }
@@ -92,7 +102,7 @@
   transition: 140ms ease;
 }
 .sub:hover { color: var(--jrh-teks); }
-.sub.aktif { background: #1e2a45; color: var(--jrh-teks); }
+.sub.aktif { background: color-mix(in srgb, var(--aksen) 16%, var(--jrh-kartu)); color: var(--jrh-teks); }
 
 .akademi h2 { margin: 0 0 6px; font-size: 23px; line-height: 1.3; letter-spacing: -0.02em; }
 .akademi h3 { margin: 0 0 10px; font-size: 18px; line-height: 1.4; }
@@ -116,7 +126,7 @@
 }
 .jbtn b { font-size: 15px; color: var(--jrh-teks); }
 .jbtn small { font-size: 11px; line-height: 1.35; }
-.jbtn:hover { border-color: #35456b; }
+.jbtn:hover { border-color: var(--aksen-garis); }
 .jbtn.aktif { border-color: var(--w); box-shadow: inset 0 0 0 1px var(--w); }
 .jbtn.aktif b { color: var(--w); }
 
@@ -128,9 +138,9 @@
 .lencana {
   display: inline-block;
   padding: 4px 11px;
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  border: 1px solid var(--aksen-garis);
   border-radius: 999px;
-  background: rgba(34, 211, 238, 0.1);
+  background: var(--aksen-lembut);
   color: var(--jrh-aksen);
   font-size: 10.5px;
   font-weight: 700;
@@ -142,7 +152,7 @@
   height: 5px;
   margin-top: 14px;
   border-radius: 99px;
-  background: #1b2540;
+  background: color-mix(in srgb, var(--jrh-teks) 10%, transparent);
   overflow: hidden;
 }
 .progres-isi {
@@ -169,14 +179,14 @@
   text-transform: uppercase;
   color: var(--jrh-redup);
 }
-.kartu-besar .isi { font-size: 15px; line-height: 1.72; color: #cfdbf3; margin: 10px 0 16px; }
+.kartu-besar .isi { font-size: 15px; line-height: 1.72; color: color-mix(in srgb, var(--jrh-teks) 82%, var(--jrh-redup)); margin: 10px 0 16px; }
 
 .organ-ringkas {
   padding: 14px;
   margin-bottom: 16px;
   border: 1px solid var(--jrh-garis);
   border-radius: 12px;
-  background: #0f172a;
+  background: color-mix(in srgb, var(--jrh-bg) 60%, var(--jrh-kartu));
 }
 .organ-nama { display: flex; align-items: center; gap: 12px; }
 .organ-nama .emoji { font-size: 24px; line-height: 1; }
@@ -190,14 +200,14 @@
   padding: 4px 10px;
   border: 1px solid var(--jrh-garis);
   border-radius: 999px;
-  background: #1e2a45;
-  color: #b9c8e4;
+  background: color-mix(in srgb, var(--jrh-teks) 8%, var(--jrh-kartu));
+  color: var(--jrh-redup);
   font-size: 11.5px;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.fakta { margin: 12px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.65; color: #c3d1ea; }
+.fakta { margin: 12px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.65; color: color-mix(in srgb, var(--jrh-teks) 78%, var(--jrh-redup)); }
 .fakta li { margin-bottom: 5px; }
 
 .mitos {
@@ -205,21 +215,21 @@
   padding: 10px 12px;
   border-left: 3px solid var(--jrh-aksen2);
   border-radius: 0 8px 8px 0;
-  background: rgba(245, 158, 11, 0.08);
+  background: color-mix(in srgb, var(--jrh-aksen2) 8%, transparent);
   font-size: 13px;
   line-height: 1.6;
-  color: #f2d9a8;
+  color: color-mix(in srgb, var(--jrh-aksen2) 60%, var(--jrh-teks));
 }
 
 .refleksi {
   margin: 16px 0 0;
   padding: 12px 14px;
-  border: 1px dashed rgba(34, 211, 238, 0.35);
+  border: 1px dashed var(--aksen-garis);
   border-radius: 10px;
-  background: rgba(34, 211, 238, 0.07);
+  background: var(--aksen-lembut);
   font-size: 13.5px;
   line-height: 1.6;
-  color: #bfeaf5;
+  color: var(--jrh-teks);
 }
 
 .navigasi { display: flex; align-items: center; gap: 10px; margin-top: 18px; }
@@ -229,19 +239,19 @@
   padding: 12px 16px;
   border: 1px solid var(--jrh-garis);
   border-radius: 11px;
-  background: #16203a;
+  background: color-mix(in srgb, var(--jrh-teks) 6%, var(--jrh-kartu));
   color: var(--jrh-teks);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: 150ms ease;
 }
-.tombol:hover:not(:disabled) { background: #1e2a45; }
+.tombol:hover:not(:disabled) { background: color-mix(in srgb, var(--aksen) 12%, var(--jrh-kartu)); }
 .tombol:disabled { opacity: 0.4; cursor: not-allowed; }
 .tombol.utama {
   border-color: transparent;
-  background: linear-gradient(135deg, var(--jrh-aksen), #67e8f9);
-  color: #04121c;
+  background: linear-gradient(135deg, var(--jrh-aksen), var(--jrh-aksen3));
+  color: var(--jrh-di-aksen);
 }
 .tombol.besar { width: 100%; margin-top: 8px; padding: 15px; font-size: 15px; }
 
@@ -259,7 +269,7 @@
   padding: 13px 15px;
   border: 1px solid var(--jrh-garis);
   border-radius: 11px;
-  background: #0f172a;
+  background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu));
   color: var(--jrh-teks);
   font-size: 14.5px;
   line-height: 1.45;
@@ -267,25 +277,25 @@
   cursor: pointer;
   transition: 150ms ease;
 }
-.pilih:hover:not(:disabled) { border-color: var(--jrh-aksen); background: #16203a; }
+.pilih:hover:not(:disabled) { border-color: var(--jrh-aksen); background: color-mix(in srgb, var(--aksen) 8%, var(--jrh-kartu)); }
 .pilih .huruf {
   flex: 0 0 26px;
   height: 26px;
   display: grid;
   place-items: center;
   border-radius: 7px;
-  background: #1e2a45;
+  background: color-mix(in srgb, var(--jrh-teks) 10%, var(--jrh-kartu));
   color: var(--jrh-redup);
   font-size: 12px;
   font-weight: 700;
 }
-.pilih.benar { border-color: var(--jrh-benar); background: rgba(34, 197, 94, 0.12); }
-.pilih.benar .huruf { background: var(--jrh-benar); color: #04120a; }
-.pilih.salah { border-color: var(--jrh-salah); background: rgba(239, 68, 68, 0.12); }
-.pilih.salah .huruf { background: var(--jrh-salah); color: #fff; }
+.pilih.benar { border-color: var(--jrh-benar); background: color-mix(in srgb, var(--jrh-benar) 12%, transparent); }
+.pilih.benar .huruf { background: var(--jrh-benar); color: var(--jrh-di-aksen); }
+.pilih.salah { border-color: var(--jrh-salah); background: color-mix(in srgb, var(--jrh-salah) 12%, transparent); }
+.pilih.salah .huruf { background: var(--jrh-salah); color: var(--jrh-di-salah); }
 
 .umpan { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--jrh-garis); }
-.umpan p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.65; color: #c9d6ee; }
+.umpan p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.65; color: color-mix(in srgb, var(--jrh-teks) 82%, var(--jrh-redup)); }
 
 .hasil { padding: 26px 18px; text-align: center; }
 .emoji-besar { display: block; margin-bottom: 6px; font-size: 50px; }
@@ -300,7 +310,7 @@
   padding: 10px 12px;
   border: 1px solid var(--jrh-garis);
   border-radius: 10px;
-  background: #0f172a;
+  background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu));
   color: var(--jrh-teks);
   font-size: 13.5px;
 }
@@ -316,7 +326,7 @@
   padding: 26px;
   border: 1px solid var(--jrh-garis);
   border-radius: var(--jrh-radius);
-  background: linear-gradient(160deg, #131a2e, #0e1526);
+  background: linear-gradient(160deg, var(--jrh-kartu), color-mix(in srgb, var(--jrh-bg) 70%, var(--jrh-kartu)));
   color: var(--jrh-teks);
   text-align: center;
   cursor: pointer;
@@ -324,8 +334,8 @@
 }
 .kartu:hover { border-color: var(--jrh-aksen); transform: translateY(-2px); }
 .kartu.balik {
-  border-color: rgba(34, 211, 238, 0.45);
-  background: linear-gradient(160deg, #0d2233, #0e1a2a);
+  border-color: var(--aksen-garis);
+  background: linear-gradient(160deg, color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu)), var(--jrh-kartu));
 }
 .kartu-sisi { font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; color: var(--jrh-redup); }
 .kartu strong { font-size: 18px; font-weight: 600; line-height: 1.55; }
@@ -334,7 +344,7 @@
 .catatan-kecil { margin-top: 14px; font-size: 11.5px; line-height: 1.6; color: var(--jrh-redup); text-align: center; }
 
 /* ---------- Detail organ (viewer) ---------- */
-.detail-organ { font-size: 13.5px; line-height: 1.65; color: #c9d6ee; }
+.detail-organ { font-size: 13.5px; line-height: 1.65; color: color-mix(in srgb, var(--jrh-teks) 82%, var(--jrh-redup)); }
 .detail-organ .inti { margin: 10px 0; font-size: 15px; font-weight: 600; color: var(--jrh-teks); }
 
 /* ---------- Ringkasan jenjang ---------- */
@@ -376,7 +386,7 @@
   gap: 8px 16px;
   padding: 10px 16px;
   border-bottom: 1px solid var(--jrh-garis);
-  background: #101728;
+  background: color-mix(in srgb, var(--jrh-bg) 92%, var(--jrh-kartu));
   font-size: 12.5px;
   line-height: 1.5;
   color: var(--jrh-redup);
@@ -387,14 +397,14 @@
   border: 0;
   border-radius: 999px;
   padding: 6px 12px;
-  background: rgba(34, 211, 238, 0.1);
+  background: var(--aksen-lembut);
   color: var(--jrh-aksen);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;
   transition: 150ms ease;
 }
-.tautan:hover { background: rgba(34, 211, 238, 0.2); }
+.tautan:hover { background: color-mix(in srgb, var(--aksen) 20%, transparent); }
 
 /* ---------- Mobile & aksesibilitas ---------- */
 @media (max-width: 640px) {

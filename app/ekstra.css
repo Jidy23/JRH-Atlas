@@ -39,7 +39,9 @@
   box-shadow: inset 0 0 0 1px var(--w, var(--aksen)), 0 8px 22px -14px var(--w, var(--aksen));
 }
 
-/* Kartu besar: garis aksen tipis di atas */
+/* Kartu besar: garis aksen tipis di atas.
+   DESIGN.md aturan 2: gradien hanya di .primary-action dan .tombol.utama,
+   jadi ini memakai aksen solid. */
 .kartu-besar { position: relative; overflow: hidden; }
 .kartu-besar::after {
   content: '';
@@ -48,8 +50,8 @@
   left: 0;
   right: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--aksen), var(--aksen-2), transparent);
-  opacity: 0.8;
+  background: var(--aksen);
+  opacity: 0.6;
 }
 
 /* Tombol utama: efek tekan yang jelas */
@@ -121,9 +123,11 @@
   }
 }
 
-/* Cetak: sembunyikan kontrol, tampilkan isi */
+/* Cetak: sembunyikan kontrol, tampilkan isi.
+   Kertas memang putih dan tinta memang hitam, jadi ini satu-satunya tempat
+   yang memakai token cetak, bukan token tema. */
 @media print {
   .tabbar, .tema, .navigasi, .subtab, .info-jelajah { display: none !important; }
-  .cangkang { background: #fff; color: #000; }
-  .kartu-besar, .kartu { border-color: #ccc; background: #fff; color: #000; }
+  .cangkang { background: var(--cetak-bg); color: var(--cetak-teks); }
+  .kartu-besar, .kartu { border-color: var(--cetak-garis); background: var(--cetak-bg); color: var(--cetak-teks); }
 }
