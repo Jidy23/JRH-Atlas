@@ -9,8 +9,10 @@ const browser=await chromium.launch();
 const reports=[];
 const MODES=['Terang','Gelap'];
 const PALETTES=['Nusantara','Samudra','Senja','Zamrud','Koral'];
-// The five educational pages; jelajah (3D viewer) is covered by the lazy-loading workflow.
+// Lima halaman edukasi; jelajah (viewer 3D) ditangani workflow lazy loading.
 const TABS=[['belajar','Belajar'],['kuis','Kuis'],['flashcard','Flashcard'],['glosarium','Glosarium'],['panduan','Panduan']];
+// Simpan detail pelanggaran supaya kegagalan bisa didiagnosis tanpa membuka log mentah.
+const ringkas=violations=>violations.map(v=>({id:v.id,impact:v.impact,help:v.help,nodes:v.nodes.map(n=>({target:n.target,html:n.html,summary:n.failureSummary}))}));
 try {
  for(const width of [390,1440]){
   const context=await browser.newContext({viewport:{width,height:900},colorScheme:'light'});
@@ -32,20 +34,21 @@ try {
      assert.equal(await page.locator('html').getAttribute('data-tema'),mode.toLowerCase());
      assert.equal(await page.locator('html').getAttribute('data-palet'),palette.toLowerCase());
      await page.keyboard.press('Escape');
-     assert.equal(await dialog.count(),0,'Escape closes the theme panel');
-     assert.ok(await trigger.evaluate(e=>e===document.activeElement),'Escape restores focus');
+     assert.equal(await dialog.count(),0,'Escape menutup panel tema');
+     assert.ok(await trigger.evaluate(e=>e===document.activeElement),'Escape mengembalikan fokus');
      await page.waitForTimeout(200);
      const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
-     const report={width,tab,mode,palette,violations:result.violations,errors:[...errors]};reports.push(report);
-     assert.equal(result.violations.length,0,`${width}/${tab}/${mode}/${palette}: axe violations`);
-     assert.equal(await pageHeading(label).count(),1,'Page survives theme changes');
-     assert.equal(new URL(page.url()).searchParams.get('tab'),tab,'Theme change must not navigate');
-     assert.deepEqual(errors,[],`${width}/${tab}/${mode}/${palette}: runtime errors`);
-     console.log(JSON.stringify({width,tab,mode,palette,violations:0}));
+     const report={width,tab,mode,palette,violations:ringkas(result.violations),errors:[...errors]};
+     reports.push(report);
+     assert.equal(await pageHeading(label).count(),1,'Halaman tetap utuh setelah ganti tema');
+     assert.equal(new URL(page.url()).searchParams.get('tab'),tab,'Ganti tema tidak boleh bernavigasi');
+     assert.deepEqual(errors,[],`${width}/${tab}/${mode}/${palette}: galat runtime`);
+     console.log(JSON.stringify({width,tab,mode,palette,violations:result.violations.length}));
+     if(result.violations.length)console.error(JSON.stringify(ringkas(result.violations),null,2));
     }
    }
   }
-  // The palette is a single persisted choice, so persistence is verified once per width.
+  // Palet adalah satu pilihan tersimpan, jadi persistensi diverifikasi sekali per lebar.
   await page.goto('http://localhost:3016/?tab=belajar',{waitUntil:'networkidle'});
   await trigger.click();
   await dialog.getByRole('button',{name:'Auto',exact:true}).click();
@@ -57,10 +60,10 @@ try {
   await dialog.getByRole('button',{name:'Gelap',exact:true}).click();
   await page.emulateMedia({colorScheme:'dark'});
   await page.emulateMedia({colorScheme:'light'});
-  assert.equal(await page.locator('html').getAttribute('data-tema'),'gelap','Explicit mode ignores system changes');
+  assert.equal(await page.locator('html').getAttribute('data-tema'),'gelap','Mode eksplisit mengabaikan perubahan sistem');
   await page.keyboard.press('Escape');
   assert.equal(await dialog.count(),0);
-  assert.ok(await trigger.evaluate(e=>e===document.activeElement),'Escape restores focus');
+  assert.ok(await trigger.evaluate(e=>e===document.activeElement),'Escape mengembalikan fokus');
   await page.reload({waitUntil:'networkidle'});
   assert.equal(await page.locator('html').getAttribute('data-tema'),'gelap');
   assert.equal(await page.locator('html').getAttribute('data-palet'),'koral');
@@ -68,9 +71,12 @@ try {
   await page.screenshot({path:`ui-evidence/${width}-theme-persistence.png`,fullPage:true});
   await context.close();
  }
- // 2 widths x 5 pages x 2 modes x 5 palettes.
- assert.equal(reports.length,100);
- assert.equal(reports.filter(r=>r.violations.length||r.errors.length).length,0,'Theme accessibility violations; see theme-report.json');
+ // 2 lebar x 5 halaman x 2 mode x 5 palet.
+ assert.equal(reports.length,100,`Mengharapkan 100 state tema, mendapat ${reports.length}`);
+ const gagal=reports.filter(r=>r.violations.length||r.errors.length);
+ if(gagal.length)console.error(JSON.stringify(gagal,null,2));
+ assert.equal(gagal.length,0,'Pelanggaran aksesibilitas tema; lihat theme-report.json');
+ console.log('100 state tema: nol pelanggaran axe WCAG, nol galat runtime.');
 } finally {
  await writeFile('ui-evidence/theme-report.json',JSON.stringify(reports,null,2));
  await browser.close();
