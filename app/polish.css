@@ -12,10 +12,10 @@
 
 /* R-06 satu stack font.
    globals.css memasang Helvetica/Arial di :root lalu menimpanya dengan Inter
-   di tengah file. .cangkang (akademi.css) memasang Inter, .app-rebuild
-   (redesign.css) juga memasang Inter. Selektor kelas menang atas :root, jadi
-   versi lama yang hanya menyasar :root tidak menyatukan apa pun. Sekarang
-   ketiga permukaan ditimpa sekaligus. */
+   di tengah file. .cangkang (akademi.css) memasang ui-sans-serif, .app-rebuild
+   (redesign.css) memasang Inter. Selektor kelas menang atas :root, jadi versi
+   lama yang hanya menyasar :root tidak menyatukan apa pun. Sekarang ketiga
+   permukaan ditimpa sekaligus. */
 :root,.cangkang,.app-rebuild{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
 
 /* R-13 tanpa glow dekoratif.
@@ -30,17 +30,21 @@
 /* R-01 gradien hanya di satu focal action per layar.
    Yang diizinkan hanya .primary-action dan .tombol.utama (DESIGN.md aturan 2).
    Gradien dekoratif berikut diganti warna aksen solid, dan setiap selektor
-   disamakan bobotnya dengan sumbernya. */
+   disamakan bobotnya dengan sumbernya.
+
+   Catatan kontras: teks di atas aksen memakai --jrh-aksen-di, bukan warna
+   literal, karena aksen palet berubah tiap tema. --aksen mentah hanya boleh
+   jadi latar dekoratif, tidak boleh jadi warna teks di mode terang. */
 :root[data-tema] .logo b{
   background:none;
   -webkit-background-clip:initial;
   background-clip:initial;
-  color:var(--aksen);
+  color:var(--jrh-aksen-teks);
 }
-:root[data-tema] .tab.aktif{background:var(--aksen);color:#04121c}
+:root[data-tema] .tab.aktif{background:var(--jrh-aksen-latar);color:var(--jrh-aksen-di)}
 .kartu-besar::after{background:var(--aksen);opacity:.6}
 :root[data-tema] .progres-isi,
-:root[data-tema] .loading-track i{background:var(--aksen)}
+:root[data-tema] .loading-track i{background:var(--jrh-aksen-latar)}
 :root[data-tema] .kartu{background:var(--jrh-kartu)}
 :root[data-tema] .kartu.balik{background:var(--jrh-kartu)}
 
@@ -52,8 +56,11 @@
 .small-number,.system-count,.slider-endpoints{color:var(--muted-foreground)}
 
 /* Batas jujur lapisan ini.
-   Aturan DESIGN.md nomor 1 ("tidak ada warna literal di komponen") BELUM
-   ditegakkan. globals.css, akademi.css, ekstra.css, dan interaction.css masih
-   memuat ratusan nilai warna literal. Menegakkannya butuh migrasi token, bukan
-   override, dan itu pekerjaan tersendiri. Jangan klaim aturan itu selesai
-   sebelum migrasinya benar-benar dikerjakan. */
+   DESIGN.md aturan 1 ("setiap warna dibaca dari token, tidak pernah literal
+   di komponen") sekarang DITEGAKKAN oleh scripts/audit-token.mjs di CI.
+   Warna literal hanya diizinkan di blok definisi token: :root di akademi.css,
+   tema.css, dan globals.css. Komponen wajib memakai var(--token).
+   Sisa pekerjaan yang diketahui: globals.css masih mendefinisikan ratusan
+   warna di dalam deklarasi komponen, bukan di :root. File itu dikecualikan
+   dari audit karena juga memuat token shadcn. Memindahkannya ke :root adalah
+   pekerjaan tersendiri; jangan klaim aturan itu tuntas untuk globals.css. */

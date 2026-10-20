@@ -1,18 +1,28 @@
 /* ===== JRH Atlas — sistem tema: 3 mode x 5 palet =====
    Menimpa viewer 3D (globals.css) dan ruang belajar (akademi.css).
-   Semua komponen membaca variabel di bawah, bukan warna literal. */
+   Semua komponen membaca variabel di bawah, bukan warna literal.
+
+   Dua jenis aksen, dan bedanya penting:
+   - `--aksen`        : warna dekoratif (garis, isian lembut, gradien focal).
+                        Boleh terang; TIDAK dipakai untuk teks.
+   - `--jrh-aksen-teks`: versi aksen yang aman untuk teks di atas latar mode.
+                        Mode terang memakai versi yang digelapkan.
+   - `--jrh-aksen-latar` + `--jrh-aksen-di`: pasangan siap pakai untuk elemen
+                        berisi aksen (tab aktif, tombol terisi).
+   Semua pasangan diuji `scripts/audit-kontras.ts`, yang membaca file ini. */
 
 /* ---------- Palet: aksen per budaya Indonesia ---------- */
 :root {
   --aksen: #22d3ee;
   --aksen-2: #f59e0b;
+  --aksen-teks: #0e7490;
   --aksen-lembut: rgba(34, 211, 238, 0.12);
   --aksen-garis: rgba(34, 211, 238, 0.32);
 }
-:root[data-palet='samudra'] { --aksen: #38bdf8; --aksen-2: #818cf8; --aksen-lembut: rgba(56, 189, 248, 0.12); --aksen-garis: rgba(56, 189, 248, 0.32); }
-:root[data-palet='senja']   { --aksen: #fb7185; --aksen-2: #fbbf24; --aksen-lembut: rgba(251, 113, 133, 0.13); --aksen-garis: rgba(251, 113, 133, 0.34); }
-:root[data-palet='zamrud']  { --aksen: #34d399; --aksen-2: #a3e635; --aksen-lembut: rgba(52, 211, 153, 0.13); --aksen-garis: rgba(52, 211, 153, 0.34); }
-:root[data-palet='koral']   { --aksen: #f472b6; --aksen-2: #2dd4bf; --aksen-lembut: rgba(244, 114, 182, 0.13); --aksen-garis: rgba(244, 114, 182, 0.34); }
+:root[data-palet='samudra'] { --aksen: #38bdf8; --aksen-2: #818cf8; --aksen-teks: #0369a1; --aksen-lembut: rgba(56, 189, 248, 0.12); --aksen-garis: rgba(56, 189, 248, 0.32); }
+:root[data-palet='senja']   { --aksen: #fb7185; --aksen-2: #fbbf24; --aksen-teks: #b4441f; --aksen-lembut: rgba(251, 113, 133, 0.13); --aksen-garis: rgba(251, 113, 133, 0.34); }
+:root[data-palet='zamrud']  { --aksen: #34d399; --aksen-2: #a3e635; --aksen-teks: #047857; --aksen-lembut: rgba(52, 211, 153, 0.13); --aksen-garis: rgba(52, 211, 153, 0.34); }
+:root[data-palet='koral']   { --aksen: #f472b6; --aksen-2: #2dd4bf; --aksen-teks: #a8205a; --aksen-lembut: rgba(244, 114, 182, 0.13); --aksen-garis: rgba(244, 114, 182, 0.34); }
 
 /* ---------- MODE TERANG ---------- */
 :root[data-tema='terang'] {
@@ -24,8 +34,14 @@
   --jrh-redup: #66707e;
   --jrh-aksen: var(--aksen);
   --jrh-aksen2: var(--aksen-2);
+  --jrh-aksen-teks: var(--aksen-teks);
+  --jrh-aksen-latar: var(--aksen-teks);
+  --jrh-aksen-di: #ffffff;
+  --jrh-di-aksen: #06121c;
   --jrh-benar: #15803d;
-  --jrh-salah: #b91c1c;
+  --jrh-di-benar: #ffffff;
+  --jrh-salah: #991b1b;
+  --jrh-di-salah: #ffffff;
 
   /* viewer 3D (variabel shadcn di globals.css) */
   --background: #f3f4f4;
@@ -39,7 +55,7 @@
   --secondary: #e9ecef;
   --secondary-foreground: #20242b;
   --muted: #e9ecef;
-  --muted-foreground: #68727d;
+  --muted-foreground: #5b6672;
   --accent: #edf0f2;
   --accent-foreground: #20242b;
   --border: rgba(24, 37, 54, 0.1);
@@ -60,8 +76,14 @@
   --jrh-redup: #97a6c2;
   --jrh-aksen: var(--aksen);
   --jrh-aksen2: var(--aksen-2);
+  --jrh-aksen-teks: var(--aksen);
+  --jrh-aksen-latar: var(--aksen);
+  --jrh-aksen-di: #06121c;
+  --jrh-di-aksen: #06121c;
   --jrh-benar: #22c55e;
+  --jrh-di-benar: #06121c;
   --jrh-salah: #ef4444;
+  --jrh-di-salah: #06121c;
 
   --background: #0a0f1c;
   --foreground: #e9effb;
@@ -100,8 +122,8 @@
 :root[data-tema='gelap'] .identity .eyebrow,
 :root[data-tema='gelap'] .identity-meta,
 :root[data-tema='gelap'] .scene-caption,
-:root[data-tema='gelap'] .studio-footer { color: #97a6c2; }
-:root[data-tema='gelap'] .identity h1 { color: #e9effb; }
+:root[data-tema='gelap'] .studio-footer { color: var(--jrh-redup); }
+:root[data-tema='gelap'] .identity h1 { color: var(--jrh-teks); }
 
 /* Vignette lebih tegas di tema gelap */
 :root[data-tema='gelap'] .vignette {
@@ -113,17 +135,18 @@
 :root[data-tema] .view-controls button.active,
 :root[data-tema] .layer-presets button[aria-pressed='true'] {
   background: var(--aksen-lembut);
-  color: var(--aksen);
+  color: var(--jrh-aksen-teks);
 }
 :root[data-tema] .status-dot { background: var(--aksen); }
+/* Satu-satunya gradien di aplikasi: aksi fokus (DESIGN.md aturan #2). */
 :root[data-tema] .dock-reset .primary-action,
 :root[data-tema] .primary-action {
   background: linear-gradient(135deg, var(--aksen), var(--aksen-2));
   border-color: transparent;
-  color: #06121c;
+  color: var(--jrh-di-aksen);
 }
 :root[data-tema] .loading-track i {
-  background: linear-gradient(90deg, var(--aksen), var(--aksen-2));
+  background: var(--aksen);
 }
 
 /* ---------- Ruang belajar ikut tema ---------- */
@@ -132,17 +155,16 @@
 :root[data-tema] .tab { color: var(--jrh-redup); }
 :root[data-tema] .tab:hover { background: color-mix(in srgb, var(--jrh-teks) 8%, transparent); color: var(--jrh-teks); }
 :root[data-tema] .tab.aktif {
-  background: linear-gradient(135deg, var(--aksen), var(--aksen-2));
-  color: #06121c;
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--aksen) 30%, transparent);
+  background: var(--jrh-aksen-latar);
+  color: var(--jrh-aksen-di);
 }
 :root[data-tema] .subtab,
 :root[data-tema] .info-jelajah { background: color-mix(in srgb, var(--jrh-kartu) 80%, var(--jrh-bg)); }
 :root[data-tema] .sub.aktif { background: color-mix(in srgb, var(--aksen) 16%, var(--jrh-kartu)); color: var(--jrh-teks); }
 :root[data-tema] .lencana,
-:root[data-tema] .tautan { background: var(--aksen-lembut); border-color: var(--aksen-garis); color: var(--aksen); }
+:root[data-tema] .tautan { background: var(--aksen-lembut); border-color: var(--aksen-garis); color: var(--jrh-aksen-teks); }
 :root[data-tema] .progres { background: color-mix(in srgb, var(--jrh-teks) 10%, transparent); }
-:root[data-tema] .progres-isi { background: linear-gradient(90deg, var(--aksen), var(--aksen-2)); }
+:root[data-tema] .progres-isi { background: var(--jrh-aksen-latar); }
 :root[data-tema] .kartu-besar,
 :root[data-tema] .organ-ringkas,
 :root[data-tema] .panduan-item,
@@ -155,27 +177,28 @@
 :root[data-tema] .refleksi { background: var(--aksen-lembut); border-color: var(--aksen-garis); color: var(--jrh-teks); }
 :root[data-tema] .tombol { background: color-mix(in srgb, var(--jrh-teks) 6%, var(--jrh-kartu)); border-color: var(--jrh-garis); color: var(--jrh-teks); }
 :root[data-tema] .tombol:hover:not(:disabled) { background: color-mix(in srgb, var(--aksen) 12%, var(--jrh-kartu)); }
-:root[data-tema] .tombol.utama { background: linear-gradient(135deg, var(--aksen), var(--aksen-2)); color: #06121c; border-color: transparent; }
+/* Aksi fokus kedua yang diizinkan DESIGN.md aturan #2. */
+:root[data-tema] .tombol.utama { background: linear-gradient(135deg, var(--aksen), var(--aksen-2)); color: var(--jrh-di-aksen); border-color: transparent; }
 :root[data-tema] .jbtn { background: var(--jrh-kartu); border-color: var(--jrh-garis); }
-:root[data-tema] .jbtn.aktif b { color: var(--w, var(--aksen)); }
+:root[data-tema] .jbtn.aktif b { color: var(--w, var(--jrh-aksen-teks)); }
 :root[data-tema] .pilih { background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu)); border-color: var(--jrh-garis); color: var(--jrh-teks); }
 :root[data-tema] .pilih .huruf { background: color-mix(in srgb, var(--jrh-teks) 10%, var(--jrh-kartu)); color: var(--jrh-redup); }
-:root[data-tema] .kartu { background: linear-gradient(160deg, var(--jrh-kartu), color-mix(in srgb, var(--jrh-bg) 70%, var(--jrh-kartu))); border-color: var(--jrh-garis); color: var(--jrh-teks); }
-:root[data-tema] .kartu.balik { border-color: var(--aksen-garis); background: linear-gradient(160deg, color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu)), var(--jrh-kartu)); }
-:root[data-tema] .skor { color: var(--aksen); }
+:root[data-tema] .kartu { background: var(--jrh-kartu); border-color: var(--jrh-garis); color: var(--jrh-teks); }
+:root[data-tema] .kartu.balik { border-color: var(--aksen-garis); background: color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu)); }
+:root[data-tema] .skor { color: var(--jrh-aksen-teks); }
 :root[data-tema] .filter select,
 :root[data-tema] .cari { background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu)); border-color: var(--jrh-garis); color: var(--jrh-teks); }
 :root[data-tema] .glos-head { background: color-mix(in srgb, var(--jrh-bg) 55%, var(--jrh-kartu)); }
 :root[data-tema] .glos-row { border-color: color-mix(in srgb, var(--jrh-garis) 65%, transparent); }
 :root[data-tema] .glos-row:hover { background: var(--aksen-lembut); }
 :root[data-tema] .panduan-item { border-left-color: var(--aksen); }
-:root[data-tema] .logo b { background: linear-gradient(135deg, var(--aksen), var(--aksen-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+:root[data-tema] .logo b { color: var(--jrh-aksen-teks); }
 
 /* Kartu istilah di viewer */
 :root[data-tema] .id-card { background: var(--aksen-lembut); border-color: var(--aksen-garis); }
-:root[data-tema] .id-card-head { color: var(--aksen); }
-:root[data-tema='gelap'] .id-card > p { color: #cfdbf3; }
-:root[data-tema] .istilah-chip { background: var(--aksen-lembut); border-color: var(--aksen-garis); color: var(--aksen); }
+:root[data-tema] .id-card-head { color: var(--jrh-aksen-teks); }
+:root[data-tema='gelap'] .id-card > p { color: var(--jrh-redup); }
+:root[data-tema] .istilah-chip { background: var(--aksen-lembut); border-color: var(--aksen-garis); color: var(--jrh-aksen-teks); }
 
 /* ---------- Tombol & panel tema ---------- */
 .tema { position: relative; margin-left: auto; flex: 0 0 auto; }
@@ -232,7 +255,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.mode.aktif { border-color: var(--aksen); background: var(--aksen-lembut); color: var(--aksen); }
+.mode.aktif { border-color: var(--aksen); background: var(--aksen-lembut); color: var(--jrh-aksen-teks); }
 
 .tema-palet { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .palet {

@@ -2,10 +2,10 @@
 .app-rebuild :is(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--jrh-teks);outline-offset:3px}
 .app-rebuild .brand{color:var(--jrh-teks)}
 .app-rebuild .tema-tombol{min-height:44px;min-width:44px}
-:root[data-tema=terang] :is(.lencana,.tautan,.istilah-chip,.id-card-head,.mode.aktif){color:#263b48}
+:root[data-tema=terang] :is(.lencana,.tautan,.istilah-chip,.id-card-head,.mode.aktif){color:var(--primary)}
 :root[data-tema] .app-rebuild .jbtn.aktif b{color:var(--jrh-teks)}
 :root[data-tema] .app-rebuild .chip{color:var(--jrh-teks)}
-:root[data-tema=terang] :is(.top-actions button.active,.view-controls button.active,.layer-presets button[aria-pressed=true]){color:#263b48}
+:root[data-tema=terang] :is(.top-actions button.active,.view-controls button.active,.layer-presets button[aria-pressed=true]){color:var(--primary)}
 :root[data-tema] .explorer-frame .layer-presets button{color:var(--jrh-teks)}
 :root[data-tema] .explorer-frame .panel-heading .small-number{color:var(--jrh-teks);background:var(--jrh-bg)}
 .app-rebuild .akademi .kartu-besar{animation:none;color:var(--jrh-teks)}
@@ -23,7 +23,7 @@
 :root[data-tema] .app-rebuild .tema .palet .palet-asal{color:var(--jrh-teks)}
 :root[data-tema] .app-rebuild .tema .palet.aktif{border:2px solid var(--aksen);background:var(--jrh-kartu)}
 @media(min-width:901px){.explorer-frame .mobile-only{display:none}.explorer-frame .desktop-only{display:flex}}
-@media(max-width:900px){.explorer-frame .desktop-only{display:none}.explorer-frame .layers-panel.mobile-open{background:var(--jrh-kartu);box-shadow:0 12px 40px #0004}.explorer-frame .system-list{overflow-y:auto;overscroll-behavior:contain}.explorer-frame .system-row{min-height:44px}.explorer-frame .search-panel{background:var(--jrh-kartu)}}
+@media(max-width:900px){.explorer-frame .desktop-only{display:none}.explorer-frame .layers-panel.mobile-open{background:var(--jrh-kartu);box-shadow:0 12px 40px var(--bayang-panel)}.explorer-frame .system-list{overflow-y:auto;overscroll-behavior:contain}.explorer-frame .system-row{min-height:44px}.explorer-frame .search-panel{background:var(--jrh-kartu)}}
 @media(max-width:480px){.explorer-frame .bottom-dock{gap:8px;padding:12px}.explorer-frame .dock-reset{min-width:44px}.explorer-frame .dock-reset span{display:none}.explorer-frame .explode-control{min-width:0}.app-rebuild .app-navigation a{overflow-wrap:anywhere}}
 
 /* The base sheet tints every plain button with a light-theme ink on hover
