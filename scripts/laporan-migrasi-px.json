@@ -1,0 +1,14 @@
+{
+  "catatan": "Laporan migrasi px bertahap. Angka diukur, bukan ditebak.",
+  "tahap": {
+    "1": [
+      {
+        "berkas": "globals.css",
+        "px_sebelum": 636,
+        "px_sesudah": 541,
+        "diganti": 95,
+        "dilewati_karena_fungsi": 0
+      }
+    ]
+  }
+}
