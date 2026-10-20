@@ -1,7 +1,7 @@
 import {flushSync} from 'react-dom';
 import {registerAtlasTools} from './agent-tools';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {Activity,ArrowUpRight,BookOpen,ChevronRight,Focus,Info,Layers3,Pause,RotateCcw,RotateCw,Search,X} from 'lucide-react';
+import {Activity,ArrowUpRight,BookOpen,ChevronRight,Focus,Info,Layers3,RotateCcw,Search,X} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
 import {Slider} from '@/components/ui/slider';
@@ -12,12 +12,17 @@ import AnatomyScene from './scene';
 import {DEFAULT_VISIBLE,SYSTEMS,EXPLANATIONS,explanation,type Atlas,type Concept,type SceneState,type SystemId,type View} from './anatomy';
 import {keIndonesia,istilahDalam,cocok} from './istilah';
 import {organByName} from './kurikulum';
-const initial:SceneState={explode:0,visible:DEFAULT_VISIBLE,selected:[],isolate:false,view:'three-quarter',rotate:false,reset:0,inspectorOpen:false};
+const initial:SceneState={explode:0,visible:DEFAULT_VISIBLE,selected:[],isolate:false,view:'three-quarter',reset:0,inspectorOpen:false};
 
 /** Sorotan dari Mode Belajar: sistem yang ditampilkan + organ yang dipilih. */
 export type Sorotan={sistem?:string[];organ?:string};
 
 interface Props{sorotan?:Sorotan|null}
+
+// Tiga sudut pandang, bukan empat. Kamera dikunci pada +-90 derajat mendatar
+// (lihat scene.tsx), jadi "tampak belakang" di 180 derajat tidak bisa dicapai.
+// Menyisakan tombolnya berarti menyediakan tombol yang tidak melakukan apa pun.
+const SUDUT:[View,string,string][]=[['three-quarter','¾','Tampak serong'],['front','F','Tampak depan'],['side','S','Tampak samping']];
 
 export default function Home({sorotan}:Props){
  const detailTitle=useRef<HTMLHeadingElement>(null);
@@ -30,9 +35,9 @@ export default function Home({sorotan}:Props){
  const selectedParts=state.selected.map(id=>parts.get(id)).filter(p=>!!p),selected=selectedParts[0],system=SYSTEMS.find(s=>s.id===selected?.system);
  const visibleCount=atlas?.parts.filter(p=>state.isolate?state.selected.includes(p.id):state.visible.includes(p.system)||state.selected.includes(p.id)).length??0;
  const results=useMemo(()=>{if(!atlas)return[];const term=query.toLowerCase().trim();if(!term)return ['heart','brain','liver','stomach','spleen','pancreas','urinary bladder','trachea'].map(name=>atlas.concepts.find(c=>c.name.toLowerCase()===name)).filter((x):x is Concept=>!!x);return atlas.concepts.filter(c=>c.name.toLowerCase().includes(term)||c.id.toLowerCase().includes(term)||cocok(c.name,term)).sort((a,b)=>a.name.length-b.name.length).slice(0,80);},[atlas,query]);
- const choose=(c:Concept)=>{setChosen(c);setState(s=>({...s,selected:c.elements,isolate:false,rotate:false}));setDetails(true);setPanel(null);};
+ const choose=(c:Concept)=>{setChosen(c);setState(s=>({...s,selected:c.elements,isolate:false}));setDetails(true);setPanel(null);};
  useEffect(()=>{if(!atlas)return;return registerAtlasTools(atlas,c=>flushSync(()=>choose(c)));},[atlas]);
- const choosePart=(id:string)=>{const p=parts.get(id);if(!p)return;setChosen({id:p.conceptId,name:p.name,elements:[id]});setState(s=>({...s,selected:[id],isolate:false,rotate:false}));setDetails(true);setPanel(null);};
+ const choosePart=(id:string)=>{const p=parts.get(id);if(!p)return;setChosen({id:p.conceptId,name:p.name,elements:[id]});setState(s=>({...s,selected:[id],isolate:false}));setDetails(true);setPanel(null);};
  const toggle=(id:SystemId)=>{setDetails(false);setState(s=>({...s,selected:[],isolate:false,visible:s.visible.includes(id)?s.visible.filter(x=>x!==id):[...s.visible,id]}));};
  const reset=()=>{setState(s=>({...initial,visible:DEFAULT_VISIBLE,reset:s.reset+1}));setChosen(null);setDetails(false);setPanel(null);};
  const openPanel=(next:'layers'|'search')=>{setDetails(false);setPanel(p=>p===next?null:next);};
@@ -42,7 +47,7 @@ export default function Home({sorotan}:Props){
   if(!atlas||!sorotan)return;
   if(sorotan.sistem){
    const sistem=sorotan.sistem as SystemId[];
-   setState(s=>({...s,visible:sistem,selected:[],isolate:false,explode:0,rotate:false,reset:s.reset+1}));
+   setState(s=>({...s,visible:sistem,selected:[],isolate:false,explode:0,reset:s.reset+1}));
   }
   if(sorotan.organ){
    const nama=sorotan.organ.toLowerCase();
@@ -76,10 +81,10 @@ export default function Home({sorotan}:Props){
    <div className="panel-foot"><span>{visibleCount.toLocaleString('id-ID')} bagian terlihat</span><Button variant="ghost" onClick={()=>setState(s=>({...s,visible:[],selected:[],isolate:false}))}>Sembunyikan semua</Button></div>
   </section>
   {panel==='search'&&<section className="search-panel glass" aria-label="Cari anatomi"><div className="panel-heading"><span>Cari struktur</span><Button variant="ghost" className="icon-button" onClick={()=>setPanel(null)} aria-label="Tutup pencarian"><X size={18}/></Button></div><Combobox<Concept> items={results} value={null} onValueChange={value=>{if(value)choose(value);}} inputValue={query} onInputValueChange={setQuery} itemToStringLabel={c=>c.name} filter={null} open onOpenChange={open=>{if(!open)setPanel(null);}}><ComboboxInput autoFocus placeholder="Jantung, tulang paha, saraf…" aria-label="Cari struktur anatomi berdasarkan nama" showTrigger={false}/><ComboboxContent className="anatomy-search-results"><ComboboxEmpty>Tidak ada struktur yang cocok.</ComboboxEmpty><ComboboxList>{(c:Concept)=><ComboboxItem key={c.id} value={c}><span className="search-result-name">{c.name}</span>{keIndonesia(c.name)!==c.name&&<small className="search-result-id">{keIndonesia(c.name)}</small>}<span className="small-number">{c.elements.length} bagian</span></ComboboxItem>}</ComboboxList></ComboboxContent></Combobox><p className="search-note">{query?'Menampilkan maksimal 80 hasil. Persempit pencarian untuk struktur kecil.':'Coba kata Indonesia (jantung, ginjal) atau nama ilmiahnya.'}</p></section>}
-  <nav className="view-controls glass" aria-label="Kontrol kamera">{(['three-quarter','front','side','back'] as View[]).map((v,i)=><Button variant="ghost" key={v} className={state.view===v?'active':''} aria-pressed={state.view===v} disabled={state.explode>.8&&v!=='front'} onClick={()=>setState(s=>({...s,view:v,reset:s.reset+1,rotate:false}))} title={['Tampak serong','Tampak depan','Tampak samping','Tampak belakang'][i]} aria-label={['Tampak serong','Tampak depan','Tampak samping','Tampak belakang'][i]}><span>{['¾','F','S','B'][i]}</span></Button>)}<i/><Button variant="ghost" disabled={state.explode>=.4} aria-label={state.rotate?'Hentikan rotasi':'Putar otomatis'} title="Putar otomatis" className={state.rotate?'active':''} onClick={()=>setState(s=>({...s,rotate:!s.rotate}))}>{state.rotate?<Pause size={17}/>:<RotateCw size={18}/>}</Button><Button variant="ghost" aria-label="Atur ulang tampilan" title="Atur ulang" onClick={reset}><RotateCcw size={17}/></Button></nav>
+  <nav className="view-controls glass" aria-label="Kontrol kamera">{SUDUT.map(([v,singkat,label])=><Button variant="ghost" key={v} className={state.view===v?'active':''} aria-pressed={state.view===v} disabled={state.explode>.8&&v!=='front'} onClick={()=>setState(s=>({...s,view:v,reset:s.reset+1}))} title={label} aria-label={label}><span>{singkat}</span></Button>)}<i/><Button variant="ghost" aria-label="Atur ulang tampilan" title="Atur ulang" onClick={reset}><RotateCcw size={17}/></Button></nav>
   <div className="scene-caption"><span className="caption-line"/><span>{state.isolate?(chosen?keIndonesia(chosen.name).toUpperCase():'STRUKTUR TERPILIH'):state.explode>.95?'INVENTARIS ANATOMI':state.explode>.05?'STRUKTUR TERPISAH':'MANUSIA DEWASA · LAKI-LAKI'}</span><span className="caption-line"/></div>
-  <div className="bottom-dock glass"><Button variant="ghost" className="mobile-only dock-layers" onClick={()=>openPanel('layers')} aria-label="Buka lapisan sistem"><Layers3 size={20}/><span>Sistem</span></Button><div className="explode-control"><div className="explode-label"><label id="explode-label">Pisahkan anatomi</label><output>{Math.round(state.explode*100)}<span>%</span></output></div><Slider aria-labelledby="explode-label" min={0} max={100} step={1} value={[state.explode*100]} onValueChange={v=>setState(s=>({...s,explode:(Array.isArray(v)?v[0]:v)/100,view:(Array.isArray(v)?v[0]:v)>80?'front':s.view,rotate:false}))}/><div className="slider-endpoints"><span>Utuh</span><span>Semua bagian</span></div></div><Button variant="ghost" className="dock-reset" onClick={reset} aria-label="Satukan dan atur ulang"><RotateCcw size={18}/><span>Atur ulang</span></Button></div>
-  <footer className="studio-footer"><span>Geser untuk memutar <b>·</b> Cubit untuk zoom <b>·</b> Ketuk untuk memeriksa</span><Button variant="ghost" onClick={()=>{setDetails(false);setPanel(null);setAbout(true);}}>Sumber & kredit <ArrowUpRight size={12}/></Button></footer>
+  <div className="bottom-dock glass"><Button variant="ghost" className="mobile-only dock-layers" onClick={()=>openPanel('layers')} aria-label="Buka lapisan sistem"><Layers3 size={20}/><span>Sistem</span></Button><div className="explode-control"><div className="explode-label"><label id="explode-label">Pisahkan anatomi</label><output>{Math.round(state.explode*100)}<span>%</span></output></div><Slider aria-labelledby="explode-label" min={0} max={100} step={1} value={[state.explode*100]} onValueChange={v=>setState(s=>({...s,explode:(Array.isArray(v)?v[0]:v)/100,view:(Array.isArray(v)?v[0]:v)>80?'front':s.view}))}/><div className="slider-endpoints"><span>Utuh</span><span>Semua bagian</span></div></div><Button variant="ghost" className="dock-reset" onClick={reset} aria-label="Satukan dan atur ulang"><RotateCcw size={18}/><span>Atur ulang</span></Button></div>
+  <footer className="studio-footer"><span>Geser ke kiri–kanan untuk memutar <b>·</b> Cubit untuk zoom <b>·</b> Ketuk untuk memeriksa</span><Button variant="ghost" onClick={()=>{setDetails(false);setPanel(null);setAbout(true);}}>Sumber & kredit <ArrowUpRight size={12}/></Button></footer>
   {progress<100&&!error&&<div className="loading glass" role="status"><Activity size={18}/><div><strong>Menyiapkan anatomi</strong><span>{progress}% · Memuat {atlas?.parts.length.toLocaleString('id-ID')??'2.234'} bagian</span><div className="loading-track"><i style={{width:`${progress}%`}}/></div></div></div>}
   {nothingVisible&&<div className="loading glass empty-state" role="status"><div><strong>Tidak ada sistem yang ditampilkan</strong><span>Pilih minimal satu sistem organ di panel, atau tampilkan kembali susunan awal.</span></div><Button variant="ghost" onClick={()=>setState(s=>({...s,visible:DEFAULT_VISIBLE,selected:[],isolate:false}))}>Tampilkan susunan awal</Button></div>}
   {error&&<div className="loading glass error" role="alert"><p>{error}</p><Button variant="ghost" onClick={()=>location.reload()}>Muat ulang</Button></div>}
