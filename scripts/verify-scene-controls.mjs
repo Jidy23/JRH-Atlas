@@ -26,6 +26,15 @@
 // guard now asserts the opposite: horizontal rotation must stay unbounded, and
 // the back view must remain reachable.
 //
+// The theme guard was itself wrong for a long time. It demanded
+// `attributeFilter: [...'data-theme'...]`, but app/tema.ts writes `data-tema`
+// and `data-palet` (Indonesian, matching tema.css). So the check passed while
+// scene.tsx read `dataset.theme` — an attribute nobody ever set. `dark` was
+// always false, the 3D canvas stayed light in dark mode, and the
+// MutationObserver never fired on a theme switch. axe could not catch it
+// because it inspects the DOM, not the canvas pixels. The guard now pins the
+// real attribute names and explicitly rejects the invented English ones.
+//
 // Usage: node scripts/verify-scene-controls.mjs
 import {readFileSync} from 'node:fs';
 import * as T from 'three';
@@ -69,7 +78,7 @@ for (const method of cameraMethods) {
 }
 
 // Theme contract: the canvas colour must be derived from CSS custom properties
-// and re-applied when data-theme / data-palette change.
+// and re-applied when the theme actually changes.
 const literalClearColor = /setClearColor\(\s*['"`]/.test(source);
 if (literalClearColor) {
   problems.push('setClearColor() is called with a colour literal; read --background so the canvas follows the theme');
@@ -77,8 +86,22 @@ if (literalClearColor) {
 if (!/getComputedStyle\(\s*document\.documentElement\s*\)/.test(source)) {
   problems.push('scene.tsx does not read CSS custom properties from document.documentElement');
 }
-if (!/attributeFilter:\s*\[[^\]]*'data-theme'/.test(source)) {
-  problems.push("scene.tsx does not observe the 'data-theme' attribute, so the canvas will not repaint on theme change");
+
+// The attribute names are the whole bug: tema.ts writes data-tema / data-palet.
+if (/dataset\.(?:theme|palette)\b/.test(source)) {
+  problems.push(
+    "scene.tsx reads dataset.theme / dataset.palette, but tema.ts writes data-tema / data-palet; " +
+      'the canvas would never follow the dark mode',
+  );
+}
+if (!/dataset\.tema\s*===\s*'gelap'/.test(source)) {
+  problems.push("scene.tsx does not read documentElement.dataset.tema === 'gelap', so it cannot know the active mode");
+}
+if (!/attributeFilter:\s*\[[^\]]*'data-tema'/.test(source)) {
+  problems.push("scene.tsx does not observe the 'data-tema' attribute, so the canvas will not repaint on theme change");
+}
+if (!/attributeFilter:\s*\[[^\]]*'data-palet'/.test(source)) {
+  problems.push("scene.tsx does not observe the 'data-palet' attribute, so the canvas will not repaint on palette change");
 }
 if (!/themeObserver\.disconnect\(\)/.test(source)) {
   problems.push('themeObserver is never disconnected in the effect cleanup');
@@ -128,7 +151,7 @@ console.log(
   `app/scene.tsx only uses three@${T.REVISION} APIs ` +
     `(${controlProps.length} control props, ${touchMembers.length} touch modes, ` +
     `${mouseMembers.length} mouse actions, ${cameraMethods.length} camera methods checked), ` +
-    'keeps the canvas on the CSS theme tokens, ' +
+    'keeps the canvas on the CSS theme tokens using the real data-tema / data-palet attributes, ' +
     'holds the camera level while allowing a full 360 degrees of horizontal rotation, ' +
     'and keeps the back view reachable.',
 );

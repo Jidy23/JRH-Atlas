@@ -76,28 +76,47 @@ export const ISTILAH: Record<string, string> = {
   superficial: 'permukaan',
 };
 
+/* Kunci diurutkan dan regex-nya disusun SEKALI di tingkat modul.
+   Sebelumnya `keIndonesia` mengurutkan ulang kamus pada setiap panggilan,
+   sedangkan pencarian memanggilnya untuk 3.432 konsep pada setiap ketikan.
+   Jadi pengurutan O(n log n) dan kompilasi ~70 RegExp itu terulang ribuan kali
+   per huruf — pekerjaan yang hasilnya selalu sama. */
+const KUNCI_URUT = Object.keys(ISTILAH).sort((a, b) => b.length - a.length);
+
+const lolosRegex = (teks: string) => teks.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const POLA_GANTI = KUNCI_URUT.map((k) => [new RegExp(`\\b${lolosRegex(k)}\\b`, 'gi'), ISTILAH[k]] as const);
+const POLA_KANDUNG = KUNCI_URUT.map((k) => [new RegExp(`\\b${lolosRegex(k)}\\b`, 'i'), ISTILAH[k]] as const);
+
+/* Hasil terjemahan di-cache: atlas hanya punya beberapa ribu nama unik dan
+   setiap nama dipanggil berkali-kali (judul panel, chip, pencarian, sorotan). */
+const CACHE_MAKS = 4096;
+const CACHE = new Map<string, string>();
+
 /** Terjemahkan istilah dengan mengganti kata utuh, mempertahankan selebihnya. */
 export function keIndonesia(nama: string): string {
-  let hasil = nama.toLowerCase();
-  // frasa lebih panjang didahulukan
-  const urut = Object.keys(ISTILAH).sort((a, b) => b.length - a.length);
-  for (const k of urut) {
-    const re = new RegExp(`\\b${k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
-    hasil = hasil.replace(re, ISTILAH[k]);
-  }
-  return hasil
+  const kunci = nama.toLowerCase();
+  const tersimpan = CACHE.get(kunci);
+  if (tersimpan !== undefined) return tersimpan;
+
+  let hasil = kunci;
+  // Frasa lebih panjang didahulukan supaya 'small intestine' tidak dipecah dulu.
+  for (const [re, ganti] of POLA_GANTI) hasil = hasil.replace(re, ganti);
+
+  const akhir = hasil
     .split(/\s+/)
     .map((w, i) => (i === 0 ? w.charAt(0).toUpperCase() + w.slice(1) : w))
     .join(' ');
+
+  if (CACHE.size >= CACHE_MAKS) CACHE.clear();
+  CACHE.set(kunci, akhir);
+  return akhir;
 }
 
 /** Kembalikan daftar istilah Indonesia unik yang terkandung dalam nama. */
 export function istilahDalam(nama: string): string[] {
   const n = nama.toLowerCase();
   const out = new Set<string>();
-  for (const k of Object.keys(ISTILAH)) {
-    if (new RegExp(`\\b${k}\\b`, 'i').test(n)) out.add(ISTILAH[k]);
-  }
+  for (const [re, ganti] of POLA_KANDUNG) if (re.test(n)) out.add(ganti);
   return [...out];
 }
 
