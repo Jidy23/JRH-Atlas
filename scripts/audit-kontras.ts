@@ -163,6 +163,17 @@ function urai(nilai: string): RGBA | null {
   }
 }
 
+/** Persentase dua sisi color-mix(); yang kosong diisi dari sisi lainnya. */
+function persenCampuran(kiri: number | null, kanan: number | null): [number, number] {
+  if (kiri === null && kanan === null) return [50, 50];
+  if (kiri === null) {
+    const k = kanan as number;
+    return [100 - k, k];
+  }
+  if (kanan === null) return [kiri, 100 - kiri];
+  return [kiri, kanan];
+}
+
 /** color-mix(in srgb, A p%, B) sesuai spesifikasi: campur premultiplied alpha. */
 function uraiCampuran(s: string): RGBA | null {
   const m = s.match(/^color-mix\(\s*in\s+srgb\s*,([\s\S]+)\)$/);
@@ -178,16 +189,7 @@ function uraiCampuran(s: string): RGBA | null {
   const c1 = urai(kiri.nilai);
   const c2 = urai(kanan.nilai);
   if (!c1 || !c2) return null;
-  let p1 = kiri.persen;
-  let p2 = kanan.persen;
-  if (p1 === null && p2 === null) {
-    p1 = 50;
-    p2 = 50;
-  } else if (p1 === null) {
-    p1 = 100 - (p2 as number);
-  } else if (p2 === null) {
-    p2 = 100 - p1;
-  }
+  const [p1, p2] = persenCampuran(kiri.persen, kanan.persen);
   const a = (c1.a * p1 + c2.a * p2) / 100;
   if (a <= 0) return { r: 0, g: 0, b: 0, a: 0 };
   const kanal = (x1: number, x2: number) => (x1 * c1.a * p1 + x2 * c2.a * p2) / (a * 100);
