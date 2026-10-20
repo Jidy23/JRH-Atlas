@@ -10,6 +10,11 @@
 // rather than a hardcoded list, so it stays correct if the pinned three
 // version changes.
 //
+// It also guards the theme contract: three.js paints its own canvas, so the
+// 3D background can never come from CSS. A hardcoded setClearColor leaves a
+// bright grey rectangle in the middle of the dark UI, which is exactly the bug
+// this check now prevents from coming back.
+//
 // Usage: node scripts/verify-scene-controls.mjs
 import {readFileSync} from 'node:fs';
 import * as T from 'three';
@@ -52,8 +57,24 @@ for (const method of cameraMethods) {
   if (!(method in T.PerspectiveCamera.prototype)) problems.push(`PerspectiveCamera has no "${method}" method`);
 }
 
+// Theme contract: the canvas colour must be derived from CSS custom properties
+// and re-applied when data-theme / data-palette change.
+const literalClearColor = /setClearColor\(\s*['"`]/.test(source);
+if (literalClearColor) {
+  problems.push('setClearColor() is called with a colour literal; read --background so the canvas follows the theme');
+}
+if (!/getComputedStyle\(\s*document\.documentElement\s*\)/.test(source)) {
+  problems.push('scene.tsx does not read CSS custom properties from document.documentElement');
+}
+if (!/attributeFilter:\s*\[[^\]]*'data-theme'/.test(source)) {
+  problems.push("scene.tsx does not observe the 'data-theme' attribute, so the canvas will not repaint on theme change");
+}
+if (!/themeObserver\.disconnect\(\)/.test(source)) {
+  problems.push('themeObserver is never disconnected in the effect cleanup');
+}
+
 if (problems.length) {
-  console.error(`app/scene.tsx uses APIs that three@${T.REVISION} does not provide:`);
+  console.error(`app/scene.tsx uses APIs that three@${T.REVISION} does not provide, or breaks the theme contract:`);
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
@@ -61,5 +82,6 @@ if (problems.length) {
 console.log(
   `app/scene.tsx only uses three@${T.REVISION} APIs ` +
     `(${controlProps.length} control props, ${touchMembers.length} touch modes, ` +
-    `${mouseMembers.length} mouse actions, ${cameraMethods.length} camera methods checked).`,
+    `${mouseMembers.length} mouse actions, ${cameraMethods.length} camera methods checked) ` +
+    'and keeps the canvas on the CSS theme tokens.',
 );

@@ -35,6 +35,18 @@ try {
  await page.getByRole('button',{name:'Cari struktur anatomi',exact:true}).waitFor();
  await page.waitForFunction(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('/models/atlas.json')));
  assert.ok(scripts.size>initialScripts.length,'Viewer chunk must load on demand');
+ // three.js paints its own canvas, so CSS cannot reach the 3D background. If the
+ // viewer hardcodes a light clear colour, dark mode leaves a bright rectangle in
+ // the middle of the dark UI. Assert the canvas actually follows the theme.
+ await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.sceneTheme);
+ const themeSync=async(expected)=>{
+  await page.evaluate((mode)=>{document.documentElement.dataset.theme=mode;},expected);
+  await page.waitForFunction((mode)=>document.querySelector('.scene')?.dataset.sceneTheme===mode,expected);
+  assert.equal(await page.locator('html').getAttribute('data-theme'),expected);
+ };
+ await themeSync('gelap');
+ await themeSync('terang');
+ report.canvasFollowsTheme=true;
  await page.goBack();
  await page.getByRole('heading',{name:'Belajar',exact:true}).waitFor();
  report.states.push({initialScripts,initialBytes,viewerScripts:[...scripts].filter(p=>!initialScripts.includes(p)),errors});

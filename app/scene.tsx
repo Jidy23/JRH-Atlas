@@ -17,7 +17,7 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
   const abort=new AbortController();
   let renderer:T.WebGLRenderer;
   try{renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}catch{onError('Peramban ini tidak dapat menjalankan penampil 3D. Coba peramban yang mendukung WebGL.');return;}
-  renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<768?1.5:2));renderer.setClearColor('#f2f3f3');renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;el.appendChild(renderer.domElement);
+  renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<768?1.5:2));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;el.appendChild(renderer.domElement);
   renderer.domElement.setAttribute('aria-label','Anatomi manusia interaktif. Geser untuk memutar, cubit atau gulir untuk zoom, dan ketuk struktur untuk memeriksanya.');
   const scene=new T.Scene(),camera=new T.PerspectiveCamera(34,1,.005,100),controls=new OrbitControls(camera,renderer.domElement);
   camera.position.set(1.4,1.05,3.6);controls.target.set(0,.85,0);controls.enableDamping=true;controls.dampingFactor=.085;controls.minDistance=.07;controls.maxDistance=40;controls.maxPolarAngle=Math.PI*.52;controls.minPolarAngle=Math.PI*.01;controls.rotateSpeed=.85;controls.panSpeed=.9;controls.addEventListener('change',()=>{dirty=true;});
@@ -38,6 +38,13 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
   const markerMaterial=new T.PointsMaterial({color:0x64748b,size:5,sizeAttenuation:false,transparent:true,opacity:.72,depthTest:false});
   markerMaterial.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <clipping_planes_fragment>','#include <clipping_planes_fragment>\nif (distance(gl_PointCoord, vec2(0.5)) > 0.5) discard;');};
   const markers=new T.Points(markerGeometry,markerMaterial);markers.frustumCulled=false;markers.renderOrder=10;markers.visible=false;scene.add(markers);
+  // three.js mewarnai kanvasnya sendiri, jadi CSS tidak bisa menyentuh latar 3D.
+  // Tanpa ini, mode Gelap tetap menampilkan kotak abu-abu terang di tengah UI gelap.
+  // Baca token yang sama dengan tema.css dan terapkan ulang saat tema/palet berganti.
+  const themeColors=()=>{const css=getComputedStyle(document.documentElement),read=(name:string,fallback:string)=>css.getPropertyValue(name).trim()||fallback;const dark=document.documentElement.dataset.theme==='gelap';return{dark,clear:read('--background',dark?'#0a0f1c':'#f2f3f3'),stage:read('--muted',dark?'#1b2740':'#d5d9dc'),platform:read('--card',dark?'#121b2e':'#eeeeec'),line:read('--muted-foreground',dark?'#97a6c2':'#8c969f'),marker:read('--muted-foreground',dark?'#97a6c2':'#64748b')};};
+  const applyTheme=()=>{const t=themeColors();renderer.setClearColor(t.clear);(ground.material as T.MeshStandardMaterial).color.set(t.stage);(platform.material as T.MeshStandardMaterial).color.set(t.platform);(ring.material as T.MeshBasicMaterial).color.set(t.line);(innerRing.material as T.MeshBasicMaterial).color.set(t.line);markerMaterial.color.set(t.marker);renderer.toneMappingExposure=t.dark?0.95:1.12;el.dataset.sceneTheme=t.dark?'gelap':'terang';dirty=true;};
+  applyTheme();
+  const themeObserver=new MutationObserver(applyTheme);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});
   const hover=document.createElement('div');hover.className='part-hover';hover.setAttribute('role','tooltip');hover.hidden=true;el.appendChild(hover);
   type Target={index:number;x:number;y:number;left:number;right:number;top:number;bottom:number};let targets:Target[]=[];
   const projected=new T.Vector3();
@@ -150,7 +157,7 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
 
   };animate();
   const contextLost=(e:Event)=>{e.preventDefault();onError('Sesi 3D dijeda oleh perangkat Anda. Muat ulang halaman untuk melanjutkan.');};renderer.domElement.addEventListener('webglcontextlost',contextLost);
-  return()=>{disposed=true;abort.abort();cancelAnimationFrame(frame);observer.disconnect();controls.dispose();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());scene.traverse(o=>{if(o instanceof T.Mesh&&!geometries.includes(o.geometry)){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose());}});env.dispose();partTexture.dispose();selectionTexture.dispose();markerGeometry.dispose();markerMaterial.dispose();hover.remove();renderer.dispose();renderer.domElement.remove();};
+  return()=>{disposed=true;abort.abort();cancelAnimationFrame(frame);themeObserver.disconnect();observer.disconnect();controls.dispose();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());scene.traverse(o=>{if(o instanceof T.Mesh&&!geometries.includes(o.geometry)){o.geometry.dispose();const ms=Array.isArray(o.material)?o.material:[o.material];ms.forEach(m=>m.dispose());}});env.dispose();partTexture.dispose();selectionTexture.dispose();markerGeometry.dispose();markerMaterial.dispose();hover.remove();renderer.dispose();renderer.domElement.remove();};
  },[atlas]);
  return <div className="scene" ref={host}/>;
 }
