@@ -4,84 +4,88 @@
 :root{font-family:'Helvetica Neue',Arial,sans-serif;color:#20242b;background:#f3f4f4;--background:#f3f4f4;--foreground:#20242b;--card:#ffffff;--card-foreground:#20242b;--popover:#ffffff;--popover-foreground:#20242b;--primary:#263b48;--primary-foreground:#f3f4f4;--secondary:#e9ecef;--secondary-foreground:#20242b;--muted:#e9ecef;--muted-foreground:#5b6672;--accent:#edf0f2;--accent-foreground:#20242b;--destructive:#a8574a;--border:#18253618;--input:#18253622;--ring:#263b48;--radius:.5rem;color-scheme:light}
 @theme inline{--color-background:var(--background);--color-foreground:var(--foreground);--color-card:var(--card);--color-card-foreground:var(--card-foreground);--color-popover:var(--popover);--color-popover-foreground:var(--popover-foreground);--color-primary:var(--primary);--color-primary-foreground:var(--primary-foreground);--color-secondary:var(--secondary);--color-secondary-foreground:var(--secondary-foreground);--color-muted:var(--muted);--color-muted-foreground:var(--muted-foreground);--color-accent:var(--accent);--color-accent-foreground:var(--accent-foreground);--color-destructive:var(--destructive);--color-border:var(--border);--color-input:var(--input);--color-ring:var(--ring)}
 
-/* Token viewer 3D. Satu-satunya tempat warna literal di file ini; deklarasi
-   komponen wajib memakai var(--token) (DESIGN.md aturan #1). Nilai di bawah
-   adalah mode terang bawaan — tema.css menimpa variabel shadcn dan panel kaca
-   saat mode gelap aktif. Nama --v-teks-* sengaja mempertahankan nilai asli
-   supaya migrasi ini tidak mengubah tampilan; menyatukannya ke
-   --muted-foreground adalah pekerjaan terpisah. */
+/* Token viewer 3D. Tidak ada abu literal: token teks membaca --foreground /
+   --muted-foreground, permukaan membaca --card / --muted / --primary, dan
+   aksen membaca --aksen. tema.css menimpa token semantik itu per mode, jadi
+   mode gelap ikut otomatis tanpa blok --v-* terpisah (DESIGN.md #1 dan #4).
+   Yang tetap literal hanya bayangan, vignette, warna fokus, dan teks tooltip
+   gelap: nilai dekoratif yang sama di kedua mode. */
 :root{
   --v-fokus:#538d9a;
-  --v-tinta:#182536;
-  --v-tinta-04:#18253604;
-  --v-tinta-05:#18253605;
-  --v-tinta-08:#18253608;
-  --v-tinta-10:#18253610;
-  --v-tinta-12:#18253612;
-  --v-tinta-15:#18253615;
-  --v-tinta-18:#18253618;
-  --v-tinta-20:#18253620;
-  --v-tinta-22:#18253622;
-  --v-tinta-28:#18253628;
-  --v-kaca:#ffffffeb;
-  --v-kaca-garis:#25384a17;
+  --v-tinta:var(--foreground);
+  --v-tinta-04:color-mix(in srgb, var(--foreground) 1.5%, transparent);
+  --v-tinta-05:color-mix(in srgb, var(--foreground) 2%, transparent);
+  --v-tinta-08:color-mix(in srgb, var(--foreground) 3%, transparent);
+  --v-tinta-10:color-mix(in srgb, var(--foreground) 6%, transparent);
+  --v-tinta-12:color-mix(in srgb, var(--foreground) 7%, transparent);
+  --v-tinta-15:color-mix(in srgb, var(--foreground) 8%, transparent);
+  --v-tinta-18:color-mix(in srgb, var(--foreground) 9%, transparent);
+  --v-tinta-20:color-mix(in srgb, var(--foreground) 13%, transparent);
+  --v-tinta-22:color-mix(in srgb, var(--foreground) 13%, transparent);
+  --v-tinta-28:color-mix(in srgb, var(--foreground) 16%, transparent);
+  --v-kaca:color-mix(in srgb, var(--card) 92%, transparent);
+  --v-kaca-garis:var(--border);
   --v-kaca-bayang:0 16px 48px #2433440a;
   --v-kaca-bayang-modern:0 2px 5px #24334403,0 16px 48px #24334407;
   --v-vignette:#83919e0f;
-  --v-status:#458a85;
-  --v-status-bayang:0 0 12px #458a8526;
-  --v-putih:#ffffff;
-  --v-putih-d9:#ffffffd9;
-  --v-putih-ed:#ffffffed;
-  --v-putih-f5:#fffffff5;
-  --v-panel-angka:#eef1f3;
-  --v-preset-latar:#edf0f2;
-  --v-keluaran-latar:#edf1f3;
-  --v-input-latar:#f7f9fa;
-  --v-primer:#263b48;
-  --v-primer-hover:#3b5261;
-  --v-primer-12:#263b4812;
-  --v-primer-30:#263b4830;
-  --v-primer-40:#263b4840;
-  --v-switch:#536875;
+  --v-status:var(--aksen, #458a85);
+  --v-status-bayang:0 0 12px color-mix(in srgb, var(--aksen, #458a85) 15%, transparent);
+  --v-putih:var(--card);
+  --v-putih-d9:color-mix(in srgb, var(--card) 85%, transparent);
+  --v-putih-ed:color-mix(in srgb, var(--card) 93%, transparent);
+  --v-putih-f5:color-mix(in srgb, var(--card) 96%, transparent);
+  --v-panel-angka:var(--muted);
+  --v-preset-latar:var(--muted);
+  --v-keluaran-latar:var(--muted);
+  --v-input-latar:color-mix(in srgb, var(--muted) 60%, var(--card));
+  --v-primer:var(--primary);
+  --v-primer-hover:color-mix(in srgb, var(--primary) 78%, var(--foreground));
+  --v-primer-12:color-mix(in srgb, var(--primary) 7%, transparent);
+  --v-primer-30:color-mix(in srgb, var(--primary) 19%, transparent);
+  --v-primer-40:color-mix(in srgb, var(--primary) 25%, transparent);
+  /* Tidak membaca --primary: elemen pemakainya menimpa --primary dengan token
+     ini, jadi rantai balik akan membentuk siklus. */
+  --v-switch:color-mix(in srgb, var(--foreground) 55%, var(--muted-foreground));
+  /* Tooltip selalu gelap di kedua mode, jadi teksnya tetap terang literal. */
   --v-tooltip:#202e3bf5;
-  --v-scroll:#b9c1c8;
-  --v-scroll-detail:#b9c3cc;
-  --v-teks-h1-em:#586572;
-  --v-teks-eyebrow:#737d89;
-  --v-teks-meta:#78828c;
-  --v-teks-titik:#9aa3ab;
-  --v-teks-aksi:#515d69;
-  --v-teks-panel:#26313c;
-  --v-teks-redup:#7c8793;
-  --v-teks-preset:#65717e;
-  --v-teks-preset2:#697582;
-  --v-teks-preset-aktif:#233644;
-  --v-teks-angka:#687582;
-  --v-teks-pilih:#485866;
-  --v-teks-hitung:#87929d;
-  --v-teks-kaki:#75818d;
-  --v-teks-kontrol:#74818e;
-  --v-teks-label:#3c4956;
-  --v-teks-satuan:#7f8c98;
-  --v-teks-satuan2:#73818e;
-  --v-teks-dok:#687683;
-  --v-teks-dok2:#6c7a88;
-  --v-teks-footer:#73808c;
-  --v-teks-footer-tebal:#a0a9b2;
-  --v-teks-catatan:#78838f;
-  --v-teks-deskripsi:#66727f;
-  --v-teks-meta-kuat:#475665;
-  --v-teks-sekunder:#788694;
-  --v-teks-anggota:#687786;
-  --v-teks-about:#667481;
-  --v-teks-about-kuat:#364653;
-  --v-teks-tautan:#516d7b;
-  --v-teks-edisi:#697782;
-  --v-teks-sistem:#8a949e;
-  --v-teks-sistem-aktif:#394957;
-  --v-teks-caption:#7c8894;
-  --v-teks-sumber:#537a89;
+  --v-tooltip-teks:#ffffff;
+  --v-scroll:color-mix(in srgb, var(--muted-foreground) 42%, transparent);
+  --v-scroll-detail:color-mix(in srgb, var(--muted-foreground) 45%, transparent);
+  --v-teks-h1-em:var(--muted-foreground);
+  --v-teks-eyebrow:var(--muted-foreground);
+  --v-teks-meta:var(--muted-foreground);
+  --v-teks-titik:color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  --v-teks-aksi:var(--muted-foreground);
+  --v-teks-panel:var(--foreground);
+  --v-teks-redup:var(--muted-foreground);
+  --v-teks-preset:var(--muted-foreground);
+  --v-teks-preset2:var(--muted-foreground);
+  --v-teks-preset-aktif:var(--foreground);
+  --v-teks-angka:var(--muted-foreground);
+  --v-teks-pilih:var(--foreground);
+  --v-teks-hitung:var(--muted-foreground);
+  --v-teks-kaki:var(--muted-foreground);
+  --v-teks-kontrol:var(--muted-foreground);
+  --v-teks-label:var(--foreground);
+  --v-teks-satuan:var(--muted-foreground);
+  --v-teks-satuan2:var(--muted-foreground);
+  --v-teks-dok:var(--muted-foreground);
+  --v-teks-dok2:var(--muted-foreground);
+  --v-teks-footer:var(--muted-foreground);
+  --v-teks-footer-tebal:color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  --v-teks-catatan:var(--muted-foreground);
+  --v-teks-deskripsi:var(--muted-foreground);
+  --v-teks-meta-kuat:var(--foreground);
+  --v-teks-sekunder:var(--muted-foreground);
+  --v-teks-anggota:var(--muted-foreground);
+  --v-teks-about:var(--muted-foreground);
+  --v-teks-about-kuat:var(--foreground);
+  --v-teks-tautan:var(--jrh-aksen-teks, var(--muted-foreground));
+  --v-teks-edisi:var(--muted-foreground);
+  --v-teks-sistem:color-mix(in srgb, var(--muted-foreground) 80%, transparent);
+  --v-teks-sistem-aktif:var(--foreground);
+  --v-teks-caption:var(--muted-foreground);
+  --v-teks-sumber:var(--jrh-aksen-teks, var(--muted-foreground));
   --v-bayang-detail:0 15px 70px #2433440a;
   --v-bayang-tooltip:0 5px 18px #18253620;
   --v-bayang-pilih:0 1px 2px #18253604;
@@ -100,7 +104,7 @@
 .anatomy-choice{margin-top:15px;pointer-events:auto}.anatomy-choice [data-slot=select-trigger]{min-height:36px;font-size:12px;letter-spacing:.02em;border:1px solid var(--v-tinta-20);border-radius:4px;color:var(--v-teks-pilih);padding:6px 10px;background:var(--v-putih-d9)}.anatomy-choice-menu [data-slot=select-item]{min-height:44px;font-size:14px}.identity{z-index:2}.layers-panel{top:217px}
 @media(max-width:767px){.anatomy-choice{margin-top:10px}.anatomy-choice [data-slot=select-trigger]{min-height:40px;font-size:12px}.layers-panel.mobile-open{top:auto}.search-panel{top:162px}.anatomy-search-results{max-height:calc(100dvh - 370px)!important}}
 @media(max-height:600px) and (orientation:landscape){.anatomy-choice{margin-top:7px}.anatomy-choice [data-slot=select-trigger]{min-height:36px}.layers-panel.mobile-open{top:132px}.search-panel{top:70px}.anatomy-search-results{max-height:160px!important}}
-.part-hover{position:absolute;pointer-events:none;z-index:45;max-width:250px;background:var(--v-tooltip);color:var(--v-putih);padding:9px 12px;border-radius:5px;box-shadow:var(--v-bayang-tooltip);font-size:13px;line-height:1.45;text-transform:capitalize}.part-hover[hidden]{display:none}.structure-meta strong{overflow-wrap:anywhere;max-width:150px}.view-controls button:disabled{opacity:.22;background:none}.scene canvas{cursor:grab}.scene canvas:active{cursor:grabbing}
+.part-hover{position:absolute;pointer-events:none;z-index:45;max-width:250px;background:var(--v-tooltip);color:var(--v-tooltip-teks);padding:9px 12px;border-radius:5px;box-shadow:var(--v-bayang-tooltip);font-size:13px;line-height:1.45;text-transform:capitalize}.part-hover[hidden]{display:none}.structure-meta strong{overflow-wrap:anywhere;max-width:150px}.view-controls button:disabled{opacity:.22;background:none}.scene canvas{cursor:grab}.scene canvas:active{cursor:grabbing}
 @media(min-width:768px) and (max-width:1100px){body:has(.detail-sheet) .layers-panel{display:none}}
 @media(max-width:767px){.detail-sheet.is-isolated{max-height:34dvh}}
 .detail-sheet [data-slot=sheet-close],.about-sheet [data-slot=sheet-close]{top:10px;right:10px;min-width:36px;min-height:36px;transform:none}.detail-sheet .eyebrow{padding-right:28px}

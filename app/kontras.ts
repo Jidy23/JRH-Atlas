@@ -8,12 +8,13 @@
 
 export type RGB = { r: number; g: number; b: number };
 
-/** Terima '#rgb', '#rrggbb', 'rgb(…)' atau 'hsl(…)' sederhana. */
+/** Terima '#rgb', '#rrggbb', '#rrggbbaa', 'rgb(…)' atau 'hsl(…)' sederhana. */
 export function warnaKeRgb(nilai: string): RGB {
   const s = nilai.trim().toLowerCase();
-  const hex = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+  const hex = s.match(/^#?([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i);
   if (hex) {
     let h = hex[1];
+    if (h.length === 8) h = h.slice(0, 6);
     if (h.length === 3) h = h.split('').map((c) => c + c).join('');
     return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
   }

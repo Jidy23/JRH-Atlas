@@ -2,15 +2,20 @@
  * Audit kontras WCAG untuk semua palet JRH Atlas.
  * Jalankan: npm run audit:kontras
  *
- * Skrip ini MEMBACA app/tema.css dan menguji nilai token yang benar-benar
- * dipakai aplikasi. Versi sebelumnya memakai palet karangan sendiri, jadi
- * lolos 30/30 sementara token asli gagal (mis. aksen #22d3ee di atas latar
+ * Skrip ini MEMBACA app/tema.css dan app/globals.css, lalu menguji nilai token
+ * yang benar-benar dipakai aplikasi. Versi lama memakai palet karangan sendiri,
+ * jadi lolos 30/30 sementara token asli gagal (mis. aksen #22d3ee di atas latar
  * terang hanya 1,66:1).
  *
- * Batas yang jujur: warna yang dibuat lewat color-mix() atau rgba() transparan
- * tidak dihitung kompositnya di sini. Untuk itu dipakai token teks solid
- * (--jrh-aksen-teks) yang memang dirancang menggantikannya. Pasangan yang
- * dilewati DICETAK, bukan diam-diam dianggap lolos.
+ * Dua bagian:
+ * 1. Uji pasangan teks/latar untuk 5 palet x 2 mode.
+ * 2. Aturan struktural: token teks viewer (--v-teks-*) tidak boleh berupa hex
+ *    literal. Token itu wajib membaca --foreground / --muted-foreground /
+ *    --jrh-aksen-teks supaya DESIGN.md aturan #4 (tidak ada abu literal) dan
+ *    mode gelap otomatis berlaku. Hex literal di sana akan gagal.
+ *
+ * Batas yang jujur: warna hasil color-mix() tidak dikomposit di sini. Pasangan
+ * yang dilewati DICETAK, bukan diam-diam dianggap lolos.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -19,6 +24,7 @@ import { periksa, type StatusKontras } from '../app/kontras.js';
 
 const AKAR = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const TEMA = readFileSync(join(AKAR, 'app', 'tema.css'), 'utf8');
+const GLOBALS = readFileSync(join(AKAR, 'app', 'globals.css'), 'utf8');
 
 type Deklarasi = Map<string, string>;
 type Scope = { dasar: Deklarasi; palet: Map<string, Deklarasi>; mode: Map<string, Deklarasi> };
@@ -63,9 +69,16 @@ for (const blok of buangKomentar(TEMA).matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
   }
 }
 
+/** Token viewer (--v-*) hidup di blok :root globals.css, prioritas terendah. */
+const TOKEN_VIEWER: Deklarasi = new Map();
+for (const blok of buangKomentar(GLOBALS).matchAll(/:root\s*\{([^{}]*)\}/g)) {
+  for (const [k, v] of deklarasi(blok[1])) TOKEN_VIEWER.set(k, v);
+}
+
 /** Susun token efektif untuk satu (palet, mode), lalu selesaikan rantai var(). */
 function tokenEfektif(palet: string, mode: string): Deklarasi {
   const gabung: Deklarasi = new Map();
+  for (const [k, v] of TOKEN_VIEWER) gabung.set(k, v);
   for (const [k, v] of scope.dasar) gabung.set(k, v);
   for (const [k, v] of scope.palet.get(palet) ?? new Map<string, string>()) gabung.set(k, v);
   for (const [k, v] of scope.mode.get(mode) ?? new Map<string, string>()) gabung.set(k, v);
@@ -77,13 +90,15 @@ function tokenEfektif(palet: string, mode: string): Deklarasi {
     if (jejak.has(nama)) throw new Error(`Rujukan var() melingkar: ${[...jejak, nama].join(' -> ')}`);
     const nilai = gabung.get(nama);
     if (nilai === undefined) return null;
-    const ref = nilai.match(/^var\(\s*(--[\w-]+)\s*\)$/);
+    // Selesaikan var() dengan fallback: var(--a, #b)
+    const ref = nilai.match(/^var\(\s*(--[\w-]+)\s*(?:,\s*([^)]+))?\)$/);
     if (!ref) {
       selesai.set(nama, nilai);
       return nilai;
     }
     jejak.add(nama);
-    const dalam = selesaikan(ref[1], jejak);
+    let dalam = selesaikan(ref[1], jejak);
+    if (dalam === null && ref[2]) dalam = ref[2].trim();
     jejak.delete(nama);
     if (dalam === null) return null;
     selesai.set(nama, dalam);
@@ -109,7 +124,12 @@ const UJI: Array<[string, string, string]> = [
   ['--jrh-di-salah', '--jrh-salah', 'lencana jawaban salah'],
   ['--muted-foreground', '--background', 'teks redup viewer di latar'],
   ['--muted-foreground', '--card', 'teks redup viewer di kartu'],
+  ['--muted-foreground', '--muted', 'teks redup viewer di permukaan redup'],
+  ['--foreground', '--muted', 'teks viewer di permukaan redup'],
+  ['--foreground', '--card', 'teks viewer di kartu'],
   ['--primary-foreground', '--primary', 'teks tombol primer viewer'],
+  ['--jrh-aksen-teks', '--card', 'tautan viewer di kartu'],
+  ['--v-tooltip-teks', '--v-tooltip', 'teks tooltip bagian anatomi'],
 ];
 
 const PALET = ['bawaan', 'samudra', 'senja', 'zamrud', 'koral'];
@@ -143,5 +163,22 @@ for (const h of HASIL) {
   console.log(`${tanda.padStart(5)}  ${h.rasio.toFixed(2).padStart(5)}:1  ${h.pasangan}`);
 }
 for (const h of HILANG) console.log(`  SKIP  ${h}`);
+
+/* ---------- Aturan struktural: tidak ada abu literal di token viewer ---------- */
+const LITERAL = /^#|^(rgba?|hsla?)\(/;
+const PELANGGARAN: string[] = [];
+for (const [nama, nilai] of TOKEN_VIEWER) {
+  if (!/^--v-teks-/.test(nama)) continue;
+  if (LITERAL.test(nilai)) {
+    PELANGGARAN.push(`${nama}: ${nilai} — token teks viewer harus membaca --foreground / --muted-foreground / --jrh-aksen-teks`);
+  }
+}
+if (PELANGGARAN.length) {
+  console.error('\n✗ Abu literal di token teks viewer (DESIGN.md aturan #4):');
+  for (const p of PELANGGARAN) console.error(`  ${p}`);
+} else {
+  console.log(`\n✓ ${[...TOKEN_VIEWER.keys()].filter((n) => /^--v-teks-/.test(n)).length} token teks viewer membaca token semantik, bukan hex literal.`);
+}
+
 console.log(`\n${HASIL.length} pasangan diperiksa, ${gagal.length} gagal AA, ${HILANG.length} dilewati.`);
-process.exit(gagal.length ? 1 : 0);
+process.exit(gagal.length || PELANGGARAN.length ? 1 : 0);
