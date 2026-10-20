@@ -9,17 +9,16 @@
 // literal" menjelaskan sejarah, bukan mendeklarasikan warna, dan tidak boleh
 // dihitung.
 //
-// Dikecualikan seluruhnya: tema.css dan globals.css. Keduanya adalah rumah
-// token (tema.css = palet + mode; globals.css = token shadcn + tata letak
-// viewer). globals.css masih menaruh banyak warna langsung di deklarasi
-// komponen; memindahkannya ke :root adalah pekerjaan tersendiri dan sengaja
-// belum diklaim selesai.
+// Dikecualikan seluruhnya: tema.css saja. Itu rumah palet dan mode, dan
+// sengaja memuat semua nilai warna mentah. globals.css kini ikut diperiksa:
+// token viewer 3D (--v-*) tinggal di blok :root-nya, deklarasi komponennya
+// hanya var(--token).
 import { readFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'app');
-const Dikecualikan = new Set(['tema.css', 'globals.css']);
+const Dikecualikan = new Set(['tema.css']);
 
 const HEX = /#[0-9a-f]{3,8}\b/gi;
 const FUNGSI_WARNA = /\b(?:rgb|rgba|hsl|hsla)\([^)]*\)/gi;
