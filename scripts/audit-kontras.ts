@@ -7,22 +7,26 @@
  * jadi lolos 30/30 sementara token asli gagal (mis. aksen #22d3ee di atas latar
  * terang hanya 1,66:1).
  *
- * Tiga bagian:
+ * Empat bagian:
  * 1. Uji pasangan teks/latar (AA 4,5:1) untuk 5 palet x 2 mode.
- * 2. Uji pasangan NON-TEKS (WCAG 1.4.11, 3:1): cincin fokus, titik status, dan
- *    track switch. Ini indikator yang wajib terlihat tanpa bergantung pada teks,
- *    dan sebelumnya tidak diuji sama sekali — token --v-status terbukti gagal
- *    1,63:1 di mode terang sebelum diperbaiki.
+ * 2. Uji pasangan NON-TEKS (WCAG 1.4.11, 3:1): cincin fokus, titik status, track
+ *    switch, batas input, batas kartu, indikator tab aktif, isian progres, dan
+ *    ibu jari scrollbar. Ini indikator yang wajib terlihat tanpa bergantung pada
+ *    teks, dan sebelumnya tidak diuji sama sekali — token --v-status terbukti
+ *    gagal 1,63:1 di mode terang sebelum diperbaiki.
  * 3. Aturan struktural: token teks viewer (--v-teks-*) tidak boleh berupa hex
  *    literal. Token itu wajib membaca --foreground / --muted-foreground /
  *    --jrh-aksen-teks supaya DESIGN.md aturan #4 (tidak ada abu literal) dan
  *    mode gelap otomatis berlaku. Hex literal di sana akan gagal.
+ * 4. Aturan struktural: indikator non-teks tidak boleh membaca aksen mentah.
+ *    --v-fokus dan --v-status wajib membaca --aksen-nonteks, bukan --aksen,
+ *    karena aksen mentah gagal 3:1 di mode terang.
  *
  * Semua nilai DIKOMPOSIT: var() diselesaikan berantai (termasuk fallback
  * bersarang), color-mix(in srgb, ...) dihitung sesuai spesifikasi (premultiply
- * alpha), lalu warna transparan ditumpuk di atas latar efektifnya. Jadi tidak
- * ada lagi pasangan yang "dilewati karena color-mix". Nilai yang tetap tidak
- * bisa diurai (mis. gradien) DICETAK sebagai SKIP, bukan diam-diam dianggap lolos.
+ * alpha), lalu warna transparan ditumpuk di atas latar efektifnya. Gradien juga
+ * diurai per stop, jadi setiap ujung gradien ikut diuji dan tidak ada lagi
+ * pasangan yang dilewati hanya karena nilainya berupa gradien.
  */
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -133,6 +137,43 @@ function selesaikanNilai(
   return akhir;
 }
 
+/** Pisah argumen pada koma di kedalaman kurung 0. */
+function pisahTopLevel(isi: string): string[] {
+  const hasil: string[] = [];
+  let dalam = 0;
+  let mulai = 0;
+  for (let i = 0; i < isi.length; i++) {
+    const c = isi[i];
+    if (c === '(') dalam++;
+    else if (c === ')') dalam--;
+    else if (c === ',' && dalam === 0) {
+      hasil.push(isi.slice(mulai, i));
+      mulai = i + 1;
+    }
+  }
+  hasil.push(isi.slice(mulai));
+  return hasil;
+}
+
+/**
+ * Urai gradien linear jadi daftar stop warna. Arah/sudut dibuang, posisi stop
+ * (mis. `#fff 50%`) juga dibuang. Tujuannya: setiap ujung gradien ikut diuji,
+ * bukan dicetak SKIP. Mengembalikan null untuk gradien yang tak bisa diurai.
+ */
+function uraiGradien(nilai: string): string[] | null {
+  const m = nilai.trim().match(/^(?:repeating-)?linear-gradient\((.*)\)$/i);
+  if (!m) return null;
+  const stop: string[] = [];
+  for (const bagian of pisahTopLevel(m[1])) {
+    const b = bagian.trim();
+    if (!b) continue;
+    // Arah atau sudut: `135deg`, `0.25turn`, `to right`, `in oklab`.
+    if (/^(?:-?[\d.]+(?:deg|rad|turn|grad)|to\s|in\s)/i.test(b)) continue;
+    stop.push(b.replace(/\s+[\d.]+%$/, '').trim());
+  }
+  return stop.length ? stop : null;
+}
+
 /** Urai satu warna jadi RGBA. Alpha dipertahankan supaya bisa dikomposit. */
 function urai(nilai: string): RGBA | null {
   const s = nilai.trim().toLowerCase();
@@ -178,7 +219,7 @@ function persenCampuran(kiri: number | null, kanan: number | null): [number, num
 function uraiCampuran(s: string): RGBA | null {
   const m = s.match(/^color-mix\(\s*in\s+srgb\s*,([\s\S]+)\)$/);
   if (!m) return null;
-  const sisi = m[1].split(',').map((x) => x.trim());
+  const sisi = pisahTopLevel(m[1]).map((x) => x.trim());
   if (sisi.length !== 2) return null;
   const pecah = (x: string): Bagian => {
     const pm = x.match(/^(.*?)\s+([\d.]+)%$/);
@@ -224,8 +265,8 @@ const UJI_TEKS: Array<[string, string, string]> = [
   ['--jrh-aksen-teks', '--jrh-bg', 'aksen sebagai teks di latar'],
   ['--jrh-aksen-teks', '--jrh-kartu', 'aksen sebagai teks di kartu'],
   ['--jrh-aksen-di', '--jrh-aksen-latar', 'teks di elemen berisi aksen (tab aktif)'],
-  ['--jrh-di-aksen', '--aksen', 'teks aksi fokus di ujung gradien 1'],
-  ['--jrh-di-aksen', '--aksen-2', 'teks aksi fokus di ujung gradien 2'],
+  // Gradien diurai per stop: dulu pasangan ini dilewati sebagai SKIP.
+  ['--jrh-di-aksen', '--gradien-fokus', 'teks aksi fokus di setiap ujung gradien'],
   ['--jrh-di-benar', '--jrh-benar', 'lencana jawaban benar'],
   ['--jrh-di-salah', '--jrh-salah', 'lencana jawaban salah'],
   ['--muted-foreground', '--background', 'teks redup viewer di latar'],
@@ -240,11 +281,26 @@ const UJI_TEKS: Array<[string, string, string]> = [
 
 /** [token indikator, token latar, keterangan] — WCAG 1.4.11, minimal 3:1. */
 const UJI_NONTEKS: Array<[string, string, string]> = [
-  ['--v-status', '--background', 'titik status di latar'],
-  ['--v-status', '--card', 'titik status di kartu'],
+  // Cincin fokus & titik status: indikator wajib terlihat di semua permukaan.
   ['--v-fokus', '--background', 'cincin fokus di latar'],
   ['--v-fokus', '--card', 'cincin fokus di kartu'],
+  ['--v-fokus', '--jrh-kartu', 'cincin fokus di kartu ruang belajar'],
+  ['--v-status', '--background', 'titik status di latar'],
+  ['--v-status', '--card', 'titik status di kartu'],
+  ['--v-status', '--kaca-bg', 'titik status di panel kaca'],
+  // Kontrol: track switch dan batas bidang input harus bisa dibedakan.
   ['--v-switch', '--card', 'track switch di kartu'],
+  ['--v-switch', '--background', 'track switch di latar'],
+  ['--v-kontrol-garis', '--card', 'batas bidang input di kartu'],
+  ['--v-kontrol-garis', '--background', 'batas bidang input di latar'],
+  // Indikator navigasi & progres di ruang belajar.
+  ['--aksen-nonteks', '--jrh-bg', 'indikator tab aktif di latar'],
+  ['--aksen-nonteks', '--jrh-kartu', 'indikator tab aktif di kartu'],
+  ['--aksen-nonteks', '--background', 'isian progres di latar'],
+  ['--aksen-nonteks', '--card', 'isian progres di kartu'],
+  // Scrollbar ikut 1.4.11: ibu jari harus terlihat terhadap track-nya.
+  ['--v-scroll', '--card', 'ibu jari scrollbar di kartu'],
+  ['--v-scroll', '--background', 'ibu jari scrollbar di latar'],
 ];
 
 const PALET = ['bawaan', 'samudra', 'senja', 'zamrud', 'koral'];
@@ -274,20 +330,38 @@ for (const palet of PALET) {
           HILANG.push(`${nama} (${t === null ? tokenIndikator : tokenLatar} tidak didefinisikan)`);
           continue;
         }
-        const latar = padat(l, dasar);
-        const depan = latar === null ? null : padat(t, latar);
-        if (latar === null || depan === null) {
-          HILANG.push(`${nama} (${latar === null ? tokenLatar : tokenIndikator} tidak bisa diurai: ${latar === null ? l : t})`);
+
+        // Gradien diurai per stop. Latar gradien tidak masuk akal untuk uji
+        // kontras, jadi hanya stop pertama yang dipakai sebagai latar.
+        const depanDaftar = /gradient\(/i.test(t) ? uraiGradien(t) : [t];
+        const latarDaftar = /gradient\(/i.test(l) ? uraiGradien(l) : [l];
+        if (!depanDaftar || !latarDaftar) {
+          HILANG.push(`${nama} (nilai tidak bisa diurai: ${!depanDaftar ? t : l})`);
           continue;
         }
-        const rasio = Math.round(rasioKontras(keHex(depan), keHex(latar)) * 100) / 100;
-        HASIL.push({
-          nama,
-          rasio,
-          teks: jenis === 'teks',
-          aaa: jenis === 'teks' && rasio >= 7,
-          lulus: rasio >= ambang,
-        });
+
+        const latar = padat(latarDaftar[0], dasar);
+        if (latar === null) {
+          HILANG.push(`${nama} (${tokenLatar} tidak bisa diurai: ${latarDaftar[0]})`);
+          continue;
+        }
+
+        for (const [i, depanMentah] of depanDaftar.entries()) {
+          const depan = padat(depanMentah, latar);
+          if (depan === null) {
+            HILANG.push(`${nama} (${tokenIndikator} tidak bisa diurai: ${depanMentah})`);
+            continue;
+          }
+          const rasio = Math.round(rasioKontras(keHex(depan), keHex(latar)) * 100) / 100;
+          const labelStop = depanDaftar.length > 1 ? `${nama} (ujung gradien ${i + 1}/${depanDaftar.length})` : nama;
+          HASIL.push({
+            nama: labelStop,
+            rasio,
+            teks: jenis === 'teks',
+            aaa: jenis === 'teks' && rasio >= 7,
+            lulus: rasio >= ambang,
+          });
+        }
       }
     };
 
@@ -303,7 +377,7 @@ for (const h of HASIL) {
 }
 for (const h of HILANG) console.log(`  SKIP  ${h}`);
 
-/* ---------- Aturan struktural: tidak ada abu literal di token viewer ---------- */
+/* ---------- Aturan struktural 1: tidak ada abu literal di token viewer ---------- */
 const LITERAL = /^#|^(rgba?|hsla?)\(/;
 const PELANGGARAN: string[] = [];
 for (const [nama, nilaiToken] of TOKEN_VIEWER) {
@@ -312,11 +386,32 @@ for (const [nama, nilaiToken] of TOKEN_VIEWER) {
     PELANGGARAN.push(`${nama}: ${nilaiToken} — token teks viewer harus membaca --foreground / --muted-foreground / --jrh-aksen-teks`);
   }
 }
+
+/* ---------- Aturan struktural 2: indikator non-teks bukan aksen mentah ---------- */
+const INDIKATOR = ['--v-fokus', '--v-status'];
+for (const mode of MODE) {
+  const gabung = gabungToken('bawaan', mode);
+  const cache = new Map<string, string | null>();
+  const nilai = (nama: string) => selesaikanNilai(nama, gabung, cache, new Set<string>());
+  const aksen = nilai('--aksen');
+  for (const nama of INDIKATOR) {
+    const mentah = gabung.get(nama) ?? '';
+    if (/^var\(\s*--aksen\s*\)$/.test(mentah.trim())) {
+      PELANGGARAN.push(`${nama} (${mode}): ${mentah} — indikator non-teks wajib membaca --aksen-nonteks, bukan aksen mentah (gagal 3:1 di mode terang)`);
+    }
+    if (mode === 'terang' && aksen !== null && nilai(nama) === aksen) {
+      PELANGGARAN.push(`${nama} (${mode}): resolve ke aksen mentah ${aksen} — gagal ambang 3:1`);
+    }
+  }
+}
+
 if (PELANGGARAN.length) {
-  console.error('\n✗ Abu literal di token teks viewer (DESIGN.md aturan #4):');
+  console.error('\n✗ Pelanggaran aturan struktural (DESIGN.md aturan #1 dan #4):');
   for (const p of PELANGGARAN) console.error(`  ${p}`);
 } else {
-  console.log(`\n✓ ${[...TOKEN_VIEWER.keys()].filter((n) => /^--v-teks-/.test(n)).length} token teks viewer membaca token semantik, bukan hex literal.`);
+  const tokenTeks = [...TOKEN_VIEWER.keys()].filter((n) => /^--v-teks-/.test(n)).length;
+  console.log(`\n✓ ${tokenTeks} token teks viewer membaca token semantik, bukan hex literal.`);
+  console.log('✓ indikator non-teks (--v-fokus, --v-status) membaca --aksen-nonteks, bukan aksen mentah.');
 }
 
 const teksDiuji = HASIL.filter((h) => h.teks).length;

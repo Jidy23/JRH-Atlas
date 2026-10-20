@@ -2,31 +2,42 @@
    Menimpa viewer 3D (globals.css) dan ruang belajar (akademi.css).
    Semua komponen membaca variabel di bawah, bukan warna literal.
 
-   Dua jenis aksen, dan bedanya penting:
+   Tiga jenis aksen, dan bedanya penting:
    - `--aksen`        : warna dekoratif (garis, isian lembut, gradien focal).
-                        Boleh terang; TIDAK dipakai untuk teks.
+                        Boleh terang; TIDAK dipakai untuk teks, dan sejak audit
+                        WCAG 1.4.11 juga TIDAK dipakai untuk indikator non-teks.
    - `--jrh-aksen-teks`: versi aksen yang aman untuk teks di atas latar mode.
                         Mode terang memakai versi yang digelapkan.
+   - `--aksen-nonteks` : versi aksen untuk INDIKATOR non-teks (cincin fokus, titik
+                        status, indikator tab aktif, isian progres). Wajib lolos
+                        WCAG 1.4.11 ambang 3:1, tapi sengaja dipilih lebih cerah
+                        daripada --jrh-aksen-teks supaya titik status 5px tidak
+                        terasa seperti tinta hitam. Mode terang memakai versi yang
+                        digelapkan secukupnya; mode gelap memakai --aksen mentah.
    - `--jrh-aksen-latar` + `--jrh-aksen-di`: pasangan siap pakai untuk elemen
                         berisi aksen (tab aktif, tombol terisi).
    Semua pasangan diuji `scripts/audit-kontras.ts`, yang membaca file ini.
 
-   Sejak audit 1.4.11, aksen mentah juga TIDAK dipakai untuk indikator non-teks
-   (cincin fokus, titik status). Aksen mentah #22d3ee di latar terang hanya
-   1,63:1, gagal ambang 3:1. Keduanya memakai --jrh-aksen-teks. */
+   Riwayat: aksen mentah #22d3ee di latar terang hanya 1,63:1, gagal ambang 3:1.
+   Karena itu indikator non-teks tidak boleh memakai --aksen mentah. */
 
 /* ---------- Palet: aksen per budaya Indonesia ---------- */
 :root {
   --aksen: #22d3ee;
   --aksen-2: #f59e0b;
   --aksen-teks: #0e7490;
+  /* 3,30:1 di atas --background terang; tetap sian, bukan tinta gelap. */
+  --aksen-nonteks: #0891b2;
   --aksen-lembut: rgba(34, 211, 238, 0.12);
   --aksen-garis: rgba(34, 211, 238, 0.32);
+  /* Satu-satunya gradien di aplikasi (DESIGN.md aturan #2). Didefinisikan sekali
+     supaya audit bisa menguji setiap ujungnya, bukan melewatinya sebagai SKIP. */
+  --gradien-fokus: linear-gradient(135deg, var(--aksen), var(--aksen-2));
 }
-:root[data-palet='samudra'] { --aksen: #38bdf8; --aksen-2: #818cf8; --aksen-teks: #0369a1; --aksen-lembut: rgba(56, 189, 248, 0.12); --aksen-garis: rgba(56, 189, 248, 0.32); }
-:root[data-palet='senja']   { --aksen: #fb7185; --aksen-2: #fbbf24; --aksen-teks: #b4441f; --aksen-lembut: rgba(251, 113, 133, 0.13); --aksen-garis: rgba(251, 113, 133, 0.34); }
-:root[data-palet='zamrud']  { --aksen: #34d399; --aksen-2: #a3e635; --aksen-teks: #047857; --aksen-lembut: rgba(52, 211, 153, 0.13); --aksen-garis: rgba(52, 211, 153, 0.34); }
-:root[data-palet='koral']   { --aksen: #f472b6; --aksen-2: #2dd4bf; --aksen-teks: #a8205a; --aksen-lembut: rgba(244, 114, 182, 0.13); --aksen-garis: rgba(244, 114, 182, 0.34); }
+:root[data-palet='samudra'] { --aksen: #38bdf8; --aksen-2: #818cf8; --aksen-teks: #0369a1; --aksen-nonteks: #0284c7; --aksen-lembut: rgba(56, 189, 248, 0.12); --aksen-garis: rgba(56, 189, 248, 0.32); }
+:root[data-palet='senja']   { --aksen: #fb7185; --aksen-2: #fbbf24; --aksen-teks: #b4441f; --aksen-nonteks: #e11d48; --aksen-lembut: rgba(251, 113, 133, 0.13); --aksen-garis: rgba(251, 113, 133, 0.34); }
+:root[data-palet='zamrud']  { --aksen: #34d399; --aksen-2: #a3e635; --aksen-teks: #047857; --aksen-nonteks: #059669; --aksen-lembut: rgba(52, 211, 153, 0.13); --aksen-garis: rgba(52, 211, 153, 0.34); }
+:root[data-palet='koral']   { --aksen: #f472b6; --aksen-2: #2dd4bf; --aksen-teks: #a8205a; --aksen-nonteks: #db2777; --aksen-lembut: rgba(244, 114, 182, 0.13); --aksen-garis: rgba(244, 114, 182, 0.34); }
 
 /* ---------- MODE TERANG ---------- */
 :root[data-tema='terang'] {
@@ -64,12 +75,19 @@
   --accent-foreground: #20242b;
   --border: rgba(24, 37, 54, 0.1);
   --input: rgba(24, 37, 54, 0.14);
-  --ring: var(--aksen);
+  --ring: var(--aksen-nonteks);
 
-  /* Indikator non-teks (WCAG 1.4.11, ambang 3:1). Aksen mentah tidak dipakai:
-     #22d3ee di atas --background hanya 1,63:1. */
-  --v-fokus: var(--jrh-aksen-teks);
-  --v-status: var(--jrh-aksen-teks);
+  /* Indikator non-teks (WCAG 1.4.11, ambang 3:1). Bukan --aksen mentah
+     (1,63:1) dan bukan --jrh-aksen-teks (terlalu pekat untuk titik 5px). */
+  --v-fokus: var(--aksen-nonteks);
+  --v-status: var(--aksen-nonteks);
+  /* Batas kontrol: 1.4.11 menuntut bidang input bisa dibedakan dari sekitarnya.
+     Campuran ini 3,6:1 di atas kartu dan 3,25:1 di atas latar. */
+  --v-kontrol-garis: color-mix(in srgb, var(--muted-foreground) 78%, var(--card));
+  /* Ibu jari scrollbar: nilai lama 42% redup hanya 1,81:1 — tidak terlihat.
+     #808a98 = 3,50:1 di atas kartu dan 3,16:1 di atas latar. */
+  --v-scroll: #808a98;
+  --v-scroll-detail: #808a98;
 
   --kaca-bg: rgba(255, 255, 255, 0.92);
   --kaca-garis: rgba(37, 56, 74, 0.1);
@@ -110,12 +128,17 @@
   --accent-foreground: #e9effb;
   --border: rgba(148, 175, 220, 0.18);
   --input: rgba(148, 175, 220, 0.24);
-  --ring: var(--aksen);
+  --ring: var(--aksen-nonteks);
 
-  /* Di mode gelap --jrh-aksen-teks sudah sama dengan --aksen, dan aksen lolos
-     jauh di atas 3:1 terhadap latar malam. */
-  --v-fokus: var(--jrh-aksen-teks);
-  --v-status: var(--jrh-aksen-teks);
+  /* Di mode gelap aksen mentah lolos jauh di atas 3:1 terhadap latar malam,
+     jadi indikator boleh memakai warnanya yang paling cerah. */
+  --aksen-nonteks: var(--aksen);
+  --v-fokus: var(--aksen-nonteks);
+  --v-status: var(--aksen-nonteks);
+  --v-kontrol-garis: color-mix(in srgb, var(--muted-foreground) 78%, var(--card));
+  /* #6b7891 = 3,85:1 di atas kartu dan 4,29:1 di atas latar malam. */
+  --v-scroll: #6b7891;
+  --v-scroll-detail: #6b7891;
 
   --kaca-bg: rgba(14, 22, 38, 0.9);
   --kaca-garis: rgba(148, 175, 220, 0.16);
@@ -155,12 +178,13 @@
 /* Satu-satunya gradien di aplikasi: aksi fokus (DESIGN.md aturan #2). */
 :root[data-tema] .dock-reset .primary-action,
 :root[data-tema] .primary-action {
-  background: linear-gradient(135deg, var(--aksen), var(--aksen-2));
+  background: var(--gradien-fokus);
   border-color: transparent;
   color: var(--jrh-di-aksen);
 }
+/* Isian progres adalah indikator non-teks: wajib 3:1, bukan --aksen mentah. */
 :root[data-tema] .loading-track i {
-  background: var(--aksen);
+  background: var(--aksen-nonteks);
 }
 
 /* ---------- Ruang belajar ikut tema ---------- */
@@ -178,7 +202,7 @@
 :root[data-tema] .lencana,
 :root[data-tema] .tautan { background: var(--aksen-lembut); border-color: var(--aksen-garis); color: var(--jrh-aksen-teks); }
 :root[data-tema] .progres { background: color-mix(in srgb, var(--jrh-teks) 10%, transparent); }
-:root[data-tema] .progres-isi { background: var(--jrh-aksen-latar); }
+:root[data-tema] .progres-isi { background: var(--aksen-nonteks); }
 :root[data-tema] .kartu-besar,
 :root[data-tema] .organ-ringkas,
 :root[data-tema] .panduan-item,
@@ -192,7 +216,7 @@
 :root[data-tema] .tombol { background: color-mix(in srgb, var(--jrh-teks) 6%, var(--jrh-kartu)); border-color: var(--jrh-garis); color: var(--jrh-teks); }
 :root[data-tema] .tombol:hover:not(:disabled) { background: color-mix(in srgb, var(--aksen) 12%, var(--jrh-kartu)); }
 /* Aksi fokus kedua yang diizinkan DESIGN.md aturan #2. */
-:root[data-tema] .tombol.utama { background: linear-gradient(135deg, var(--aksen), var(--aksen-2)); color: var(--jrh-di-aksen); border-color: transparent; }
+:root[data-tema] .tombol.utama { background: var(--gradien-fokus); color: var(--jrh-di-aksen); border-color: transparent; }
 :root[data-tema] .jbtn { background: var(--jrh-kartu); border-color: var(--jrh-garis); }
 :root[data-tema] .jbtn.aktif b { color: var(--w, var(--jrh-aksen-teks)); }
 :root[data-tema] .pilih { background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu)); border-color: var(--jrh-garis); color: var(--jrh-teks); }
@@ -200,12 +224,13 @@
 :root[data-tema] .kartu { background: var(--jrh-kartu); border-color: var(--jrh-garis); color: var(--jrh-teks); }
 :root[data-tema] .kartu.balik { border-color: var(--aksen-garis); background: color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu)); }
 :root[data-tema] .skor { color: var(--jrh-aksen-teks); }
+/* Bidang input wajib punya batas yang terlihat (WCAG 1.4.11). */
 :root[data-tema] .filter select,
-:root[data-tema] .cari { background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu)); border-color: var(--jrh-garis); color: var(--jrh-teks); }
+:root[data-tema] .cari { background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu)); border-color: var(--v-kontrol-garis); color: var(--jrh-teks); }
 :root[data-tema] .glos-head { background: color-mix(in srgb, var(--jrh-bg) 55%, var(--jrh-kartu)); }
 :root[data-tema] .glos-row { border-color: color-mix(in srgb, var(--jrh-garis) 65%, transparent); }
 :root[data-tema] .glos-row:hover { background: var(--aksen-lembut); }
-:root[data-tema] .panduan-item { border-left-color: var(--aksen); }
+:root[data-tema] .panduan-item { border-left-color: var(--aksen-nonteks); }
 :root[data-tema] .logo b { color: var(--jrh-aksen-teks); }
 
 /* Kartu istilah di viewer */
@@ -221,7 +246,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 12px;
-  border: 1px solid var(--jrh-garis);
+  border: 1px solid var(--v-kontrol-garis);
   border-radius: 999px;
   background: var(--jrh-kartu);
   color: var(--jrh-redup);
@@ -230,7 +255,7 @@
   cursor: pointer;
   transition: 150ms ease;
 }
-.tema-tombol:hover { color: var(--jrh-teks); border-color: var(--aksen-garis); }
+.tema-tombol:hover { color: var(--jrh-teks); border-color: var(--aksen-nonteks); }
 
 .tema-panel {
   position: absolute;
@@ -261,7 +286,7 @@
 .mode {
   flex: 1;
   padding: 9px 4px;
-  border: 1px solid var(--jrh-garis);
+  border: 1px solid var(--v-kontrol-garis);
   border-radius: 9px;
   background: transparent;
   color: var(--jrh-redup);
@@ -269,7 +294,7 @@
   font-weight: 600;
   cursor: pointer;
 }
-.mode.aktif { border-color: var(--aksen); background: var(--aksen-lembut); color: var(--jrh-aksen-teks); }
+.mode.aktif { border-color: var(--aksen-nonteks); background: var(--aksen-lembut); color: var(--jrh-aksen-teks); }
 
 .tema-palet { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .palet {
@@ -277,14 +302,14 @@
   align-items: center;
   gap: 8px;
   padding: 8px 9px;
-  border: 1px solid var(--jrh-garis);
+  border: 1px solid var(--v-kontrol-garis);
   border-radius: 10px;
   background: transparent;
   color: var(--jrh-teks);
   text-align: left;
   cursor: pointer;
 }
-.palet.aktif { border-color: var(--aksen); background: var(--aksen-lembut); }
+.palet.aktif { border-color: var(--aksen-nonteks); background: var(--aksen-lembut); }
 .palet-warna { width: 18px; height: 18px; border-radius: 6px; flex: 0 0 auto; }
 .palet-nama { display: block; font-size: 11.5px; font-weight: 700; line-height: 1.2; }
 .palet-asal { display: block; font-size: 9.5px; color: var(--jrh-redup); line-height: 1.2; }
