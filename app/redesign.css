@@ -1,7 +1,7 @@
 /* Application layout: scoped to avoid the legacy .isi collision. */
 html:has(.app-rebuild),body:has(.app-rebuild),#root:has(.app-rebuild){height:auto;min-height:100%;overflow:visible}
 body:has(.app-rebuild){background:var(--jrh-bg);color:var(--jrh-teks)}
-.app-rebuild{display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-rows:76px 1fr;min-height:100dvh;font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
+.app-rebuild{display:grid;grid-template-columns:200px minmax(0,1fr);grid-template-rows:76px 1fr;min-height:100dvh;font-family:var(--font-sans)}
 .app-header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:12px 28px;border-bottom:1px solid var(--jrh-garis);background:var(--jrh-kartu);position:relative;z-index:100}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}.brand-mark{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--jrh-teks);color:var(--jrh-bg);font-weight:800;font-size:24px}.brand strong{display:block;font-size:17px}.brand small{display:block;color:var(--jrh-redup);font-size:12px;margin-top:2px}
 .app-navigation{padding:24px 12px;border-right:1px solid var(--jrh-garis);display:flex;flex-direction:column;gap:7px;background:var(--jrh-kartu)}

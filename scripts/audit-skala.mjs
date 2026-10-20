@@ -139,6 +139,21 @@ if (fontBermasalah.length) {
   console.log('  font-family: semua membaca --font-sans');
 }
 
+// ---------- 5. Ratchet: utang migrasi tidak boleh naik ----------
+const baseline = JSON.parse(
+  readFileSync(join(akar, 'scripts', 'baseline-skala.json'), 'utf8'),
+);
+if (totalPx > baseline.px_total) {
+  catat(`px langsung naik: ${totalPx} > baseline ${baseline.px_total}. Pakai token skala.`);
+} else {
+  console.log(`✓ ratchet px: ${totalPx} <= ${baseline.px_total}`);
+}
+if (fontBermasalah.length > baseline.font_declarations) {
+  catat(`font-family literal naik: ${fontBermasalah.length} > baseline ${baseline.font_declarations}`);
+} else {
+  console.log(`✓ ratchet font: ${fontBermasalah.length} <= ${baseline.font_declarations}`);
+}
+
 if (gagal) {
   console.error(`\n${gagal} pelanggaran skala desain.`);
   process.exit(1);

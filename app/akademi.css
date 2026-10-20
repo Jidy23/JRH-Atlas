@@ -33,7 +33,7 @@
   flex-direction: column;
   background: var(--jrh-bg);
   color: var(--jrh-teks);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .tabbar {
