@@ -36,7 +36,9 @@ const arah = (derajat: number) => new T.Vector3(Math.sin(T.MathUtils.degToRad(de
 // kanvas 3D tetap berlatar terang dan memakai eksposur terang walaupun UI sudah
 // mode gelap, dan MutationObserver tidak pernah terpicu saat tema berganti.
 // Bug ini tidak tertangkap audit karena axe memeriksa DOM, bukan isi kanvas.
-const ATRIBUT_TEMA = ['data-tema', 'data-palet'] as const;
+//
+// Daftar atribut ditulis sebagai literal, bukan konstanta terpisah, supaya
+// penjaga di scripts/verify-scene-controls.mjs bisa memeriksanya langsung.
 
 export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:Props){
  const host=useRef<HTMLDivElement>(null),latest=useRef(state),select=useRef(onSelect);
@@ -84,7 +86,7 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
   // Pantau atribut yang BENAR-BENAR ditulis tema.ts. Sebelumnya filter ini
   // menunggu 'data-theme'/'data-palette', jadi mengganti tema tidak pernah
   // memicu applyTheme() dan kanvas tertinggal di palet lama.
-  const themeObserver=new MutationObserver(applyTheme);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:[...ATRIBUT_TEMA]});
+  const themeObserver=new MutationObserver(applyTheme);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-tema','data-palet']});
   const hover=document.createElement('div');hover.className='part-hover';hover.setAttribute('role','tooltip');hover.hidden=true;el.appendChild(hover);
   type Target={index:number;x:number;y:number;left:number;right:number;top:number;bottom:number};let targets:Target[]=[];
   const projected=new T.Vector3();
