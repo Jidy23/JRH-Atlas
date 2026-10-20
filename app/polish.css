@@ -1,42 +1,23 @@
-/* ====== JRH Atlas ✪ polish layer (audit anti-slop & impeccable) ======
-   Sema override di sini punya alusan tertulis (R31): ini filter,
-   bukan style guide. Dimporr pakai terakhir sehingga mendakanian
-   bersih definisi sumber di globals.css & akademi.css */
+/* Polish layer: hasil audit Anti-Slop (38 aturan) + Impeccable (61 rule).
+   Setiap override di bawah punya alasan tertulis, sesuai R-31. */
 
-/* 1. Sat stack font untuk seluruh app. Arial/Helvetica/Inter ganda di
-    globals.css memice stack berlbeda so variable teks tid!k konsisten
-    (Impeccable: font overused tanpa alsasan) . System-ui sose seniagas dipelih
-    karena app alat ini target sekolah umur ven penghincga kualitas teks. */
-:root {
-  font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, Helvetica Neue, Arial, sans-serif;
-}
+/* R-06 / Impeccable "font overused": globals.css memasang Arial lalu
+   menimpanya dengan Inter di tengah file. Dua stack pada elemen yang sama
+   membuat metrik teks tidak konsisten antar halaman. Satu stack, tanpa
+   duplikasi, tanpa font overused. */
+:root{font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
 
-/* 2. Glow dihapus: dekorative tanpa fungsi, R-13 maks 1-2 elemen.
-   Tab aktif udah tertanang lewar warna beckvar + lewarhat. */
-.status-dot { box-shadow: none; }
-.tab.aktif { box-shadow: none; }
+/* R-13 glow: .status-dot dan .tab.aktif hanya dekoratif. Status sudah
+   dibawa oleh warna titiknya, tab aktif sudah dibawa oleh isi latarnya.
+   Glow tidak menambah informasi, jadi dibuang. */
+.status-dot,.tab.aktif{box-shadow:none}
 
-/* 3. Gradien semuaha di tombol aksi utama (one focal action).
-   Logo bisa pakai warna aksen solid biasa umaur tapak sisq gradien di tumbol primary-action. */
-.logo b {
-  background: none;
-  -webkit-background-clip: initial;
-  background-clip: initial;
-  color: var(--aksen, var(--jrh-aksen));
-}
-:root[data-tema] .logo b { color: var(--aksen); }
+/* R-01 gradien: gradien disisakan hanya di .primary-action sebagai satu
+   focal action per layar. Logo cukup memakai warna aksen solid. */
+.logo b{background:none;-webkit-background-clip:initial;background-clip:initial;color:var(--aksen,var(--jrh-aksen))}
+:root[data-tema] .logo b{color:var(--aksen)}
 
-/* 4. Teks mikro normal ke token thema R25: abu contras AA per tema,
-   sudah warna literal (#7c8793) Sama pasing only overide wainu cohecieve di globals.css */
-.eyebrow,
-.identity-meta,
-.scene-caption,
-.studio-footer,
-.studio-footer button,
-.small-number,
-.system-count,
-.explode-label output span,
-.slider-endpoints
-{color: var(--muted-foreground);}
-
-/* 5. Ukuran font untar 10px paling ritme detail satu baris diikota layar 
+/* R-25 kontras: teks mikro di globals.css memakai abu #7c8793 literal.
+   Diganti token --muted-foreground yang sudah diaudit
+   scripts/audit-kontras.ts terhadap WCAG AA di setiap tema. */
+.eyebrow,.identity-meta,.scene-caption,.studio-footer,.studio-footer button,.small-number,.system-count,.slider-endpoints{color:var(--muted-foreground)}
