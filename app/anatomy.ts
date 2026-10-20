@@ -31,8 +31,20 @@ export interface Part {id:string;name:string;conceptId:string;system:SystemId;ch
 export interface Concept {id:string;name:string;elements:string[];}
 export interface Chunk {url:string;gzip?:string;bytes:number;}
 export interface Atlas {version:string;parts:Part[];concepts:Concept[];chunks:Chunk[];}
-export type View = 'front'|'back'|'side'|'three-quarter';
-export interface SceneState {explode:number;visible:string[];selected:string[];isolate:boolean;view:View;rotate:boolean;reset:number;inspectorOpen:boolean;}
+
+/**
+ * Sudut pandang yang bisa dicapai. `back` sengaja tidak ada: kamera dibatasi
+ * ±90° pada sumbu mendatar, jadi 180° (tampak belakang) mustahil dicapai tanpa
+ * melanggar batas itu. Lihat catatan di scene.tsx.
+ */
+export type View = 'front'|'side'|'three-quarter';
+
+/**
+ * `rotate` sudah dihapus: model tidak lagi berputar sendiri. Rotasi otomatis
+ * adalah sumber utama keluhan "diputer-putar", dan satu-satunya cara mematikannya
+ * dengan jujur adalah menghapus kontrolnya, bukan menyembunyikannya.
+ */
+export interface SceneState {explode:number;visible:string[];selected:string[];isolate:boolean;view:View;reset:number;inspectorOpen:boolean;}
 export const DEFAULT_VISIBLE = ['skeletal','muscular','cardiac','sensory','digestive','respiratory','urinary'];
 
 /** Penjelasan singkat per struktur, untuk panel detail. */

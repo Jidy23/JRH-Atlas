@@ -15,6 +15,11 @@
 // bright grey rectangle in the middle of the dark UI, which is exactly the bug
 // this check now prevents from coming back.
 //
+// Finally it guards the camera contract. The viewer used to spin on its own and
+// let the camera drift overhead, which made the model feel out of control. Those
+// are design decisions, not accidents, so they are asserted here instead of
+// relying on someone remembering them.
+//
 // Usage: node scripts/verify-scene-controls.mjs
 import {readFileSync} from 'node:fs';
 import * as T from 'three';
@@ -49,7 +54,7 @@ for (const member of touchMembers) {
 
 const mouseMembers = unique([...source.matchAll(/\bT\.MOUSE\.([A-Z_]+)/g)].map((m) => m[1]));
 for (const member of mouseMembers) {
-  if (!(member in T.MOUSE)) problems.push(`MOUSE has no "${member}" member (available: ${Object.keys(T.MOUSE).join(', ')})`);
+  if (!(member in T.MOUSE)) problems.push(`MOUSE has no "${member}" action (available: ${Object.keys(T.MOUSE).join(', ')})`);
 }
 
 const cameraMethods = unique([...source.matchAll(/\bcamera\.([A-Za-z_$][\w$]*)\s*\(/g)].map((m) => m[1]));
@@ -73,8 +78,35 @@ if (!/themeObserver\.disconnect\(\)/.test(source)) {
   problems.push('themeObserver is never disconnected in the effect cleanup');
 }
 
+// Camera contract 1: no self-rotation. The model must only move when the user
+// moves it. Hiding the button while leaving autoRotate wired would be the same
+// bug with a smaller surface.
+if (/autoRotate\s*=\s*true/.test(source) || /autoRotate\s*=\s*s\./.test(source)) {
+  problems.push('scene.tsx re-enables autoRotate; the model must not spin without user input');
+}
+
+// Camera contract 2: the vertical axis is locked, so the camera can never rise
+// above or drop below the subject.
+if (!/controls\.minPolarAngle\s*=\s*POLAR_KUNCI/.test(source) || !/controls\.maxPolarAngle\s*=\s*POLAR_KUNCI/.test(source)) {
+  problems.push('scene.tsx does not lock minPolarAngle and maxPolarAngle to the same value, so the camera can drift vertically');
+}
+
+// Camera contract 3: horizontal rotation is bounded on both sides.
+if (!/controls\.minAzimuthAngle\s*=\s*-AZIMUT_MAKS/.test(source) || !/controls\.maxAzimuthAngle\s*=\s*AZIMUT_MAKS/.test(source)) {
+  problems.push('scene.tsx does not bound minAzimuthAngle/maxAzimuthAngle, so horizontal rotation is unbounded');
+}
+
+// Camera contract 4: every camera placement must stay on the horizon. A stray
+// non-zero Y in a direction vector is what let the camera look down at the model.
+const verticalOffsets = [...source.matchAll(/camera\.position\.(?:set|copy)\([^;]*?,\s*([0-9.]+)\s*,/g)]
+  .map((m) => m[1])
+  .filter((value) => Number(value) !== 0);
+if (verticalOffsets.length) {
+  problems.push(`scene.tsx places the camera at a non-zero Y (${verticalOffsets.join(', ')}); the camera must stay level with its target`);
+}
+
 if (problems.length) {
-  console.error(`app/scene.tsx uses APIs that three@${T.REVISION} does not provide, or breaks the theme contract:`);
+  console.error(`app/scene.tsx uses APIs that three@${T.REVISION} does not provide, or breaks the theme/camera contract:`);
   for (const problem of problems) console.error(`  - ${problem}`);
   process.exit(1);
 }
@@ -82,6 +114,7 @@ if (problems.length) {
 console.log(
   `app/scene.tsx only uses three@${T.REVISION} APIs ` +
     `(${controlProps.length} control props, ${touchMembers.length} touch modes, ` +
-    `${mouseMembers.length} mouse actions, ${cameraMethods.length} camera methods checked) ` +
-    'and keeps the canvas on the CSS theme tokens.',
+    `${mouseMembers.length} mouse actions, ${cameraMethods.length} camera methods checked), ` +
+    'keeps the canvas on the CSS theme tokens, ' +
+    'and holds the camera level within +-90 degrees of horizontal rotation.',
 );
