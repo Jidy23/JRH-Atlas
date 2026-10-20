@@ -6,9 +6,8 @@
 // failed to build, and the only signal was a bare tsc error that did not say
 // which runtime was expected.
 //
-// This script checks the identifiers against the real installed package
-// rather than a hardcoded list, so it stays correct if the pinned three
-// version changes.
+// This script checks the identifiers against the real installed package rather
+// than a hardcoded list, so it stays correct if the pinned three version changes.
 //
 // It also guards the theme contract: three.js paints its own canvas, so the
 // 3D background can never come from CSS. A hardcoded setClearColor leaves a
@@ -19,6 +18,13 @@
 // let the camera drift overhead, which made the model feel out of control. Those
 // are design decisions, not accidents, so they are asserted here instead of
 // relying on someone remembering them.
+//
+// The azimuth rule was inverted once already. An earlier version bounded it to
+// +-90 degrees, which quietly removed the back view and forced the "B" button to
+// be deleted. That was a regression disguised as a fix: the complaint was never
+// "I can rotate too far", it was "it moves by itself" and "it tilts away". So the
+// guard now asserts the opposite: horizontal rotation must stay unbounded, and
+// the back view must remain reachable.
 //
 // Usage: node scripts/verify-scene-controls.mjs
 import {readFileSync} from 'node:fs';
@@ -91,9 +97,10 @@ if (!/controls\.minPolarAngle\s*=\s*POLAR_KUNCI/.test(source) || !/controls\.max
   problems.push('scene.tsx does not lock minPolarAngle and maxPolarAngle to the same value, so the camera can drift vertically');
 }
 
-// Camera contract 3: horizontal rotation is bounded on both sides.
-if (!/controls\.minAzimuthAngle\s*=\s*-AZIMUT_MAKS/.test(source) || !/controls\.maxAzimuthAngle\s*=\s*AZIMUT_MAKS/.test(source)) {
-  problems.push('scene.tsx does not bound minAzimuthAngle/maxAzimuthAngle, so horizontal rotation is unbounded');
+// Camera contract 3: horizontal rotation is UNBOUNDED, so the user can spin the
+// full 360 degrees. Bounding it again would silently remove the back view.
+if (/controls\.(?:min|max)AzimuthAngle\s*=/.test(source)) {
+  problems.push('scene.tsx bounds the azimuth angle; horizontal rotation must stay unbounded so the full 360 degrees is reachable');
 }
 
 // Camera contract 4: every camera placement must stay on the horizon. A stray
@@ -103,6 +110,12 @@ const verticalOffsets = [...source.matchAll(/camera\.position\.(?:set|copy)\([^;
   .filter((value) => Number(value) !== 0);
 if (verticalOffsets.length) {
   problems.push(`scene.tsx places the camera at a non-zero Y (${verticalOffsets.join(', ')}); the camera must stay level with its target`);
+}
+
+// Camera contract 5: the back view must actually be wired. Removing the azimuth
+// bound is only useful if something still asks for 180 degrees.
+if (!/view==='back'\?arah\(180\)/.test(source)) {
+  problems.push("scene.tsx never maps view 'back' to arah(180), so the back view is unreachable");
 }
 
 if (problems.length) {
@@ -116,5 +129,6 @@ console.log(
     `(${controlProps.length} control props, ${touchMembers.length} touch modes, ` +
     `${mouseMembers.length} mouse actions, ${cameraMethods.length} camera methods checked), ` +
     'keeps the canvas on the CSS theme tokens, ' +
-    'and holds the camera level within +-90 degrees of horizontal rotation.',
+    'holds the camera level while allowing a full 360 degrees of horizontal rotation, ' +
+    'and keeps the back view reachable.',
 );

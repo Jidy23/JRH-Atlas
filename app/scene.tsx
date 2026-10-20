@@ -9,21 +9,24 @@ import {PointerTap} from './pointer-tap';
 import {SYSTEMS,type Atlas,type SceneState} from './anatomy';
 interface Props {atlas:Atlas;state:SceneState;onSelect:(id:string)=>void;onProgress:(n:number)=>void;onError:(s:string)=>void}
 
-// Kamera sengaja dikurung. Keluhan aslinya: model "diputer-putar" dan terasa
-// liar. Dua penyebabnya berbeda dan keduanya diperbaiki di sini:
-//   1. rotasi otomatis (autoRotate) memutar model tanpa disentuh -> dihapus;
-//   2. sumbu vertikal bebas membuat sekali geser ke atas kamera melayang di
-//      atas kepala dan sulit dikembalikan -> dikunci ke ketinggian mata.
-// Batas mendatar +-90 derajat memberi depan, serong, dan kedua samping tanpa
-// membuat orientasi hilang. Konsekuensinya 180 derajat (tampak belakang) tidak
-// bisa dicapai, jadi tombol "B" ikut dihapus dari UI - bukan dibiarkan ada tapi
-// tak berfungsi.
-const AZIMUT_MAKS = Math.PI / 2;
+// Kamera dikunci pada SATU sumbu saja: mendatar penuh 360 derajat, vertikal mati.
+//
+// Riwayat keputusan, supaya tidak bolak-balik tanpa alasan:
+//   - rotasi otomatis (autoRotate) tetap DIHAPUS. Keluhan "diputer-putar"
+//     berasal dari model yang bergerak tanpa disentuh, bukan dari kemampuan
+//     memutar. Itu tidak dikembalikan.
+//   - sumbu vertikal tetap DIKUNCI. minPolarAngle = maxPolarAngle = pi/2 membuat
+//     kamera selalu setinggi target, jadi tidak ada lagi kamera melayang di atas
+//     kepala yang sulit dikembalikan.
+//   - azimut TIDAK dibatasi. Versi sebelumnya memotongnya di +-90 derajat, dan
+//     itu kesalahan: pengguna kehilangan tampak belakang, padahal memutar penuh
+//     adalah cara paling wajar memeriksa model 3D. Sekarang 360 derajat penuh,
+//     jadi depan, kedua samping, dan belakang semuanya terjangkau.
 const POLAR_KUNCI = Math.PI / 2;
 /** Ketinggian target kamera. Semua penempatan kamera memakai nilai ini. */
 const TINGGI_TARGET = 0.85;
 
-/** Arah kamera mendatar pada sudut tertentu. 0 = depan, 90 = samping kanan. */
+/** Arah kamera mendatar pada sudut tertentu. 0 = depan, 90 = samping kanan, 180 = belakang. */
 const arah = (derajat: number) => new T.Vector3(Math.sin(T.MathUtils.degToRad(derajat)), 0, Math.cos(T.MathUtils.degToRad(derajat)));
 
 export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:Props){
@@ -36,15 +39,14 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
   let renderer:T.WebGLRenderer;
   try{renderer=new T.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});}catch{onError('Peramban ini tidak dapat menjalankan penampil 3D. Coba peramban yang mendukung WebGL.');return;}
   renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<768?1.5:2));renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;el.appendChild(renderer.domElement);
-  renderer.domElement.setAttribute('aria-label','Anatomi manusia interaktif. Geser ke kiri atau kanan untuk memutar, cubit atau gulir untuk memperbesar, dan ketuk struktur untuk memeriksanya. Putaran dibatasi ke kiri dan kanan saja.');
+  renderer.domElement.setAttribute('aria-label','Anatomi manusia interaktif. Geser ke kiri atau kanan untuk memutar penuh 360 derajat, cubit atau gulir untuk memperbesar, dan ketuk struktur untuk memeriksanya. Kamera tidak bisa dimiringkan ke atas atau ke bawah.');
   const scene=new T.Scene(),camera=new T.PerspectiveCamera(34,1,.005,100),controls=new OrbitControls(camera,renderer.domElement);
   // Kamera awal sengaja sejajar target (Y sama), bukan di atasnya.
   controls.target.set(0,TINGGI_TARGET,0);camera.position.set(1.4,TINGGI_TARGET,3.6);
   controls.enableDamping=true;controls.dampingFactor=.09;controls.minDistance=.07;controls.maxDistance=40;
   // Kunci sumbu vertikal: kamera selalu setinggi target, jadi gerakan hanya kiri-kanan.
   controls.minPolarAngle=POLAR_KUNCI;controls.maxPolarAngle=POLAR_KUNCI;
-  // Batas mendatar +-90 derajat.
-  controls.minAzimuthAngle=-AZIMUT_MAKS;controls.maxAzimuthAngle=AZIMUT_MAKS;
+  // Azimut sengaja TIDAK dibatasi: putaran mendatar penuh 360 derajat.
   controls.rotateSpeed=.55;controls.zoomSpeed=.6;controls.panSpeed=.7;
   controls.addEventListener('change',()=>{dirty=true;});
   const pmrem=new T.PMREMGenerator(renderer),room=new RoomEnvironment(),env=pmrem.fromScene(room,.04);scene.environment=env.texture;room.dispose();pmrem.dispose();
@@ -153,7 +155,8 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
    const reservedHeight=mobile?350:270;const availableAspect=Math.max(.35,(el.clientWidth-(mobile?40:340))/Math.max(160,el.clientHeight-reservedHeight));const atlasDistance=Math.max(packingHeight,packingWidth/availableAspect)/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)))*(el.clientHeight/Math.max(160,el.clientHeight-reservedHeight))*1.08;
    const distance=T.MathUtils.lerp(normalDistance,Math.max(.2,atlasDistance),extent);if(extent>.8)view='front';
    // Semua arah mendatar: tidak ada komponen Y, supaya kamera tidak pernah naik/turun.
-   const direction=view==='front'?arah(0):view==='side'?arah(90):arah(20);
+   // 180 derajat = tampak belakang, sekarang terjangkau karena azimut tidak dibatasi.
+   const direction=view==='front'?arah(0):view==='back'?arah(180):view==='side'?arah(90):arah(20);
    controls.target.set(extent>.1&&el.clientWidth>767?-packingWidth*.12:0,extent>.1||mobile?TINGGI_TARGET:.68,0);camera.position.copy(controls.target).addScaledVector(direction,distance);controls.update();dirty=true;targetsAt=-Infinity;
   };
   const resize=()=>{layoutKey='';lastState=null;renderer.setPixelRatio(Math.min(devicePixelRatio,el.clientWidth<768||el.clientHeight<600?1.5:2));camera.aspect=el.clientWidth/el.clientHeight;camera.updateProjectionMatrix();renderer.setSize(el.clientWidth,el.clientHeight);fit(latest.current.view,amount);};const observer=new ResizeObserver(resize);observer.observe(el);
