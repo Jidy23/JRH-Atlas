@@ -1,0 +1,37 @@
+/* Interaction and readability fixes, shared by every route. */
+.app-rebuild :is(a,button,input,select,[tabindex]):focus-visible{outline:3px solid var(--jrh-teks);outline-offset:3px}
+.app-rebuild .brand{color:var(--jrh-teks)}
+.app-rebuild .tema-tombol{min-height:44px;min-width:44px}
+:root[data-tema=terang] :is(.lencana,.tautan,.istilah-chip,.id-card-head,.mode.aktif){color:#263b48}
+:root[data-tema] .app-rebuild .jbtn.aktif b{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .chip{color:var(--jrh-teks)}
+:root[data-tema=terang] :is(.top-actions button.active,.view-controls button.active,.layer-presets button[aria-pressed=true]){color:#263b48}
+:root[data-tema] .explorer-frame .layer-presets button{color:var(--jrh-teks)}
+:root[data-tema] .explorer-frame .panel-heading .small-number{color:var(--jrh-teks);background:var(--jrh-bg)}
+.app-rebuild .akademi .kartu-besar{animation:none;color:var(--jrh-teks)}
+.app-rebuild .pilih:disabled{opacity:1;cursor:default}
+.app-rebuild .pilih.benar{border:2px solid var(--jrh-benar)}
+.app-rebuild .pilih.salah{border:2px solid var(--jrh-salah)}
+.app-rebuild .umpan{margin-top:20px}
+.app-rebuild .glos-row{overflow-wrap:anywhere}
+.explorer-frame .loading{max-width:calc(100% - 32px);z-index:60}
+.explorer-frame .loading.error{flex-wrap:wrap}
+/* Keep palette text on an opaque theme surface. Selection uses its border,
+   not a legacy literal foreground or translucent accent background. */
+:root[data-tema] .app-rebuild .tema .palet{background:var(--jrh-kartu);color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .tema .palet .palet-nama{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .tema .palet .palet-asal{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .tema .palet.aktif{border:2px solid var(--aksen);background:var(--jrh-kartu)}
+@media(min-width:901px){.explorer-frame .mobile-only{display:none}.explorer-frame .desktop-only{display:flex}}
+@media(max-width:900px){.explorer-frame .desktop-only{display:none}.explorer-frame .layers-panel.mobile-open{background:var(--jrh-kartu);box-shadow:0 12px 40px #0004}.explorer-frame .system-list{overflow-y:auto;overscroll-behavior:contain}.explorer-frame .system-row{min-height:44px}.explorer-frame .search-panel{background:var(--jrh-kartu)}}
+@media(max-width:480px){.explorer-frame .bottom-dock{gap:8px;padding:12px}.explorer-frame .dock-reset{min-width:44px}.explorer-frame .dock-reset span{display:none}.explorer-frame .explode-control{min-width:0}.app-rebuild .app-navigation a{overflow-wrap:anywhere}}
+
+/* The base sheet tints every plain button with a light-theme ink on hover
+   (button:not([data-slot]):hover{color:#182536}). The level cards are plain
+   buttons, so their captions inherited that ink and dropped to 1.11:1 on the
+   dark card surface. Pin the card and its captions to the theme token so the
+   hover tint can no longer reach them. */
+:root[data-tema] .app-rebuild .akademi .jbtn,
+:root[data-tema] .app-rebuild .akademi .jbtn:hover{color:var(--jrh-teks)}
+:root[data-tema] .app-rebuild .akademi .jbtn small,
+:root[data-tema] .app-rebuild .akademi .jbtn .jbtn-tagline{color:var(--jrh-teks)}

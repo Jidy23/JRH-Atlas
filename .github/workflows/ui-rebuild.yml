@@ -1,0 +1,51 @@
+name: UI rebuild browser checks
+on:
+  push:
+    branches: [feat/ui-ux-rebuild]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ui-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm audit
+      - run: npm run check
+      - run: npm run audit:kontras
+      - run: npm run build
+      - name: Install isolated browser test tools
+        run: |
+          npm install --prefix /tmp/ui-browser --no-package-lock playwright @axe-core/playwright
+          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Browser regression and accessibility report
+        run: |
+          npm run dev > /tmp/vite-ui.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3016/ > /dev/null && break; sleep 1; done
+          node scripts/ui-browser.mjs
+      - name: Require zero WCAG violations in tested states
+        run: |
+          node --input-type=module - <<'JS'
+          import {readFileSync} from 'node:fs';
+          const reports=JSON.parse(readFileSync('ui-evidence/report.json','utf8'));
+          const failures=reports.filter(r=>r.violations.length||r.errors.length);
+          if(reports.length!==12||failures.length){console.error(JSON.stringify(failures,null,2));process.exit(1);}
+          console.log('12 page/viewport states: zero axe WCAG violations, zero runtime errors.');
+          JS
+      - name: Theme palettes, Auto, persistence and keyboard focus
+        run: node scripts/ui-theme-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-browser-evidence
+          path: ui-evidence/

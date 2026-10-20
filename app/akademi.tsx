@@ -3,6 +3,7 @@ import { JENJANG, ORGAN, organByName, type Jenjang } from './kurikulum';
 import { TUR, organLangkah, turUntuk } from './belajar';
 import { acak, bankSoal, deck, nilai, predikat, type Soal } from './kuis';
 import './akademi.css';
+import './interaction.css';
 
 type Mode = 'belajar' | 'kuis' | 'flashcard';
 
@@ -10,13 +11,12 @@ type Mode = 'belajar' | 'kuis' | 'flashcard';
 
 function PilihJenjang({ nilai: v, ubah }: { nilai: Jenjang; ubah: (j: Jenjang) => void }) {
   return (
-    <div className="jenjang" role="radiogroup" aria-label="Pilih jenjang">
+    <div className="jenjang" role="group" aria-label="Pilih jenjang">
       {JENJANG.map((j) => (
         <button
           key={j.id}
           type="button"
-          role="radio"
-          aria-checked={v === j.id}
+          aria-pressed={v === j.id}
           className={v === j.id ? 'jbtn aktif' : 'jbtn'}
           style={{ '--w': j.warna } as CSSProperties}
           onClick={() => ubah(j.id)}
@@ -66,7 +66,7 @@ export function Belajar({
         <span className="lencana">Mode Belajar · {tur.durasi}</span>
         <h2>{tur.judul}</h2>
         <p>{tur.tujuan}</p>
-        <div className="progres" aria-label={`Langkah ${i + 1} dari ${tur.langkah.length}`}>
+        <div className="progres" role="progressbar" aria-valuemin={1} aria-valuemax={tur.langkah.length} aria-valuenow={i + 1} aria-label={`Langkah ${i + 1} dari ${tur.langkah.length}`}>
           <div className="progres-isi" style={{ width: `${((i + 1) / tur.langkah.length) * 100}%` }} />
         </div>
       </div>
@@ -234,7 +234,7 @@ export function Kuis({
         </div>
 
         {pilih !== null && (
-          <div className="umpan">
+          <div className="umpan" role="status" aria-live="polite">
             <p>
               <b>{pilih === s.jawaban ? 'Benar. ' : 'Belum tepat. '}</b>
               {s.alasan}
@@ -264,7 +264,7 @@ export function Flashcard() {
   const [mode, setMode] = useState<ModeKartu>('nama');
   const [i, setI] = useState(0);
   const [balik, setBalik] = useState(false);
-  const [dihafal, setDihafal] = useState(0);
+  const [dihafal, setDihafal] = useState<Set<string>>(() => new Set());
 
   const kartu = useMemo(
     () => deck(jenjang === 'semua' ? undefined : jenjang, mode),
@@ -273,6 +273,7 @@ export function Flashcard() {
 
   const total = kartu.length;
   const k = kartu[i % total];
+  const hafalTerlihat = kartu.filter(c => dihafal.has(`${mode}:${c.organ}`)).length;
 
   function geser(arah: 1 | -1) {
     setBalik(false);
@@ -280,9 +281,16 @@ export function Flashcard() {
   }
 
   function tandai(hafal: boolean) {
-    if (hafal) setDihafal((h) => h + 1);
+    setDihafal(previous => {
+      const next = new Set(previous);
+      const key = `${mode}:${k.organ}`;
+      if (hafal) next.add(key); else next.delete(key);
+      return next;
+    });
     geser(1);
   }
+
+  if (!k) return <section className="akademi"><h2>Flashcard</h2><p role="status">Belum ada kartu untuk filter ini.</p></section>;
 
   return (
     <section className="akademi">
@@ -342,7 +350,7 @@ export function Flashcard() {
       </div>
 
       <p className="catatan-kecil">
-        {dihafal > 0 ? `${dihafal} kartu ditandai hafal sesi ini. ` : ''}
+        {`${hafalTerlihat} dari ${total} kartu unik ditandai hafal pada filter ini. `}
         Ulangi besok untuk mengunci ingatan.
       </p>
     </section>

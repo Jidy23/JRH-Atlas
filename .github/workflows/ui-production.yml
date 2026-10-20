@@ -1,0 +1,42 @@
+name: Production lazy loading checks
+on:
+  push:
+    branches: [feat/ui-ux-rebuild]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - name: Install browser tools
+        run: |
+          npm install --prefix /tmp/ui-browser --no-package-lock playwright @axe-core/playwright
+          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium
+      - name: Test built production assets
+        run: |
+          npx vite preview --host 127.0.0.1 --port 3016 > /tmp/vite-production.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3016/ > /dev/null && break; sleep 1; done
+          node scripts/ui-lazy-browser.mjs
+          node scripts/ui-browser.mjs
+          node scripts/ui-theme-browser.mjs
+          node --input-type=module - <<'JS'
+          import {readFileSync} from 'node:fs';
+          const reports=JSON.parse(readFileSync('ui-evidence/report.json','utf8'));
+          if(reports.length!==12||reports.some(r=>r.violations.length||r.errors.length))process.exit(1);
+          JS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ui-production-evidence
+          path: ui-evidence/

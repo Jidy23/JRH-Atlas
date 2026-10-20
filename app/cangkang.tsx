@@ -1,127 +1,39 @@
-import { useEffect, useState } from 'react';
-import Home, { type Sorotan } from './page';
-import { Akademi } from './akademi';
-import { Glosarium, Panduan } from './halaman';
+import {Component,Suspense,lazy,useEffect,useLayoutEffect,useRef,useState,type ReactNode} from 'react';
+import type {Sorotan} from './page';
+import {Akademi} from './akademi';
+import {Glosarium,Panduan} from './halaman';
 import Tema from './tombol-tema';
-import { terapkanTema, bacaTema } from './tema';
-import { turUntuk, organLangkah } from './belajar';
-import type { Jenjang } from './kurikulum';
+import {turUntuk,organLangkah} from './belajar';
+import type {Jenjang} from './kurikulum';
 import './ekstra.css';
-
-type Tab = 'jelajah' | 'belajar' | 'kuis' | 'flashcard' | 'glosarium' | 'panduan';
-
-const TAB: { id: Tab; label: string; ikon: string }[] = [
-  { id: 'jelajah', label: 'Jelajah 3D', ikon: '🧭' },
-  { id: 'belajar', label: 'Belajar', ikon: '📖' },
-  { id: 'kuis', label: 'Kuis', ikon: '🎯' },
-  { id: 'flashcard', label: 'Flashcard', ikon: '🃏' },
-  { id: 'glosarium', label: 'Glosarium', ikon: '📚' },
-  { id: 'panduan', label: 'Panduan', ikon: 'ℹ️' },
-];
-
-function tabDariUrl(): Tab {
-  const p = new URLSearchParams(location.search).get('tab') as Tab | null;
-  return p && TAB.some((t) => t.id === p) ? p : 'jelajah';
+import './redesign.css';
+const Home=lazy(()=>import('./page'));
+class ViewerBoundary extends Component<{children:ReactNode},{failed:boolean}>{
+ state={failed:false};
+ static getDerivedStateFromError(){return {failed:true};}
+ render(){return this.state.failed?<div className="kartu-besar" role="alert"><p>Penjelajah 3D tidak dapat dimuat. Periksa koneksi lalu coba lagi.</p><button className="tombol" type="button" onClick={()=>location.reload()}>Muat ulang</button></div>:this.props.children;}
 }
-
-function jenjangDariUrl(): Jenjang {
-  const p = new URLSearchParams(location.search).get('jenjang');
-  return p === 'smp' || p === 'sma' ? p : 'sd';
-}
-
-function jenjangKeUrl(j: Jenjang) {
-  const url = new URL(location.href);
-  url.searchParams.set('jenjang', j);
-  history.replaceState(null, '', url);
-}
-
-export default function Cangkang() {
-  const [tab, setTab] = useState<Tab>('jelajah');
-  const [sorotan, setSorotan] = useState<Sorotan | null>(null);
-
-  useEffect(() => {
-    // Tema diterapkan sedini mungkin supaya tidak ada kilatan warna.
-    const t = bacaTema();
-    terapkanTema(t.mode, t.palet);
-
-    setTab(tabDariUrl());
-    const onPop = () => setTab(tabDariUrl());
-    addEventListener('popstate', onPop);
-    return () => removeEventListener('popstate', onPop);
-  }, []);
-
-  function pilih(t: Tab) {
-    setTab(t);
-    const url = new URL(location.href);
-    url.searchParams.set('tab', t);
-    history.pushState(null, '', url);
-    window.scrollTo({ top: 0 });
-  }
-
-  /** Dari Mode Belajar ke viewer 3D. */
-  function lihatDi3D(jenjang: Jenjang, indeksLangkah: number) {
-    const tur = turUntuk(jenjang);
-    const l = tur.langkah[indeksLangkah];
-    const organ = organLangkah(l);
-    if (!organ) return;
-    setSorotan({ sistem: l.sorot, organ: organ.key });
-    pilih('jelajah');
-  }
-
-  function keBelajar() {
-    setSorotan(null);
-    pilih('belajar');
-  }
-
-  const akademi = tab === 'belajar' || tab === 'kuis' || tab === 'flashcard';
-
-  return (
-    <div className="cangkang">
-      <nav className="tabbar" role="tablist" aria-label="Bagian JRH Atlas">
-        <span className="logo" aria-label="JRH Atlas">
-          <b>JRH</b> Atlas
-        </span>
-        {TAB.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            className={tab === t.id ? 'tab aktif' : 'tab'}
-            onClick={() => pilih(t.id)}
-          >
-            <span aria-hidden>{t.ikon}</span> {t.label}
-          </button>
-        ))}
-        <Tema />
-      </nav>
-
-      <main className="isi">
-        {tab === 'jelajah' && (
-          <>
-            <div className="info-jelajah">
-              <span>
-                <b>Jelajah 3D</b> — ketuk bagian tubuh untuk nama dan penjelasannya. Bisa dicari dengan kata Indonesia.
-              </span>
-              <button type="button" className="tautan" onClick={keBelajar}>
-                Belum tahu mulai dari mana? Buka <b>Mode Belajar</b>
-              </button>
-            </div>
-            <Home sorotan={sorotan} />
-          </>
-        )}
-
-        {akademi && (
-          <Akademi
-            awal={tab as 'belajar' | 'kuis' | 'flashcard'}
-            awalJenjang={jenjangDariUrl()}
-            onJenjang={jenjangKeUrl}
-            onLihat3D={lihatDi3D}
-          />
-        )}
-        {tab === 'glosarium' && <div className="akademi-wrap"><Glosarium /></div>}
-        {tab === 'panduan' && <div className="akademi-wrap"><Panduan /></div>}
-      </main>
-    </div>
-  );
+const TABS=[{id:'jelajah',label:'Jelajah 3D',icon:'◎',description:'Kenali tubuh melalui model tiga dimensi.'},{id:'belajar',label:'Belajar',icon:'▤',description:'Pelajari organ, satu langkah setiap kali.'},{id:'kuis',label:'Kuis',icon:'✓',description:'Uji pemahaman dan pelajari penjelasannya.'},{id:'flashcard',label:'Flashcard',icon:'▱',description:'Latihan mengingat nama, fungsi, dan fakta.'},{id:'glosarium',label:'Glosarium',icon:'Aa',description:'Temukan arti istilah anatomi.'},{id:'panduan',label:'Panduan',icon:'?',description:'Panduan penggunaan dan sumber pembelajaran.'}] as const;
+type Tab=typeof TABS[number]['id'];
+function readTab():Tab{const value=new URLSearchParams(location.search).get('tab');return TABS.find(t=>t.id===value)?.id??'jelajah';}
+function readLevel():Jenjang{const value=new URLSearchParams(location.search).get('jenjang');return value==='smp'||value==='sma'?value:'sd';}
+export default function Cangkang(){
+ const [tab,setTab]=useState<Tab>(readTab),[level,setLevel]=useState<Jenjang>(readLevel),[sorotan,setSorotan]=useState<Sorotan|null>(null);
+ const heading=useRef<HTMLHeadingElement>(null);
+ const previousTab=useRef(tab);
+ // Focus only after React commits a route change; also covers back/forward.
+ useLayoutEffect(()=>{if(previousTab.current===tab)return;previousTab.current=tab;window.scrollTo({top:0});heading.current?.focus({preventScroll:true});},[tab]);
+ useEffect(()=>{const pop=()=>{setTab(readTab());setLevel(readLevel());};addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop);},[]);
+ function navigate(next:Tab){if(next===tab)return;const url=new URL(location.href);url.searchParams.set('tab',next);history.pushState(null,'',url);setTab(next);}
+ function changeLevel(next:Jenjang){setLevel(next);const url=new URL(location.href);url.searchParams.set('jenjang',next);history.replaceState(null,'',url);}
+ function show3D(j:Jenjang,index:number){const step=turUntuk(j).langkah[index];if(!step)return;const organ=organLangkah(step);if(!organ)return;setSorotan({sistem:step.sorot,organ:organ.key});navigate('jelajah');}
+ const current=TABS.find(t=>t.id===tab)!;
+ return <div className={`cangkang app-rebuild ${tab==='jelajah'?'is-explorer':''}`}>
+  <a className="skip-link" href="#konten-utama">Lewati navigasi</a>
+  <header className="app-header"><a className="brand" href="?tab=jelajah" onClick={e=>{e.preventDefault();navigate('jelajah');}}><span className="brand-mark" aria-hidden="true">J</span><span><strong>JRH Atlas</strong><small>Anatomi untuk dipahami</small></span></a><Tema/></header>
+  <nav className="app-navigation" aria-label="Navigasi utama">{TABS.map(t=><a key={t.id} href={`?tab=${t.id}`} aria-current={tab===t.id?'page':undefined} onClick={e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();navigate(t.id);}}><span className="nav-icon" aria-hidden="true">{t.icon}</span><span>{t.label}</span></a>)}<p className="nav-note">Untuk belajar.<br/>Bukan alat diagnosis.</p></nav>
+  <main id="konten-utama" className="app-content" tabIndex={-1}><div className="page-heading"><div><span className="page-kicker">RUANG EKSPLORASI & BELAJAR</span><h1 ref={heading} tabIndex={-1}>{current.label}</h1><p>{current.description}</p></div>{tab==='jelajah'&&<button className="tombol" type="button" onClick={()=>navigate('belajar')}>Mulai tur belajar →</button>}</div>
+   {tab==='jelajah'?<div className="explorer-frame"><ViewerBoundary><Suspense fallback={<div className="kartu-besar" role="status">Menyiapkan penjelajah 3D…</div>}><Home sorotan={sorotan}/></Suspense></ViewerBoundary></div>:tab==='glosarium'?<div className="akademi-wrap"><Glosarium/></div>:tab==='panduan'?<div className="akademi-wrap"><Panduan/></div>:<Akademi key={`${tab}-${level}`} awal={tab} awalJenjang={level} onJenjang={changeLevel} onLihat3D={show3D}/>}
+  </main>
+ </div>;
 }
