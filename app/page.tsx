@@ -19,10 +19,12 @@ export type Sorotan={sistem?:string[];organ?:string};
 
 interface Props{sorotan?:Sorotan|null}
 
-// Tiga sudut pandang, bukan empat. Kamera dikunci pada +-90 derajat mendatar
-// (lihat scene.tsx), jadi "tampak belakang" di 180 derajat tidak bisa dicapai.
-// Menyisakan tombolnya berarti menyediakan tombol yang tidak melakukan apa pun.
-const SUDUT:[View,string,string][]=[['three-quarter','¾','Tampak serong'],['front','F','Tampak depan'],['side','S','Tampak samping']];
+// Empat sudut pandang. Kamera hanya dikunci pada sumbu vertikal, sedangkan
+// sumbu mendatar bebas 360 derajat (lihat scene.tsx), jadi "tampak belakang"
+// di 180 derajat memang terjangkau. Tombolnya dulu sempat dibuang karena
+// azimut dipotong di +-90 derajat; sekarang batas itu hilang, jadi tombolnya
+// dikembalikan. Tombol tanpa sasaran sama buruknya dengan sudut yang hilang.
+const SUDUT:[View,string,string][]=[['three-quarter','¾','Tampak serong'],['front','F','Tampak depan'],['side','S','Tampak samping'],['back','B','Tampak belakang']];
 
 export default function Home({sorotan}:Props){
  const detailTitle=useRef<HTMLHeadingElement>(null);
@@ -84,7 +86,7 @@ export default function Home({sorotan}:Props){
   <nav className="view-controls glass" aria-label="Kontrol kamera">{SUDUT.map(([v,singkat,label])=><Button variant="ghost" key={v} className={state.view===v?'active':''} aria-pressed={state.view===v} disabled={state.explode>.8&&v!=='front'} onClick={()=>setState(s=>({...s,view:v,reset:s.reset+1}))} title={label} aria-label={label}><span>{singkat}</span></Button>)}<i/><Button variant="ghost" aria-label="Atur ulang tampilan" title="Atur ulang" onClick={reset}><RotateCcw size={17}/></Button></nav>
   <div className="scene-caption"><span className="caption-line"/><span>{state.isolate?(chosen?keIndonesia(chosen.name).toUpperCase():'STRUKTUR TERPILIH'):state.explode>.95?'INVENTARIS ANATOMI':state.explode>.05?'STRUKTUR TERPISAH':'MANUSIA DEWASA · LAKI-LAKI'}</span><span className="caption-line"/></div>
   <div className="bottom-dock glass"><Button variant="ghost" className="mobile-only dock-layers" onClick={()=>openPanel('layers')} aria-label="Buka lapisan sistem"><Layers3 size={20}/><span>Sistem</span></Button><div className="explode-control"><div className="explode-label"><label id="explode-label">Pisahkan anatomi</label><output>{Math.round(state.explode*100)}<span>%</span></output></div><Slider aria-labelledby="explode-label" min={0} max={100} step={1} value={[state.explode*100]} onValueChange={v=>setState(s=>({...s,explode:(Array.isArray(v)?v[0]:v)/100,view:(Array.isArray(v)?v[0]:v)>80?'front':s.view}))}/><div className="slider-endpoints"><span>Utuh</span><span>Semua bagian</span></div></div><Button variant="ghost" className="dock-reset" onClick={reset} aria-label="Satukan dan atur ulang"><RotateCcw size={18}/><span>Atur ulang</span></Button></div>
-  <footer className="studio-footer"><span>Geser ke kiri–kanan untuk memutar <b>·</b> Cubit untuk zoom <b>·</b> Ketuk untuk memeriksa</span><Button variant="ghost" onClick={()=>{setDetails(false);setPanel(null);setAbout(true);}}>Sumber & kredit <ArrowUpRight size={12}/></Button></footer>
+  <footer className="studio-footer"><span>Geser ke kiri–kanan untuk memutar penuh 360° <b>·</b> Cubit untuk zoom <b>·</b> Ketuk untuk memeriksa</span><Button variant="ghost" onClick={()=>{setDetails(false);setPanel(null);setAbout(true);}}>Sumber & kredit <ArrowUpRight size={12}/></Button></footer>
   {progress<100&&!error&&<div className="loading glass" role="status"><Activity size={18}/><div><strong>Menyiapkan anatomi</strong><span>{progress}% · Memuat {atlas?.parts.length.toLocaleString('id-ID')??'2.234'} bagian</span><div className="loading-track"><i style={{width:`${progress}%`}}/></div></div></div>}
   {nothingVisible&&<div className="loading glass empty-state" role="status"><div><strong>Tidak ada sistem yang ditampilkan</strong><span>Pilih minimal satu sistem organ di panel, atau tampilkan kembali susunan awal.</span></div><Button variant="ghost" onClick={()=>setState(s=>({...s,visible:DEFAULT_VISIBLE,selected:[],isolate:false}))}>Tampilkan susunan awal</Button></div>}
   {error&&<div className="loading glass error" role="alert"><p>{error}</p><Button variant="ghost" onClick={()=>location.reload()}>Muat ulang</Button></div>}

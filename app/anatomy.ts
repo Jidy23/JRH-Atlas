@@ -33,11 +33,15 @@ export interface Chunk {url:string;gzip?:string;bytes:number;}
 export interface Atlas {version:string;parts:Part[];concepts:Concept[];chunks:Chunk[];}
 
 /**
- * Sudut pandang yang bisa dicapai. `back` sengaja tidak ada: kamera dibatasi
- * ±90° pada sumbu mendatar, jadi 180° (tampak belakang) mustahil dicapai tanpa
- * melanggar batas itu. Lihat catatan di scene.tsx.
+ * Sudut pandang yang bisa dicapai. Keempatnya nyata: kamera hanya dikunci pada
+ * sumbu vertikal, sedangkan sumbu mendatar bebas 360 derajat. Jadi 180 derajat
+ * (tampak belakang) memang terjangkau dan tombolnya tidak sia-sia.
+ *
+ * Ini pernah salah: azimut sempat dipotong di +-90 derajat, `back` dihapus dari
+ * tipe ini, dan tombolnya ikut dibuang. Itu menutupi masalah alih-alih
+ * menyelesaikannya. Lihat catatan di scene.tsx.
  */
-export type View = 'front'|'side'|'three-quarter';
+export type View = 'front'|'side'|'three-quarter'|'back';
 
 /**
  * `rotate` sudah dihapus: model tidak lagi berputar sendiri. Rotasi otomatis
