@@ -18,50 +18,38 @@
   .tab { min-height: 40px; }
 }
 
-/* Kartu jenjang: sudut aksen saat aktif, miring halus saat hover */
+/* Kartu jenjang: state aktif ditandai border + warna label.
+   Versi sebelumnya menambahkan .jbtn::before berupa garis 3px di tepi KIRI
+   kartu. Itu persis pola yang DESIGN.md daftarkan sebagai sengaja tidak dipakai
+   ("Side-tab border berwarna di tepi kiri kartu"), dan menambah satu lapisan
+   dekorasi yang tidak membawa informasi baru — border kartu sudah berubah
+   warna saat aktif. */
 .jbtn {
   position: relative;
-  overflow: hidden;
   transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
-.jbtn::before {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: var(--w, var(--aksen));
-  opacity: 0;
-  transition: opacity 160ms ease;
-}
 .jbtn:hover { transform: translateY(-1px); }
-.jbtn.aktif::before { opacity: 1; }
 .jbtn.aktif {
-  box-shadow: inset 0 0 0 1px var(--w, var(--aksen)), 0 8px 22px -14px var(--w, var(--aksen));
+  box-shadow: inset 0 0 0 1px var(--w, var(--aksen));
 }
 
-/* Kartu besar: garis aksen tipis di atas.
-   DESIGN.md aturan 2: gradien hanya di .primary-action dan .tombol.utama,
-   jadi ini memakai aksen solid. */
-.kartu-besar { position: relative; overflow: hidden; }
-.kartu-besar::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--aksen);
-  opacity: 0.6;
-}
+/* Kartu besar: tanpa garis aksen dekoratif di atas kartu.
+   Hierarki dibawa oleh kontras, ukuran, dan spasi (DESIGN.md aturan #3), bukan
+   oleh garis hias 2px. Aturan #2 juga sudah membatasi gradien ke aksi fokus,
+   jadi garis ini hanya menambah dekorasi tanpa makna. */
+.kartu-besar { position: relative; }
 
 /* Tombol utama: efek tekan yang jelas */
 .tombol.utama { position: relative; }
 .tombol.utama:active { transform: translateY(1px); }
 .tombol:active:not(:disabled) { transform: translateY(1px); }
 
-/* Fokus keyboard selalu terlihat, termasuk di tema terang */
+/* Fokus keyboard selalu terlihat, termasuk di tema terang.
+   Memakai --aksen-nonteks, bukan --aksen mentah: DESIGN.md aturan #7 menetapkan
+   cincin fokus sebagai indikator non-teks yang wajib lolos 3:1, dan aksen mentah
+   hanya 1,63:1 di latar terang. */
 :where(button, select, input, a, [tabindex]):focus-visible {
-  outline: 2px solid var(--aksen);
+  outline: 2px solid var(--aksen-nonteks);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -70,7 +58,8 @@
 .pilih.benar { color: var(--jrh-teks); }
 .pilih.salah { color: var(--jrh-teks); }
 
-/* Bilah progres tipis di bawah tab aktif (penanda posisi) */
+/* Bilah progres tipis di bawah tab aktif (penanda posisi).
+   Indikator non-teks, jadi memakai --aksen-nonteks (DESIGN.md aturan #7). */
 .tab.aktif::after {
   content: '';
   position: absolute;
@@ -80,25 +69,22 @@
   width: 14px;
   height: 2px;
   border-radius: 2px;
-  background: currentColor;
+  background: var(--aksen-nonteks);
   opacity: 0.5;
 }
 .tab { position: relative; }
 
-/* Skeleton halus saat katalog 3D dimuat */
-.loading::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, transparent, var(--aksen-lembut), transparent);
-  animation: kilau 1.6s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes kilau {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
-}
+/* Panel memuat: indikator progres sudah ada di .loading-track, jadi tidak perlu
+   kilau berjalan di atasnya.
+
+   Versi sebelumnya memasang animasi `kilau` tak berujung pada .loading::before
+   dengan `inset: 0` dan `translateX(-100%)`. Karena .loading TIDAK punya
+   overflow:hidden, pita gradien itu meluncur keluar dari panel dan menyeberangi
+   kanvas 3D sebagai kilatan terang. Selain itu animasi tak berujung bertentangan
+   dengan MOTION 1 ("hanya transisi 150ms pada hover dan fokus"). Keduanya
+   dihapus; overflow:hidden tetap dipertahankan sebagai pengaman kalau nanti ada
+   dekorasi lain di dalam panel. */
+.loading { overflow: hidden; }
 
 /* Layer & sistem: baris lebih mudah dipindai */
 .system-row { transition: background 150ms ease; }

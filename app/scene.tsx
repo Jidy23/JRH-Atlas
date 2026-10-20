@@ -29,6 +29,17 @@ const TINGGI_TARGET = 0.85;
 /** Arah kamera mendatar pada sudut tertentu. 0 = depan, 90 = samping kanan, 180 = belakang. */
 const arah = (derajat: number) => new T.Vector3(Math.sin(T.MathUtils.degToRad(derajat)), 0, Math.cos(T.MathUtils.degToRad(derajat)));
 
+// Nama atribut tema di <html>. SUMBER KEBENARANNYA adalah app/tema.ts
+// (`html.dataset.tema` / `html.dataset.palet`), yang juga dipakai tema.css.
+// Sebelumnya scene.tsx membaca `dataset.theme` dan `dataset.palette` — dua
+// atribut yang TIDAK PERNAH ditulis siapa pun. Akibatnya `dark` selalu false:
+// kanvas 3D tetap berlatar terang dan memakai eksposur terang walaupun UI sudah
+// mode gelap, dan MutationObserver tidak pernah terpicu saat tema berganti.
+// Bug ini tidak tertangkap audit karena axe memeriksa DOM, bukan isi kanvas.
+//
+// Daftar atribut ditulis sebagai literal, bukan konstanta terpisah, supaya
+// penjaga di scripts/verify-scene-controls.mjs bisa memeriksanya langsung.
+
 export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:Props){
  const host=useRef<HTMLDivElement>(null),latest=useRef(state),select=useRef(onSelect);
  latest.current=state;select.current=onSelect;
@@ -69,10 +80,13 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
   // three.js mewarnai kanvasnya sendiri, jadi CSS tidak bisa menyentuh latar 3D.
   // Tanpa ini, mode Gelap tetap menampilkan kotak abu-abu terang di tengah UI gelap.
   // Baca token yang sama dengan tema.css dan terapkan ulang saat tema/palet berganti.
-  const themeColors=()=>{const css=getComputedStyle(document.documentElement),read=(name:string,fallback:string)=>css.getPropertyValue(name).trim()||fallback;const dark=document.documentElement.dataset.theme==='gelap';return{dark,clear:read('--background',dark?'#0a0f1c':'#f2f3f3'),stage:read('--muted',dark?'#1b2740':'#d5d9dc'),platform:read('--card',dark?'#121b2e':'#eeeeec'),line:read('--muted-foreground',dark?'#97a6c2':'#8c969f'),marker:read('--muted-foreground',dark?'#97a6c2':'#64748b')};};
+  const themeColors=()=>{const css=getComputedStyle(document.documentElement),read=(name:string,fallback:string)=>css.getPropertyValue(name).trim()||fallback;const dark=document.documentElement.dataset.tema==='gelap';return{dark,clear:read('--background',dark?'#0a0f1c':'#f2f3f3'),stage:read('--muted',dark?'#1b2740':'#d5d9dc'),platform:read('--card',dark?'#121b2e':'#eeeeec'),line:read('--muted-foreground',dark?'#97a6c2':'#8c969f'),marker:read('--muted-foreground',dark?'#97a6c2':'#64748b')};};
   const applyTheme=()=>{const t=themeColors();renderer.setClearColor(t.clear);(ground.material as T.MeshStandardMaterial).color.set(t.stage);(platform.material as T.MeshStandardMaterial).color.set(t.platform);(ring.material as T.MeshBasicMaterial).color.set(t.line);(innerRing.material as T.MeshBasicMaterial).color.set(t.line);markerMaterial.color.set(t.marker);renderer.toneMappingExposure=t.dark?0.95:1.12;el.dataset.sceneTheme=t.dark?'gelap':'terang';dirty=true;};
   applyTheme();
-  const themeObserver=new MutationObserver(applyTheme);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-palette']});
+  // Pantau atribut yang BENAR-BENAR ditulis tema.ts. Sebelumnya filter ini
+  // menunggu 'data-theme'/'data-palette', jadi mengganti tema tidak pernah
+  // memicu applyTheme() dan kanvas tertinggal di palet lama.
+  const themeObserver=new MutationObserver(applyTheme);themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-tema','data-palet']});
   const hover=document.createElement('div');hover.className='part-hover';hover.setAttribute('role','tooltip');hover.hidden=true;el.appendChild(hover);
   type Target={index:number;x:number;y:number;left:number;right:number;top:number;bottom:number};let targets:Target[]=[];
   const projected=new T.Vector3();

@@ -38,11 +38,20 @@ try {
  // three.js paints its own canvas, so CSS cannot reach the 3D background. If the
  // viewer hardcodes a light clear colour, dark mode leaves a bright rectangle in
  // the middle of the dark UI. Assert the canvas actually follows the theme.
+ //
+ // This test used to toggle `data-theme` / `data-palette` — English attribute
+ // names that nothing in the app ever writes. app/tema.ts writes `data-tema`
+ // and `data-palet`. So the test was driving an attribute the viewer ignored,
+ // and it only passed because scene.tsx happened to read the same wrong name.
+ // Both sides agreed on a name the product never used, which is why this
+ // regression survived a green CI. The assertions now use the real names and
+ // also check that the palette attribute survives a mode switch.
  await page.waitForFunction(()=>document.querySelector('.scene')?.dataset.sceneTheme);
  const themeSync=async(expected)=>{
-  await page.evaluate((mode)=>{document.documentElement.dataset.theme=mode;},expected);
+  await page.evaluate((mode)=>{document.documentElement.dataset.tema=mode;},expected);
   await page.waitForFunction((mode)=>document.querySelector('.scene')?.dataset.sceneTheme===mode,expected);
-  assert.equal(await page.locator('html').getAttribute('data-theme'),expected);
+  assert.equal(await page.locator('html').getAttribute('data-tema'),expected);
+  assert.ok(await page.locator('html').getAttribute('data-palet'),'palette attribute must stay present after a mode switch');
  };
  await themeSync('gelap');
  await themeSync('terang');
