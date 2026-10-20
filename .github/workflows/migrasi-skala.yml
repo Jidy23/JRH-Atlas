@@ -1,0 +1,131 @@
+name: Migrasi skala sekali-jalan
+
+# Workflow ini hanya untuk menjalankan migrasi Fase 2 di runner, lalu menghapus
+# dirinya sendiri. Alasan: REST contents API hanya menerima isi UTUH, dan
+# app/globals.css (32 KB) nyaris satu baris. Menulis ulang berkas itu dari nol
+# berisiko merusak seluruh stylesheet viewer tanpa galat build. Runner di sini
+# mengedit berkas asli dengan penggantian teks eksak, dan menolak jalan kalau
+# polanya tidak muncul tepat satu kali.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  migrasi:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/premium-skala
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Ganti font-family literal menjadi var(--font-sans)
+        run: |
+          node <<'NODE'
+          const { readFileSync, writeFileSync } = require('node:fs');
+
+          function ganti(file, pasangan) {
+            let isi = readFileSync(file, 'utf8');
+            for (const [dari, ke] of pasangan) {
+              const jumlah = isi.split(dari).length - 1;
+              if (jumlah !== 1) {
+                console.error(`GAGAL ${file}: pola muncul ${jumlah} kali (harus tepat 1): ${dari}`);
+                process.exit(1);
+              }
+              isi = isi.replace(dari, ke);
+            }
+            writeFileSync(file, isi);
+            console.log(`OK ${file}: ${pasangan.length} penggantian`);
+          }
+
+          ganti('app/akademi.css', [
+            ['font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;',
+             'font-family: var(--font-sans);'],
+          ]);
+
+          ganti('app/redesign.css', [
+            ['font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif',
+             'font-family:var(--font-sans)'],
+          ]);
+
+          ganti('app/globals.css', [
+            ["font-family:'Helvetica Neue',Arial,sans-serif;",
+             'font-family:var(--font-sans);'],
+            ['font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;',
+             'font-family:var(--font-sans);'],
+            ['font-family:inherit!important',
+             'font-family:var(--font-sans)!important'],
+          ]);
+          NODE
+
+      - name: Pasang ratchet di audit-skala.mjs
+        run: |
+          node <<'NODE'
+          const { readFileSync, writeFileSync } = require('node:fs');
+
+          const berkas = 'scripts/audit-skala.mjs';
+          let isi = readFileSync(berkas, 'utf8');
+          if (isi.includes('Ratchet: utang migrasi tidak boleh naik')) {
+            console.log('Ratchet sudah terpasang, dilewati.');
+            process.exit(0);
+          }
+          const jangkar = 'if (gagal) {';
+          if (isi.split(jangkar).length - 1 !== 1) {
+            console.error('Jangkar "if (gagal) {" tidak unik.');
+            process.exit(1);
+          }
+          const sisip = [
+            '// ---------- 5. Ratchet: utang migrasi tidak boleh naik ----------',
+            'const baseline = JSON.parse(',
+            "  readFileSync(join(akar, 'scripts', 'baseline-skala.json'), 'utf8'),",
+            ');',
+            'if (totalPx > baseline.px_total) {',
+            '  catat(`px langsung naik: ${totalPx} > baseline ${baseline.px_total}. Pakai token skala.`);',
+            '} else {',
+            '  console.log(`\u2713 ratchet px: ${totalPx} <= ${baseline.px_total}`);',
+            '}',
+            'if (fontBermasalah.length > baseline.font_declarations) {',
+            '  catat(`font-family literal naik: ${fontBermasalah.length} > baseline ${baseline.font_declarations}`);',
+            '} else {',
+            '  console.log(`\u2713 ratchet font: ${fontBermasalah.length} <= ${baseline.font_declarations}`);',
+            '}',
+            '',
+            '',
+          ].join('\n');
+          isi = isi.replace(jangkar, sisip + jangkar);
+          writeFileSync(berkas, isi);
+          console.log('OK ratchet dipasang sebelum if (gagal)');
+          NODE
+
+      - name: Turunkan baseline font ke 0
+        run: |
+          node <<'NODE'
+          const { readFileSync, writeFileSync } = require('node:fs');
+          const p = 'scripts/baseline-skala.json';
+          const b = JSON.parse(readFileSync(p, 'utf8'));
+          b.font_declarations = 0;
+          b.generated_from = 'log CI PR #16, setelah migrasi font Fase 2';
+          writeFileSync(p, JSON.stringify(b));
+          console.log(readFileSync(p, 'utf8'));
+          NODE
+
+      - name: Buktikan audit skala lolos dengan ratchet
+        run: node scripts/audit-skala.mjs
+
+      - name: Commit, push, lalu hapus workflow ini
+        run: |
+          set -e
+          git config user.name "jidy"
+          git config user.email "zahraamanda302@gmail.com"
+          git add app/akademi.css app/redesign.css app/globals.css scripts/audit-skala.mjs scripts/baseline-skala.json
+          git commit -m "feat(skala): migrasi 5 font-family ke var(--font-sans) dan pasang ratchet" -m "Lima deklarasi font literal diganti token --font-sans dari app/skala.css:" -m "- akademi.css: .cangkang" -m "- redesign.css: .app-rebuild" -m "- globals.css: :root Helvetica, :root Inter, .structure-title !important" -m "scripts/audit-skala.mjs kini membaca scripts/baseline-skala.json dan gagal bila total px melewati 1115 atau jumlah font literal melewati baseline. Baseline font diturunkan 5 -> 0, jadi font literal baru akan menggagalkan CI."
+          git push origin HEAD:feat/premium-skala
+          git rm .github/workflows/migrasi-skala.yml
+          git commit -m "chore(ci): hapus workflow migrasi sekali-jalan"
+          git push origin HEAD:feat/premium-skala
