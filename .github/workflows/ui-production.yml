@@ -9,7 +9,7 @@ permissions:
 jobs:
   production:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,6 +18,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      # Chunks are packed by organ system at build time, so the visibility-driven
+      # loader can skip whole systems instead of only the one leftover chunk.
+      - name: Repack anatomy chunks per organ system
+        run: node scripts/repack-chunks.mjs
+      - name: Verify chunk packing matches organ systems
+        run: node scripts/validate-chunks.mjs
       - run: npm run build
       - name: Install browser tools
         run: |
@@ -35,6 +41,11 @@ jobs:
           const reports=JSON.parse(readFileSync('ui-evidence/report.json','utf8'));
           if(reports.length!==12||reports.some(r=>r.violations.length||r.errors.length))process.exit(1);
           JS
+      - name: Measure visibility-driven chunk loading
+        run: |
+          npx vite preview --host 127.0.0.1 --port 3016 > /tmp/vite-chunks.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3016/ > /dev/null && break; sleep 1; done
+          node scripts/ui-lazy-chunks-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

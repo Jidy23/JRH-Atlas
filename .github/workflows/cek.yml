@@ -17,6 +17,11 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # Checks the 3D viewer against the installed three build. A camera fix
+      # once used OrbitControls/TOUCH members that do not exist in the pinned
+      # three version, and the only signal was a bare tsc error.
+      - name: Verify 3D control API usage
+        run: node scripts/verify-scene-controls.mjs
       - name: Typecheck
         run: npm run check
       - name: Audit kontras WCAG

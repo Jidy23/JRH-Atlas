@@ -18,6 +18,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      # Anatomy chunks are packed per organ system at build time. Without this
+      # step the mobile job downloaded all 14 source chunks (~31 MB) instead of
+      # the 7 the production job downloads, so it tested different binaries
+      # and hit the 45 s timeout on an emulated Pixel 7.
+      - name: Repack anatomy chunks per organ system
+        run: node scripts/repack-chunks.mjs
+      - name: Verify chunk packing matches organ systems
+        run: node scripts/validate-chunks.mjs
       - run: npm run build
       - name: Install browser engines
         run: |
