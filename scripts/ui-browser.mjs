@@ -7,6 +7,20 @@ const {default:AxeBuilder}=require('@axe-core/playwright');
 await mkdir('ui-evidence',{recursive:true});
 const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const reports=[];
+// Bukti tangkapan layar bukan asersi: kanvas WebGL pada tab jelajah dapat
+// menggantung screenshot full-page. Beri batas waktu, cadangan viewport, dan
+// jangan biarkan kegagalan bukti menutupi hasil uji aksesibilitas.
+async function tangkap(page,path,fullPage=true){
+ const opsi={path,fullPage,timeout:15000,animations:'disabled',caret:'hide'};
+ try{await page.screenshot(opsi);return true}
+ catch(pertama){
+  try{await page.screenshot({...opsi,fullPage:false});return true}
+  catch(kedua){
+   console.warn(JSON.stringify({screenshot:path,gagal:String(pertama),cadangan:String(kedua)}));
+   return false;
+  }
+ }
+}
 try {
  for(const width of [390,1440]){
   const context=await browser.newContext({viewport:{width,height:900},deviceScaleFactor:1});
@@ -43,10 +57,11 @@ try {
     const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
     reports.push({width,tab,violations:result.violations,errors:[...errors]});
     console.log(JSON.stringify({width,tab,violations:result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),errors}));
-    await page.screenshot({path:`ui-evidence/${width}-${tab}.png`,fullPage:true});
+    await tangkap(page,`ui-evidence/${width}-${tab}.png`,tab!=='jelajah');
    } catch(error) {
-    await page.screenshot({path:`ui-evidence/${width}-${tab}-failure.png`,fullPage:true});
-    await writeFile(`ui-evidence/${width}-${tab}-failure.txt`,String(error)+'\n'+await page.locator('body').innerText());
+    await tangkap(page,`ui-evidence/${width}-${tab}-failure.png`,false);
+    const teks=await page.locator('body').innerText().catch(()=>'<tidak tersedia>');
+    await writeFile(`ui-evidence/${width}-${tab}-failure.txt`,String(error)+'\n'+teks);
     throw error;
    }
   }
