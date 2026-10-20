@@ -58,7 +58,13 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
    };materials.push(m);return m;
   };
   const mats=new Map(SYSTEMS.map(s=>[s.id,materialFor(s.id)]));
-  let loaded=0;
+  // A chunk is only fetched when at least one of its parts belongs to a system the
+  // viewer currently shows. Chunks are packed by byte budget, not by system, so this
+  // is chunk-granularity lazy loading driven by visibility - not per-system files.
+  const chunkSystems=atlas.chunks.map((_,ci)=>{const s=new Set<string>();for(const p of atlas.parts)if(p.chunk===ci)s.add(p.system);return s;});
+  const loadedChunks=new Set<number>(),loadingChunks=new Set<number>();
+  const neededChunks=(visible:readonly string[])=>{const out:number[]=[];for(let ci=0;ci<atlas.chunks.length;ci++){for(const sys of chunkSystems[ci]){if(visible.includes(sys)){out.push(ci);break;}}}return out;};
+  const reportProgress=()=>{const need=neededChunks(latest.current.visible).length;onProgress(need?Math.round(loadedChunks.size/Math.min(need,atlas.chunks.length)*100):100);};
   const loadChunk=async(ci:number)=>{
    const chunk=atlas.chunks[ci],compressed=!!chunk.gzip&&typeof DecompressionStream!=='undefined';const response=await fetch(compressed?chunk.gzip!:chunk.url,{signal:abort.signal});const buffer=await decodeModelResponse(response,chunk.bytes,compressed);if(disposed)return;
    const groups=new Map<string,T.BufferGeometry[]>();
@@ -72,9 +78,24 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
     const list=groups.get(p.system)??[];list.push(g);groups.set(p.system,list);
    });
    groups.forEach((gs,system)=>{const geometry=mergeGeometries(gs,false);if(!geometry)throw new Error('Could not assemble anatomy geometry.');geometries.push(geometry);const mesh=new T.Mesh(geometry,mats.get(system as never));mesh.frustumCulled=false;scene.add(mesh);});
-   lastState=null;loaded++;onProgress(Math.round(loaded/atlas.chunks.length*100));dirty=true;
+   lastState=null;loadedChunks.add(ci);reportProgress();dirty=true;
   };
-  (async()=>{try{let cursor=0;await Promise.all(Array.from({length:3},async()=>{while(cursor<atlas.chunks.length){const i=cursor++;await loadChunk(i);}}));if(!disposed){ready=true;dirty=true;}}catch(e){if(!disposed)onError(e instanceof Error?e.message:'Could not load the anatomy.');}})();
+  let pumping=false;
+  const pump=async()=>{
+   if(pumping||disposed)return;pumping=true;
+   try{
+    for(;;){
+     if(disposed)return;
+     const pending=neededChunks(latest.current.visible).filter(ci=>!loadedChunks.has(ci)&&!loadingChunks.has(ci));
+     if(!pending.length)break;
+     const batch=pending.slice(0,3);batch.forEach(ci=>loadingChunks.add(ci));
+     await Promise.all(batch.map(ci=>loadChunk(ci)));
+    }
+    if(!disposed){ready=loadedChunks.size>0;reportProgress();dirty=true;}
+   }catch(e){if(!disposed)onError(e instanceof Error?e.message:'Could not load the anatomy.');}
+   finally{pumping=false;}
+  };
+  void pump();
   const fit=(view:string,extent=0)=>{
    const aspect=camera.aspect,mobile=el.clientWidth<768,normalDistance=mobile?Math.max(4.5,1.8*el.clientHeight/Math.max(160,el.clientHeight-350)/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)))):4;
    const reservedHeight=mobile?350:270;const availableAspect=Math.max(.35,(el.clientWidth-(mobile?40:340))/Math.max(160,el.clientHeight-reservedHeight));const atlasDistance=Math.max(packingHeight,packingWidth/availableAspect)/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)))*(el.clientHeight/Math.max(160,el.clientHeight-reservedHeight))*1.08;
@@ -97,6 +118,7 @@ export default function AnatomyScene({atlas,state,onSelect,onProgress,onError}:P
   const clock=new T.Clock();let lastExtent=-1;
   const animate=()=>{
    if(disposed)return;frame=requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.05),s=latest.current;
+   if(!pumping&&neededChunks(s.visible).some(ci=>!loadedChunks.has(ci)))void pump();
    const changed=lastState?.visible!==s.visible||lastState?.selected!==s.selected||lastState?.isolate!==s.isolate;
    const moving=Math.abs(amount-s.explode)>.0001;
    if(moving){amount=T.MathUtils.damp(amount,s.explode,8,dt);dirty=true;}

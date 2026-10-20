@@ -35,6 +35,11 @@ jobs:
           const reports=JSON.parse(readFileSync('ui-evidence/report.json','utf8'));
           if(reports.length!==12||reports.some(r=>r.violations.length||r.errors.length))process.exit(1);
           JS
+      - name: Measure visibility-driven chunk loading
+        run: |
+          npx vite preview --host 127.0.0.1 --port 3016 > /tmp/vite-chunks.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS http://localhost:3016/ > /dev/null && break; sleep 1; done
+          node scripts/ui-lazy-chunks-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

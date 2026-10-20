@@ -68,6 +68,34 @@ try {
    assert.equal(models.length,0,'Educational routes must not fetch anatomy models');
    assert.deepEqual(errors,[]);
    await page.screenshot({path:`ui-evidence/${test.name}.png`,fullPage:true});
+   // The 3D route is the one place where WebGL, pointer events and lazy chunks meet.
+   // Record what each engine actually does instead of assuming parity with Chromium.
+   const viewer={};
+   try {
+    await page.goto('http://localhost:3016/?tab=jelajah',{waitUntil:'networkidle'});
+    await page.getByRole('button',{name:'Cari struktur anatomi',exact:true}).waitFor({timeout:30000});
+    viewer.reachedRoute=true;
+    viewer.canvasCount=await page.locator('canvas').count();
+    viewer.webgl=await page.evaluate(()=>{try{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'));}catch{return false;}});
+    // Either the model loads (progress reaches 100) or a recoverable alert appears.
+    const loaded=await page.waitForFunction(()=>{const el=document.querySelector('.loading');return !el;},{timeout:45000}).then(()=>true).catch(()=>false);
+    viewer.loadedWithoutAlert=loaded;
+    viewer.alertText=loaded?null:await page.getByRole('alert').innerText().catch(()=>null);
+    if(viewer.webgl){
+     assert.ok(viewer.canvasCount>0,'WebGL available but no canvas was created');
+     assert.equal(viewer.loadedWithoutAlert,true,`${test.name}: viewer stayed on loading state with WebGL available`);
+    }
+    // Touch orbit must not throw even when WebGL falls back to software rendering.
+    await page.mouse.move(200,400);await page.mouse.down();await page.mouse.move(260,430,{steps:5});await page.mouse.up();
+    viewer.pointerGestureSurvived=true;
+    assert.deepEqual(errors,[],`${test.name}: runtime errors on the 3D route`);
+    await page.screenshot({path:`ui-evidence/${test.name}-jelajah.png`,fullPage:false});
+   } catch(error) {
+    viewer.failure=String(error);
+    throw error;
+   } finally {
+    report.viewer=viewer;
+   }
    report.passed=true;console.log(JSON.stringify(report));
   }catch(error){report.failure=String(error);await page.screenshot({path:`ui-evidence/${test.name}-failure.png`,fullPage:true}).catch(()=>{});throw error;}
   finally{await context.close();await browser.close();}
@@ -76,4 +104,5 @@ try {
  // Prove three distinct engines actually ran, instead of trusting configuration.
  assert.equal(new Set(reports.map(r=>r.engine)).size,3,'Three distinct browser engines must execute');
  assert.ok(reports.every(r=>r.version),'Each engine must report a version');
+ assert.ok(reports.every(r=>r.viewer&&r.viewer.reachedRoute),'Every engine must reach the 3D route');
 }finally{await writeFile('ui-evidence/mobile-report.json',JSON.stringify(reports,null,2));}
