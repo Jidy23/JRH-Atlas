@@ -1,1 +1,13 @@
-{"font_declarations":0,"generated_from":"log CI PR #16, setelah migrasi font Fase 2","globals.css":636,"akademi.css":195,"ekstra.css":16,"interaction.css":16,"polish.css":0,"px_total":1115,"redesign.css":163,"skala.css":41,"tema.css":46}
+{
+  "font_declarations": 0,
+  "generated_from": "log CI setelah migrasi px bertahap",
+  "akademi.css": 119,
+  "ekstra.css": 16,
+  "globals.css": 541,
+  "interaction.css": 17,
+  "polish.css": 0,
+  "redesign.css": 137,
+  "skala.css": 41,
+  "tema.css": 37,
+  "px_total": 908
+}
