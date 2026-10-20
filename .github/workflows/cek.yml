@@ -17,6 +17,13 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      # `npm run check` only covers **/*.ts, **/*.tsx and **/*.mts, so a syntax
+      # error in a .mjs test script reached main unnoticed: the chunk measurement
+      # step died with "SyntaxError: missing ) after argument list" the first time
+      # it actually ran. Parse every script before anything else.
+      - name: Parse check scripts
+        run: |
+          for file in scripts/*.mjs; do node --check "$file"; done
       # Checks the 3D viewer against the installed three build. A camera fix
       # once used OrbitControls/TOUCH members that do not exist in the pinned
       # three version, and the only signal was a bare tsc error.
