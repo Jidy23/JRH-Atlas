@@ -40,7 +40,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   position: sticky;
   top: 0;
   z-index: 900;
@@ -55,7 +55,7 @@
 .tab {
   flex: 0 0 auto;
   padding: 9px 14px;
-  border-radius: 999px;
+  border-radius: var(--r-pil);
   border: 1px solid transparent;
   background: transparent;
   color: var(--jrh-redup);
@@ -78,17 +78,17 @@
   width: 100%;
   max-width: 860px;
   margin: 0 auto;
-  padding: 20px 16px 72px;
+  padding: var(--sp-5) var(--sp-4) 72px;
 }
 
 .subtab {
   display: flex;
-  gap: 4px;
-  padding: 4px;
+  gap: var(--sp-1);
+  padding: var(--sp-1);
   margin-bottom: 22px;
   background: color-mix(in srgb, var(--jrh-bg) 92%, var(--jrh-kartu));
   border: 1px solid var(--jrh-garis);
-  border-radius: 12px;
+  border-radius: var(--r-2);
 }
 .sub {
   flex: 1;
@@ -97,7 +97,7 @@
   border-radius: 9px;
   background: transparent;
   color: var(--jrh-redup);
-  font-size: 13px;
+  font-size: var(--t-4);
   font-weight: 600;
   cursor: pointer;
   transition: 140ms ease;
@@ -107,18 +107,18 @@
 
 .akademi h2 { margin: 0 0 6px; font-size: 23px; line-height: 1.3; letter-spacing: -0.02em; }
 .akademi h3 { margin: 0 0 10px; font-size: 18px; line-height: 1.4; }
-.leads { margin: 0 0 18px; font-size: 14px; line-height: 1.65; color: var(--jrh-redup); }
+.leads { margin: 0 0 18px; font-size: var(--t-5); line-height: 1.65; color: var(--jrh-redup); }
 
 /* ---------- Pilih jenjang ---------- */
-.jenjang { display: flex; gap: 8px; margin-bottom: 22px; }
+.jenjang { display: flex; gap: var(--sp-2); margin-bottom: 22px; }
 .jbtn {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 12px 14px;
+  padding: var(--sp-3) 14px;
   border: 1px solid var(--jrh-garis);
-  border-radius: 12px;
+  border-radius: var(--r-2);
   background: var(--jrh-kartu);
   color: var(--jrh-redup);
   text-align: left;
@@ -126,21 +126,21 @@
   transition: 160ms ease;
 }
 .jbtn b { font-size: 15px; color: var(--jrh-teks); }
-.jbtn small { font-size: 11px; line-height: 1.35; }
+.jbtn small { font-size: var(--t-2); line-height: 1.35; }
 .jbtn:hover { border-color: var(--aksen-garis); }
 .jbtn.aktif { border-color: var(--w); box-shadow: inset 0 0 0 1px var(--w); }
 .jbtn.aktif b { color: var(--w); }
 
 /* ---------- Mode belajar ---------- */
-.tur-kepala { margin-bottom: 16px; }
-.tur-kepala h2 { margin: 8px 0 6px; }
-.tur-kepala p { margin: 0; font-size: 13px; line-height: 1.6; color: var(--jrh-redup); }
+.tur-kepala { margin-bottom: var(--sp-4); }
+.tur-kepala h2 { margin: var(--sp-2) 0 6px; }
+.tur-kepala p { margin: 0; font-size: var(--t-4); line-height: 1.6; color: var(--jrh-redup); }
 
 .lencana {
   display: inline-block;
-  padding: 4px 11px;
+  padding: var(--sp-1) 11px;
   border: 1px solid var(--aksen-garis);
-  border-radius: 999px;
+  border-radius: var(--r-pil);
   background: var(--aksen-lembut);
   color: var(--jrh-aksen-teks);
   font-size: 10.5px;
@@ -180,27 +180,27 @@
   text-transform: uppercase;
   color: var(--jrh-redup);
 }
-.kartu-besar .isi { font-size: 15px; line-height: 1.72; color: color-mix(in srgb, var(--jrh-teks) 82%, var(--jrh-redup)); margin: 10px 0 16px; }
+.kartu-besar .isi { font-size: 15px; line-height: 1.72; color: color-mix(in srgb, var(--jrh-teks) 82%, var(--jrh-redup)); margin: 10px 0 var(--sp-4); }
 
 .organ-ringkas {
   padding: 14px;
-  margin-bottom: 16px;
+  margin-bottom: var(--sp-4);
   border: 1px solid var(--jrh-garis);
-  border-radius: 12px;
+  border-radius: var(--r-2);
   background: color-mix(in srgb, var(--jrh-bg) 60%, var(--jrh-kartu));
 }
-.organ-nama { display: flex; align-items: center; gap: 12px; }
+.organ-nama { display: flex; align-items: center; gap: var(--sp-3); }
 .organ-nama .emoji { font-size: 24px; line-height: 1; }
-.organ-nama strong { display: block; font-size: 16px; }
+.organ-nama strong { display: block; font-size: var(--t-6); }
 .organ-nama small { display: block; margin-top: 2px; font-size: 12.5px; line-height: 1.5; color: var(--jrh-redup); }
 
 .chip {
   display: inline-block;
   flex: 0 0 auto;
   margin-left: auto;
-  padding: 4px 10px;
+  padding: var(--sp-1) 10px;
   border: 1px solid var(--jrh-garis);
-  border-radius: 999px;
+  border-radius: var(--r-pil);
   background: color-mix(in srgb, var(--jrh-teks) 8%, var(--jrh-kartu));
   color: var(--jrh-redup);
   font-size: 11.5px;
@@ -208,23 +208,23 @@
   white-space: nowrap;
 }
 
-.fakta { margin: 12px 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.65; color: color-mix(in srgb, var(--jrh-teks) 78%, var(--jrh-redup)); }
+.fakta { margin: var(--sp-3) 0 0; padding-left: 18px; font-size: 13.5px; line-height: 1.65; color: color-mix(in srgb, var(--jrh-teks) 78%, var(--jrh-redup)); }
 .fakta li { margin-bottom: 5px; }
 
 .mitos {
-  margin: 12px 0 0;
-  padding: 10px 12px;
+  margin: var(--sp-3) 0 0;
+  padding: 10px var(--sp-3);
   border-left: 3px solid var(--jrh-aksen2);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--r-1) var(--r-1) 0;
   background: color-mix(in srgb, var(--jrh-aksen2) 8%, transparent);
-  font-size: 13px;
+  font-size: var(--t-4);
   line-height: 1.6;
   color: color-mix(in srgb, var(--jrh-aksen2) 60%, var(--jrh-teks));
 }
 
 .refleksi {
-  margin: 16px 0 0;
-  padding: 12px 14px;
+  margin: var(--sp-4) 0 0;
+  padding: var(--sp-3) 14px;
   border: 1px dashed var(--aksen-garis);
   border-radius: 10px;
   background: var(--aksen-lembut);
@@ -237,12 +237,12 @@
 
 .tombol {
   flex: 1;
-  padding: 12px 16px;
+  padding: var(--sp-3) var(--sp-4);
   border: 1px solid var(--jrh-garis);
   border-radius: 11px;
   background: color-mix(in srgb, var(--jrh-teks) 6%, var(--jrh-kartu));
   color: var(--jrh-teks);
-  font-size: 14px;
+  font-size: var(--t-5);
   font-weight: 600;
   cursor: pointer;
   transition: 150ms ease;
@@ -255,10 +255,10 @@
   background: linear-gradient(135deg, var(--jrh-aksen), var(--jrh-aksen2));
   color: var(--jrh-di-aksen);
 }
-.tombol.besar { width: 100%; margin-top: 8px; padding: 15px; font-size: 15px; }
+.tombol.besar { width: 100%; margin-top: var(--sp-2); padding: 15px; font-size: 15px; }
 
-.daftar-tur { margin-top: 24px; font-size: 13px; color: var(--jrh-redup); }
-.daftar-tur summary { padding: 8px 0; cursor: pointer; }
+.daftar-tur { margin-top: var(--sp-6); font-size: var(--t-4); color: var(--jrh-redup); }
+.daftar-tur summary { padding: var(--sp-2) 0; cursor: pointer; }
 .daftar-tur ul { padding-left: 18px; line-height: 1.85; }
 
 /* ---------- Kuis ---------- */
@@ -267,7 +267,7 @@
 .pilih {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--sp-3);
   padding: 13px 15px;
   border: 1px solid var(--jrh-garis);
   border-radius: 11px;
@@ -288,7 +288,7 @@
   border-radius: 7px;
   background: color-mix(in srgb, var(--jrh-teks) 10%, var(--jrh-kartu));
   color: var(--jrh-redup);
-  font-size: 12px;
+  font-size: var(--t-3);
   font-weight: 700;
 }
 .pilih.benar { border-color: var(--jrh-benar); background: color-mix(in srgb, var(--jrh-benar) 12%, transparent); }
@@ -296,20 +296,20 @@
 .pilih.salah { border-color: var(--jrh-salah); background: color-mix(in srgb, var(--jrh-salah) 12%, transparent); }
 .pilih.salah .huruf { background: var(--jrh-salah); color: var(--jrh-di-salah); }
 
-.umpan { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--jrh-garis); }
+.umpan { margin-top: var(--sp-4); padding-top: var(--sp-4); border-top: 1px solid var(--jrh-garis); }
 .umpan p { margin: 0 0 14px; font-size: 13.5px; line-height: 1.65; color: color-mix(in srgb, var(--jrh-teks) 82%, var(--jrh-redup)); }
 
 .hasil { padding: 26px 18px; text-align: center; }
 .emoji-besar { display: block; margin-bottom: 6px; font-size: 50px; }
-.skor { margin: 4px 0; font-size: 52px; font-weight: 800; letter-spacing: -0.03em; color: var(--jrh-aksen-teks); }
-.skor small { font-size: 16px; font-weight: 600; color: var(--jrh-redup); }
+.skor { margin: var(--sp-1) 0; font-size: 52px; font-weight: 800; letter-spacing: -0.03em; color: var(--jrh-aksen-teks); }
+.skor small { font-size: var(--t-6); font-weight: 600; color: var(--jrh-redup); }
 
 /* ---------- Flashcard ---------- */
-.filter { display: flex; gap: 8px; margin-bottom: 16px; }
+.filter { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-4); }
 .filter select {
   flex: 1;
   min-width: 0;
-  padding: 10px 12px;
+  padding: 10px var(--sp-3);
   border: 1px solid var(--jrh-garis);
   border-radius: 10px;
   background: color-mix(in srgb, var(--jrh-bg) 50%, var(--jrh-kartu));
@@ -350,22 +350,22 @@
 .detail-organ .inti { margin: 10px 0; font-size: 15px; font-weight: 600; color: var(--jrh-teks); }
 
 /* ---------- Ringkasan jenjang ---------- */
-.ringkasan { display: flex; gap: 8px; }
+.ringkasan { display: flex; gap: var(--sp-2); }
 .ringkas-kartu {
   flex: 1;
-  padding: 12px;
+  padding: var(--sp-3);
   border: 1px solid var(--jrh-garis);
-  border-radius: 12px;
+  border-radius: var(--r-2);
   background: var(--jrh-kartu);
 }
-.ringkas-kartu b { display: block; font-size: 14px; color: var(--w); }
-.ringkas-kartu span { font-size: 12px; color: var(--jrh-teks); }
-.ringkas-kartu small { display: block; margin-top: 4px; font-size: 11px; line-height: 1.4; color: var(--jrh-redup); }
+.ringkas-kartu b { display: block; font-size: var(--t-5); color: var(--w); }
+.ringkas-kartu span { font-size: var(--t-3); color: var(--jrh-teks); }
+.ringkas-kartu small { display: block; margin-top: var(--sp-1); font-size: var(--t-2); line-height: 1.4; color: var(--jrh-redup); }
 
 /* ---------- Tab bar: logo & info ---------- */
 .logo {
   flex: 0 0 auto;
-  padding: 6px 12px 6px 2px;
+  padding: 6px var(--sp-3) 6px 2px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -373,7 +373,7 @@
   white-space: nowrap;
 }
 .logo b {
-  font-size: 16px;
+  font-size: var(--t-6);
   color: var(--jrh-aksen-teks);
 }
 
@@ -382,8 +382,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 16px;
-  padding: 10px 16px;
+  gap: var(--sp-2) var(--sp-4);
+  padding: 10px var(--sp-4);
   border-bottom: 1px solid var(--jrh-garis);
   background: color-mix(in srgb, var(--jrh-bg) 92%, var(--jrh-kartu));
   font-size: 12.5px;
@@ -394,8 +394,8 @@
 
 .tautan {
   border: 0;
-  border-radius: 999px;
-  padding: 6px 12px;
+  border-radius: var(--r-pil);
+  padding: 6px var(--sp-3);
   background: var(--aksen-lembut);
   color: var(--jrh-aksen-teks);
   font-size: 12.5px;
@@ -407,18 +407,18 @@
 
 /* ---------- Mobile & aksesibilitas ---------- */
 @media (max-width: 640px) {
-  .akademi-wrap { padding: 14px 12px 64px; }
-  .akademi h2 { font-size: 20px; }
-  .kartu-besar { padding: 16px; }
+  .akademi-wrap { padding: 14px var(--sp-3) var(--sp-10); }
+  .akademi h2 { font-size: var(--t-7); }
+  .kartu-besar { padding: var(--sp-4); }
   .jenjang { gap: 6px; }
   .jbtn { padding: 10px; }
   .jbtn small:nth-of-type(2) { display: none; }
-  .kartu { min-height: 180px; padding: 20px; }
-  .kartu strong { font-size: 16px; }
-  .tab { padding: 8px 12px; font-size: 12.5px; }
-  .logo { font-size: 13px; }
-  .logo b { font-size: 14px; }
-  .info-jelajah { font-size: 11.5px; padding: 8px 12px; }
+  .kartu { min-height: 180px; padding: var(--sp-5); }
+  .kartu strong { font-size: var(--t-6); }
+  .tab { padding: var(--sp-2) var(--sp-3); font-size: 12.5px; }
+  .logo { font-size: var(--t-4); }
+  .logo b { font-size: var(--t-5); }
+  .info-jelajah { font-size: 11.5px; padding: var(--sp-2) var(--sp-3); }
   .ringkasan { flex-direction: column; }
 }
 

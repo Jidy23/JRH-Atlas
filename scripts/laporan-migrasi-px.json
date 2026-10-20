@@ -9,6 +9,22 @@
         "diganti": 95,
         "dilewati_karena_fungsi": 0
       }
+    ],
+    "2": [
+      {
+        "berkas": "akademi.css",
+        "px_sebelum": 195,
+        "px_sesudah": 119,
+        "diganti": 76,
+        "dilewati_karena_fungsi": 0
+      },
+      {
+        "berkas": "redesign.css",
+        "px_sebelum": 163,
+        "px_sesudah": 137,
+        "diganti": 26,
+        "dilewati_karena_fungsi": 0
+      }
     ]
   }
 }
