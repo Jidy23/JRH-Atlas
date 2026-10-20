@@ -77,17 +77,31 @@ try {
     viewer.reachedRoute=true;
     viewer.canvasCount=await page.locator('canvas').count();
     viewer.webgl=await page.evaluate(()=>{try{const c=document.createElement('canvas');return !!(c.getContext('webgl2')||c.getContext('webgl'));}catch{return false;}});
-    // Either the model loads (progress reaches 100) or a recoverable alert appears.
-    const loaded=await page.waitForFunction(()=>{const el=document.querySelector('.loading');return !el;},{timeout:45000}).then(()=>true).catch(()=>false);
-    viewer.loadedWithoutAlert=loaded;
-    viewer.alertText=loaded?null:await page.getByRole('alert').innerText().catch(()=>null);
+    // Ready means the loading indicator is gone. The field name says exactly that:
+    // it does not claim that no alert appeared.
+    viewer.reachedReadyState=await page.waitForFunction(()=>!document.querySelector('.loading'),{timeout:45000}).then(()=>true).catch(()=>false);
+    viewer.alertText=await page.getByRole('alert').innerText().catch(()=>null);
     if(viewer.webgl){
+     // A WebGL-capable engine must actually render, with no failure alert.
      assert.ok(viewer.canvasCount>0,'WebGL available but no canvas was created');
-     assert.equal(viewer.loadedWithoutAlert,true,`${test.name}: viewer stayed on loading state with WebGL available`);
+     assert.equal(viewer.reachedReadyState,true,`${test.name}: viewer stayed on loading state with WebGL available`);
+     assert.equal(viewer.alertText,null,`${test.name}: unexpected alert with WebGL available`);
+     viewer.mode='rendered';
+    }else{
+     // Without WebGL the only acceptable outcome is the explicit fallback, never a
+     // silent blank canvas. This branch used to be skipped entirely, which let a
+     // headless engine with no WebGL report passed:true without testing anything.
+     assert.equal(viewer.canvasCount,0,`${test.name}: no WebGL but a canvas was created`);
+     assert.ok(viewer.alertText&&viewer.alertText.length>0,`${test.name}: no WebGL and no fallback alert shown`);
+     viewer.mode='fallback';
     }
-    // Touch orbit must not throw even when WebGL falls back to software rendering.
-    await page.mouse.move(200,400);await page.mouse.down();await page.mouse.move(260,430,{steps:5});await page.mouse.up();
-    viewer.pointerGestureSurvived=true;
+    // Orbit must not throw. Record the outcome instead of hardcoding success.
+    const errorsBefore=errors.length;
+    try{
+     await page.mouse.move(200,400);await page.mouse.down();await page.mouse.move(260,430,{steps:5});await page.mouse.up();
+     viewer.pointerGestureSurvived=errors.length===errorsBefore;
+    }catch(error){viewer.pointerGestureSurvived=false;viewer.pointerGestureError=String(error);}
+    assert.equal(viewer.pointerGestureSurvived,true,`${test.name}: pointer orbit threw`);
     assert.deepEqual(errors,[],`${test.name}: runtime errors on the 3D route`);
     await page.screenshot({path:`ui-evidence/${test.name}-jelajah.png`,fullPage:false});
    } catch(error) {
@@ -105,4 +119,9 @@ try {
  assert.equal(new Set(reports.map(r=>r.engine)).size,3,'Three distinct browser engines must execute');
  assert.ok(reports.every(r=>r.version),'Each engine must report a version');
  assert.ok(reports.every(r=>r.viewer&&r.viewer.reachedRoute),'Every engine must reach the 3D route');
+ // Every engine must end in a defined state: either it rendered, or it showed the
+ // explicit fallback. An engine that reaches neither can no longer pass.
+ assert.ok(reports.every(r=>r.viewer.mode==='rendered'||r.viewer.mode==='fallback'),'Every engine must render or show the WebGL fallback');
+ assert.ok(reports.some(r=>r.viewer.mode==='rendered'),'At least one engine must actually render the 3D scene');
+ console.log(`rendered: ${reports.filter(r=>r.viewer.mode==='rendered').map(r=>r.engine).join(', ')||'none'}; fallback: ${reports.filter(r=>r.viewer.mode==='fallback').map(r=>r.engine).join(', ')||'none'}`);
 }finally{await writeFile('ui-evidence/mobile-report.json',JSON.stringify(reports,null,2));}

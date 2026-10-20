@@ -9,7 +9,7 @@ permissions:
 jobs:
   production:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -18,6 +18,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check
+      # Chunks are packed by organ system at build time, so the visibility-driven
+      # loader can skip whole systems instead of only the one leftover chunk.
+      - name: Repack anatomy chunks per organ system
+        run: node scripts/repack-chunks.mjs
+      - name: Verify chunk packing matches organ systems
+        run: node scripts/validate-chunks.mjs
       - run: npm run build
       - name: Install browser tools
         run: |
