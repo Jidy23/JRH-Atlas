@@ -1,4 +1,3 @@
-
 /* ===== JRH Atlas — ruang belajar ===== */
 
 /* Blok ini satu-satunya tempat warna literal di file ini: definisi token
@@ -11,11 +10,14 @@
   --jrh-redup: #9aa9c7;
   --jrh-aksen: #22d3ee;
   --jrh-aksen2: #f59e0b;
-  --jrh-aksen3: #67e8f9;
+  --jrh-aksen-teks: #22d3ee;
+  --jrh-aksen-latar: #22d3ee;
+  --jrh-aksen-di: #06121c;
   --jrh-di-aksen: #06121c;
-  --jrh-di-salah: #ffffff;
   --jrh-benar: #22c55e;
+  --jrh-di-benar: #06121c;
   --jrh-salah: #ef4444;
+  --jrh-di-salah: #06121c;
   --jrh-radius: 16px;
   --bayang-kartu: rgba(0, 0, 0, 0.05);
   --bayang-panel: rgba(0, 0, 0, 0.27);
@@ -65,9 +67,8 @@
 }
 .tab:hover { background: color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu)); color: var(--jrh-teks); }
 .tab.aktif {
-  color: var(--jrh-di-aksen);
-  background: linear-gradient(135deg, var(--jrh-aksen), var(--jrh-aksen3));
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--jrh-aksen) 26%, transparent);
+  color: var(--jrh-aksen-di);
+  background: var(--jrh-aksen-latar);
 }
 
 .isi { flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -141,7 +142,7 @@
   border: 1px solid var(--aksen-garis);
   border-radius: 999px;
   background: var(--aksen-lembut);
-  color: var(--jrh-aksen);
+  color: var(--jrh-aksen-teks);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.07em;
@@ -157,7 +158,7 @@
 }
 .progres-isi {
   height: 100%;
-  background: linear-gradient(90deg, var(--jrh-aksen), var(--jrh-aksen2));
+  background: var(--jrh-aksen-latar);
   transition: width 300ms ease;
 }
 
@@ -248,9 +249,10 @@
 }
 .tombol:hover:not(:disabled) { background: color-mix(in srgb, var(--aksen) 12%, var(--jrh-kartu)); }
 .tombol:disabled { opacity: 0.4; cursor: not-allowed; }
+/* Aksi fokus (DESIGN.md aturan #2): satu-satunya gradien di ruang belajar. */
 .tombol.utama {
   border-color: transparent;
-  background: linear-gradient(135deg, var(--jrh-aksen), var(--jrh-aksen3));
+  background: linear-gradient(135deg, var(--jrh-aksen), var(--jrh-aksen2));
   color: var(--jrh-di-aksen);
 }
 .tombol.besar { width: 100%; margin-top: 8px; padding: 15px; font-size: 15px; }
@@ -290,7 +292,7 @@
   font-weight: 700;
 }
 .pilih.benar { border-color: var(--jrh-benar); background: color-mix(in srgb, var(--jrh-benar) 12%, transparent); }
-.pilih.benar .huruf { background: var(--jrh-benar); color: var(--jrh-di-aksen); }
+.pilih.benar .huruf { background: var(--jrh-benar); color: var(--jrh-di-benar); }
 .pilih.salah { border-color: var(--jrh-salah); background: color-mix(in srgb, var(--jrh-salah) 12%, transparent); }
 .pilih.salah .huruf { background: var(--jrh-salah); color: var(--jrh-di-salah); }
 
@@ -299,7 +301,7 @@
 
 .hasil { padding: 26px 18px; text-align: center; }
 .emoji-besar { display: block; margin-bottom: 6px; font-size: 50px; }
-.skor { margin: 4px 0; font-size: 52px; font-weight: 800; letter-spacing: -0.03em; color: var(--jrh-aksen); }
+.skor { margin: 4px 0; font-size: 52px; font-weight: 800; letter-spacing: -0.03em; color: var(--jrh-aksen-teks); }
 .skor small { font-size: 16px; font-weight: 600; color: var(--jrh-redup); }
 
 /* ---------- Flashcard ---------- */
@@ -326,7 +328,7 @@
   padding: 26px;
   border: 1px solid var(--jrh-garis);
   border-radius: var(--jrh-radius);
-  background: linear-gradient(160deg, var(--jrh-kartu), color-mix(in srgb, var(--jrh-bg) 70%, var(--jrh-kartu)));
+  background: var(--jrh-kartu);
   color: var(--jrh-teks);
   text-align: center;
   cursor: pointer;
@@ -335,7 +337,7 @@
 .kartu:hover { border-color: var(--jrh-aksen); transform: translateY(-2px); }
 .kartu.balik {
   border-color: var(--aksen-garis);
-  background: linear-gradient(160deg, color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu)), var(--jrh-kartu));
+  background: color-mix(in srgb, var(--aksen) 10%, var(--jrh-kartu));
 }
 .kartu-sisi { font-size: 10.5px; font-weight: 700; letter-spacing: 0.12em; color: var(--jrh-redup); }
 .kartu strong { font-size: 18px; font-weight: 600; line-height: 1.55; }
@@ -372,10 +374,7 @@
 }
 .logo b {
   font-size: 16px;
-  background: linear-gradient(135deg, var(--jrh-aksen), var(--jrh-aksen2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--jrh-aksen-teks);
 }
 
 .info-jelajah {
@@ -398,7 +397,7 @@
   border-radius: 999px;
   padding: 6px 12px;
   background: var(--aksen-lembut);
-  color: var(--jrh-aksen);
+  color: var(--jrh-aksen-teks);
   font-size: 12.5px;
   font-weight: 600;
   cursor: pointer;

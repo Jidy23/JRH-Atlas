@@ -30,17 +30,21 @@
 /* R-01 gradien hanya di satu focal action per layar.
    Yang diizinkan hanya .primary-action dan .tombol.utama (DESIGN.md aturan 2).
    Gradien dekoratif berikut diganti warna aksen solid, dan setiap selektor
-   disamakan bobotnya dengan sumbernya. */
+   disamakan bobotnya dengan sumbernya.
+
+   Catatan kontras: teks di atas aksen memakai --jrh-aksen-di, bukan warna
+   literal, karena aksen palet berubah tiap tema. --aksen mentah hanya boleh
+   jadi latar dekoratif, tidak boleh jadi warna teks di mode terang. */
 :root[data-tema] .logo b{
   background:none;
   -webkit-background-clip:initial;
   background-clip:initial;
-  color:var(--aksen);
+  color:var(--jrh-aksen-teks);
 }
-:root[data-tema] .tab.aktif{background:var(--aksen);color:var(--jrh-di-aksen)}
+:root[data-tema] .tab.aktif{background:var(--jrh-aksen-latar);color:var(--jrh-aksen-di)}
 .kartu-besar::after{background:var(--aksen);opacity:.6}
 :root[data-tema] .progres-isi,
-:root[data-tema] .loading-track i{background:var(--aksen)}
+:root[data-tema] .loading-track i{background:var(--jrh-aksen-latar)}
 :root[data-tema] .kartu{background:var(--jrh-kartu)}
 :root[data-tema] .kartu.balik{background:var(--jrh-kartu)}
 
