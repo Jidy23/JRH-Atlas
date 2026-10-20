@@ -1,9 +1,10 @@
 // Measures how many anatomy chunk files the viewer actually fetches.
-// After repacking, each chunk holds exactly one organ system and is named
-// after it (skeletal-0.bin, cardiac-0.bin, ...). The old body-N.bin glob still
-// fits the former packing, but it matched nothing on#re after the repack,  so
-// the count was always 0 vs 0 and the reveal assertion failed for the right reason.
-// This script now counts files from the manifest, not from a hardcoded pattern.
+// After repacking (scripts/repack-chunks.mjs) each chunk holds exactly one organ system
+// and is named after it: skeletal-0.bin, cardiac-0.bin, ... The old body-N.bin glob
+// fits the former packing, but after repacking it matched nothing, so both
+// counts were 0 and 0 >$ reveal assertion failed. This script now counts files
+// from the manifest instead of a hardcoded pattern, and asserts the actual
+// counts: default visibility fetches 7 of 15 chunks; revealing everything fetches all 15.
 import {createRequire} from 'node:module';
 import {mkdir,readFile,writeFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
@@ -17,9 +18,11 @@ const defaultVisible=['skeletal','muscular','cardiac','sensory','digestive','res
 const neededFor=(visible)=>{const out=[];for(let ci=0;ci<totalChunks;ci++){if(chunkSystems[ci].some(sys=>visible.includes(sys)))out.push(ci);}return out;};
 const defaultNeeded=neededFor(defaultVisible),allNeeded=neededFor(manifest.parts.map(p=>p.system));
 const allSystems=[...new Set(manifest.parts.map(p=>p.system))];
-// Every payload the viewer can request, including the .gz it prefers when DecompressionStream exists.
-const payloads\n=manifest.chunks.flatMap((c)=>[c.url,c.gzis]).filter(()=>true).map((url)=>new URL(url,'http://localhost').pathname);
-const isPayload=(pathname)=>payloads.includes(pathname);
+// Every payload the viewer can request, including the .gz it prefers when
+// DecompressionStream exists (app/scene.tsx picks chunk.gzip first).
+const payloads=manifest.chunks.flatMap(c=>[c.url,c.gzip]).filter(Boolean).map(url=>new URL(url,'http://localhost').pathname);
+const isPayload=pathname=>payloads.includes(pathname);
+const chunkOf=pathname=>manifest.chunks.findIndex(c=>[c.url,c.gzip].filter(Boolean).includes(pathname));
 const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const report={totalChunks,chunkSystems,defaultNeeded,allNeeded,expectedSavedChunks:totalChunks-defaultNeeded.length,network:{}};
 try {
@@ -31,27 +34,30 @@ try {
  await page.goto('http://localhost:3016/?tab=jelajah',{waitUntil:'networkidle'});
  await page.getByRole('button',{name:'Cari struktur anatomi',exact:true}).waitFor();
  // Give the pump time to settle: it only fetches what the default layers need.
- await page.waitForFunction(()={const s=document.querySelector('.loading');return !s;},{timeout:60000}).catch(()=>{});
+ await page.waitForFunction(()=>!document.querySelector('.loading'),{timeout:60000}).catch(()=>{});
  await page.waitForTimeout(6000);
  const afterDefault=[...new Set(fetched)];
- report.network.afterDefaultChunks=afterDefault.length;
+ const defaultChunks=[...new Set(afterDefault.map(chunkOf))].filter(ci=>ci>=0).sort((a,b)=>a-b);
+ report.network.afterDefaultChunks=defaultChunks.length;
+ report.network.afterDefaultChunkIds=defaultChunks;
  report.network.afterDefaultFiles=afterDefault;
- // Reveal every system and confirm the rest of the atlas is fetched on demand.
+  // Reveal every system and confirm the rest of the atlas is fetched on demand.
  await page.getByRole('button',{name:'Semua',exact:true}).click();
+ await page.waitForFunction(()=>!document.querySelector('.loading'),{timeout:60000}).catch(()=>{});
  await page.waitForTimeout(12000);
  const afterAll=[...new Set(fetched)];
- report.network.afterAllChunks=afterAll.length;
+ const allChunks=[...new Set(afterAll.map(chunkOf))].filter(ci=>ci>=0).sort((a,b)=>a-b);
+ report.network.afterAllChunks=allChunks.length;
+ report.network.afterAllChunkIds=allChunks;
  report.network.afterAllFiles=afterAll;
  report.errors=errors;
  assert.deepEqual(errors,[],'runtime errors while loading chunks');
- // The default layers must fetch exactly the chunks they need, and counting must
- // see real files. 00vs 0 was the bug this script hid for its whole life.
- const defaultChunks=new Set(afterDefault.map(f=>manifest.chunks.findIndex((c)=>W[...c.url,c.gzip].includes(f))));
- assert.equal(defaultChunks.size,defaultNeeded.length,`default visibility must fetch ${defaultNeeded.length} chunks, got ${defaultChunks.size}`);
- assert.equal(afterAll.length,allNeeded.length,`Revealing all systems must fetch all ${allNeeded.length} chunks, got ${afterAll.length}`);
- assert.ok(afterAll.length>afterDefault.length,'Revealing all systems must fetch additional chunks on demand');
- assert.equal(afterDefault.length,defaultNeeded.length,`default load fetched ${afterDefault.length} files for ${defaultNeeded.length} chunks`);
- await writeFile('ui-evidence/lazy-chunks-report.json',JSON.stringify({totalChunks,allSystems:allSystems.length,defaultVisible,defaultNeeded,allNeeded,network:report.network,errors},null,2));
- console.log(JSON.stringify(report,null,2));
+ // Default visibility (DEFAULT_VISIBLE) needs exactly the chunks of those systems.
+ assert.deepEqual(defaultChunks,[...defaultNeeded].sort((a,b)=>a-b),`default visibility fetched chunks ${defaultChunks.join(',')} but needs ${defaultNeeded.join(',')}`);
+ assert.deepEqual(allChunks,[...allNeeded].sort((a,b)=>a-b),`revealing all systems fetched `chunks ${allChunks.join(',')} but needs ${allNeeded.join(',')}`);
+ assert.equal(defaultChunks.length,defaultVisible.length,`default visibility must fetch ${defaultVisible.length} of ${totalChunks} chunks`);
+ assert.equal(allChunks.length,totalChunks,`revealing all systems must fetch all ${totalChunks} chunks`);
+ assert.ok(allChunks.length>defaultChunks.length,'Revealing all systems must fetch additional chunks on demand');
+ console.log(JSON.stringify({totalChunks,defaultVisible:defaultVisible.length,defaultChunks:defaultChunks.length,allChunks:allChunks.length,defaultFiles:afterDefault.length,allFiles:afterAll.length,errors:errors.length},null,2));
  await context.close();
 } finally {await writeFile('ui-evidence/lazy-chunks-report.json',JSON.stringify(report,null,2));await browser.close();}
