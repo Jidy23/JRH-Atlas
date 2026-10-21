@@ -7,6 +7,9 @@ const {default:AxeBuilder}=require('@axe-core/playwright');
 await mkdir('ui-evidence',{recursive:true});
 const browser=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 const reports=[];
+// Rute berupa path asli sejak batch SEO. Sebelumnya ?tab=, yang membuat keenam
+// halaman berbagi satu URL dan satu judul dokumen.
+const RUTE={belajar:'/belajar',kuis:'/kuis',flashcard:'/flashcard',glosarium:'/glosarium',panduan:'/panduan',jelajah:'/jelajah'};
 // Bukti tangkapan layar bukan asersi: kanvas WebGL pada tab jelajah dapat
 // menggantung screenshot full-page. Beri batas waktu, cadangan viewport, dan
 // jangan biarkan kegagalan bukti menutupi hasil uji aksesibilitas.
@@ -28,9 +31,10 @@ try {
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   for(const tab of ['belajar','kuis','flashcard','glosarium','panduan','jelajah']){
    try {
-    await page.goto(`http://localhost:3016/?tab=${tab}`,{waitUntil:'networkidle'});
+    await page.goto(`http://localhost:3016${RUTE[tab]}`,{waitUntil:'networkidle'});
     await page.getByRole('navigation',{name:'Navigasi utama'}).getByRole('link',{name:tab==='jelajah'?'Jelajah 3D':new RegExp(tab,'i')}).waitFor();
     assert.equal(await page.locator('main').count(),1,'Exactly one main landmark');
+    assert.equal(new URL(page.url()).pathname,RUTE[tab],`${width}/${tab}: path harus ${RUTE[tab]}`);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${width}/${tab}: horizontal overflow`);
     if(tab==='kuis'){
      await page.getByRole('button',{name:/Mulai kuis/}).click();
@@ -55,7 +59,7 @@ try {
      await page.getByRole('button',{name:'Atur ulang tampilan',exact:true}).click();
     }
     const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
-    reports.push({width,tab,violations:result.violations,errors:[...errors]});
+    reports.push({width,tab,judul:await page.title(),violations:result.violations,errors:[...errors]});
     console.log(JSON.stringify({width,tab,violations:result.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),errors}));
     await tangkap(page,`ui-evidence/${width}-${tab}.png`,tab!=='jelajah');
    } catch(error) {
@@ -66,6 +70,9 @@ try {
    }
   }
   assert.deepEqual(errors,[],`${width}: browser runtime errors`);
+  // Keenam rute tidak boleh berbagi satu judul dokumen.
+  const unik=new Set(reports.filter(r=>r.width===width).map(r=>r.judul));
+  assert.equal(unik.size,6,`${width}: setiap rute harus punya judul dokumen sendiri`);
   await context.close();
  }
 } finally {
