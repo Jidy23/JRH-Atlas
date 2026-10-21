@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties } from 'react';
 import { JENJANG, ORGAN, organByName, type Jenjang } from './kurikulum';
 import { TUR, organLangkah, turUntuk } from './belajar';
-import { acak, bankSoal, deck, nilai, predikat, type Soal } from './kuis';
+import { acak, acakPilihan, bankSoal, deck, nilai, predikat, type Soal } from './kuis';
 import './akademi.css';
 import './interaction.css';
 
@@ -149,7 +149,10 @@ export function Kuis({
   const [selesai, setSelesai] = useState(false);
 
   function mulaiKuis() {
-    setSoal(acak(bankSoal(jenjang)));
+    // Dua lapis pengacakan: urutan soal, lalu urutan pilihan tiap soal.
+    // Tanpa lapis kedua, posisi jawaban benar tetap terbaca sebagai pola
+    // (lihat catatan di app/kuis.ts fungsi acakPilihan).
+    setSoal(acak(bankSoal(jenjang)).map((s) => acakPilihan(s)));
     setN(0);
     setBenar(0);
     setPilih(null);
