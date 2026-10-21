@@ -1,10 +1,16 @@
 name: Migrasi token garis sekali-jalan
 
-# Sekali-jalan. Tidak ada pemicu otomatis: hanya workflow_dispatch, dan hanya
-# boleh jalan di branch chore/token-garis. Setelah dipakai, workflow ini
-# sebaiknya dihapus supaya tidak jadi zombie seperti migrasi-px.yml.
+# Sekali-jalan. Tidak ada pemicu otomatis di main: workflow ini hanya jalan
+# kalau ada push ke branch chore/token-garis, atau dipicu manual. Setelah
+# dipakai, workflow ini dihapus supaya tidak jadi zombie seperti
+# migrasi-px.yml (masih terdaftar aktif padahal berkasnya sudah tidak ada).
 on:
   workflow_dispatch:
+  push:
+    branches: [chore/token-garis]
+    paths:
+      - 'app/*.css'
+      - 'scripts/token-garis.mjs'
 
 permissions:
   contents: write
@@ -16,8 +22,6 @@ jobs:
     if: github.ref == 'refs/heads/chore/token-garis'
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: chore/token-garis
 
       - uses: actions/setup-node@v4
         with:
@@ -41,7 +45,7 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add app scripts
           if git diff --staged --quiet; then
-            echo 'Tidak ada perubahan untuk di-commit.'
+            echo 'Tidak ada perubahan. Selesai.'
             exit 0
           fi
           git commit -m 'chore(design): ketebalan garis jadi token --w-garis / --w-garis-tebal'
