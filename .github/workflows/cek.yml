@@ -31,6 +31,11 @@ jobs:
         run: node scripts/verify-scene-controls.mjs
       - name: Typecheck
         run: npm run check
+      # app/rute.json kini sumber tunggal untuk path, judul, deskripsi, dan
+      # sitemap. Tanpa langkah ini, rute baru bisa lupa didaftarkan atau judul
+      # melewati batas panjang hasil pencarian tanpa ada yang menolak.
+      - name: Audit rute & metadata
+        run: npm run audit:rute
       - name: Audit kontras WCAG
         run: npm run audit:kontras
       # DESIGN.md aturan #1: warna komponen harus dibaca dari token, bukan
@@ -45,10 +50,6 @@ jobs:
       # karena CSS tidak melempar galat untuk itu.
       - name: Audit skala desain
         run: npm run audit:skala
-      # Posisi jawaban benar harus seimbang. Sebelum perbaikan level 23, 16 dari
-      # 21 soal bank tambahan menjawab A dan seluruh jenjang SD menjawab A, jadi
-      # kuis bisa dimenangkan tanpa membaca soal. Pengacakan di app/kuis.ts hanya
-      # menyamarkan pola; langkah ini yang menghapusnya, dan mencegahnya kembali.
       - name: Audit bank soal
         run: npm run audit:soal
       - name: Laporan dependensi

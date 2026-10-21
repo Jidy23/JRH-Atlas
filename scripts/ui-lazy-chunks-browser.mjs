@@ -31,7 +31,7 @@ try {
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const fetched=[];
  page.on('response',r=>{const pathname=new URL(r.url()).pathname;if(isPayload(pathname))fetched.push(pathname);});
- await page.goto('http://localhost:3016/?tab=jelajah',{waitUntil:'networkidle'});
+ await page.goto('http://localhost:3016/jelajah',{waitUntil:'networkidle'});
  await page.getByRole('button',{name:'Cari struktur anatomi',exact:true}).waitFor();
  // Give the pump time to settle: it only fetches what the default layers need.
  await page.waitForFunction(()=>!document.querySelector('.loading'),{timeout:60000}).catch(()=>{});

@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Halaman hasil pencarian internal tidak punya URL sendiri; rute sudah path asli.
+Sitemap: https://jrh-atlas.pages.dev/sitemap.xml

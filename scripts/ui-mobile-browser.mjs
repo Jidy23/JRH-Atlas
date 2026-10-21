@@ -26,20 +26,30 @@ try {
   // Match the page heading, not a same-named section heading (e.g. Flashcard).
   const pageHeading=label=>page.getByRole('heading',{name:label,exact:true,level:1});
   try {
-   await page.goto('http://localhost:3016/?tab=belajar&jenjang=smp',{waitUntil:'networkidle'});
+   // Rute sekarang berupa path asli, bukan query ?tab=. Tautan ?tab= lama tetap
+   // diterima aplikasi, tetapi uji ini sengaja memakai bentuk path supaya
+   // kontrak yang baru benar-benar diuji, bukan jalur kompatibilitas.
+   await page.goto('http://localhost:3016/belajar?jenjang=smp',{waitUntil:'networkidle'});
    const nav=page.getByRole('navigation',{name:'Navigasi utama'});
-   for(const [tab,label] of [['belajar','Belajar'],['kuis','Kuis'],['flashcard','Flashcard'],['glosarium','Glosarium'],['panduan','Panduan']]){
-    if(tab!=='belajar')await activate(nav.getByRole('link',{name:label,exact:true}));
+   for(const [rute,label] of [['/belajar','Belajar'],['/kuis','Kuis'],['/flashcard','Flashcard'],['/glosarium','Glosarium'],['/panduan','Panduan']]){
+    if(rute!=='/belajar')await activate(nav.getByRole('link',{name:label,exact:true}));
     const heading=pageHeading(label);await heading.waitFor();
     assert.equal(await heading.count(),1,'Exactly one matching page heading');
-    assert.equal(new URL(page.url()).searchParams.get('tab'),tab);
-    assert.equal(await nav.getByRole('link',{name:label,exact:true}).getAttribute('aria-current'),'page');
+    assert.equal(new URL(page.url()).pathname,rute);
+    const tautanNav=nav.getByRole('link',{name:label,exact:true});
+    assert.equal(await tautanNav.getAttribute('aria-current'),'page');
+    assert.equal(await tautanNav.getAttribute('href'),rute);
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Horizontal overflow');
-    if(tab!=='belajar')assert.ok(await heading.evaluate(e=>e===document.activeElement),'Navigation focuses heading');
+    if(rute!=='/belajar')assert.ok(await heading.evaluate(e=>e===document.activeElement),'Navigation focuses heading');
+    // Judul dokumen harus ikut berubah: keenam rute sebelumnya berbagi satu judul.
+    assert.ok((await page.title()).length>0,`${test.name}/${rute}: empty document title`);
     const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
-    report.pages.push({tab,violations:result.violations});
-    assert.equal(result.violations.length,0,`${test.name}/${tab}: axe violations`);
+    report.pages.push({rute,judul:await page.title(),violations:result.violations});
+    assert.equal(result.violations.length,0,`${test.name}/${rute}: axe violations`);
    }
+   // Judul per rute tidak boleh identik dengan rute lain.
+   const judulUnik=new Set(report.pages.map(p=>p.judul));
+   assert.equal(judulUnik.size,report.pages.length,'Setiap rute harus punya judul dokumen berbeda');
    await page.goBack();await pageHeading('Glosarium').waitFor();
    await page.goForward();await pageHeading('Panduan').waitFor();
    assert.equal(new URL(page.url()).searchParams.get('jenjang'),'smp');
@@ -64,7 +74,7 @@ try {
    assert.equal(inside,false,'Dismissal point must be outside the theme panel');
    if(test.touch)await page.touchscreen.tap(point.x,point.y);else await page.mouse.click(point.x,point.y);
    assert.equal(await dialog.count(),0,'Outside pointer closes theme panel');
-   assert.equal(new URL(page.url()).searchParams.get('tab'),'panduan','Outside dismissal must not navigate');
+   assert.equal(new URL(page.url()).pathname,'/panduan','Outside dismissal must not navigate');
    assert.equal(models.length,0,'Educational routes must not fetch anatomy models');
    assert.deepEqual(errors,[]);
    await page.screenshot({path:`ui-evidence/${test.name}.png`,fullPage:true});
@@ -72,7 +82,7 @@ try {
    // Record what each engine actually does instead of assuming parity with Chromium.
    const viewer={};
    try {
-    await page.goto('http://localhost:3016/?tab=jelajah',{waitUntil:'networkidle'});
+    await page.goto('http://localhost:3016/jelajah',{waitUntil:'networkidle'});
     await page.getByRole('button',{name:'Cari struktur anatomi',exact:true}).waitFor({timeout:30000});
     viewer.reachedRoute=true;
     viewer.canvasCount=await page.locator('canvas').count();

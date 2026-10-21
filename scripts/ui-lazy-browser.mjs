@@ -17,7 +17,7 @@ try {
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const scripts=new Set();const models=[];
  page.on('request',r=>{if(r.resourceType()==='script')scripts.add(new URL(r.url()).pathname);if(r.url().includes('/models/'))models.push(r.url());});
- await page.goto('http://localhost:3016/?tab=belajar&jenjang=smp',{waitUntil:'networkidle'});
+ await page.goto('http://localhost:3016/belajar?jenjang=smp',{waitUntil:'networkidle'});
  await page.getByRole('heading',{name:'Belajar',exact:true}).waitFor();
  assert.equal(models.length,0,'Learning route must not fetch anatomy models');
  const initialScripts=[...scripts];
@@ -64,7 +64,7 @@ try {
  // A failed chunk must show a recoverable alert, not erase navigation.
  const failed=await browser.newContext();const failurePage=await failed.newPage();
  await failurePage.route('**/assets/*.js',route=>new URL(route.request().url()).pathname.split('/').pop().startsWith('page-')?route.abort():route.continue());
- await failurePage.goto('http://localhost:3016/?tab=jelajah',{waitUntil:'networkidle'});
+ await failurePage.goto('http://localhost:3016/jelajah',{waitUntil:'networkidle'});
  await failurePage.getByRole('alert').filter({hasText:'Penjelajah 3D tidak dapat dimuat'}).waitFor();
  await failurePage.getByRole('navigation',{name:'Navigasi utama'}).getByRole('link',{name:'Belajar',exact:true}).click();
  await failurePage.getByRole('heading',{name:'Belajar',exact:true}).waitFor();

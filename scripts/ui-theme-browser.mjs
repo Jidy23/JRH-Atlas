@@ -10,7 +10,7 @@ const reports=[];
 const MODES=['Terang','Gelap'];
 const PALETTES=['Nusantara','Samudra','Senja','Zamrud','Koral'];
 // Lima halaman edukasi; jelajah (viewer 3D) ditangani workflow lazy loading.
-const TABS=[['belajar','Belajar'],['kuis','Kuis'],['flashcard','Flashcard'],['glosarium','Glosarium'],['panduan','Panduan']];
+const RUTE=[['/belajar','Belajar'],['/kuis','Kuis'],['/flashcard','Flashcard'],['/glosarium','Glosarium'],['/panduan','Panduan']];
 // Simpan detail pelanggaran supaya kegagalan bisa didiagnosis tanpa membuka log mentah.
 const ringkas=violations=>violations.map(v=>({id:v.id,impact:v.impact,help:v.help,nodes:v.nodes.map(n=>({target:n.target,html:n.html,summary:n.failureSummary}))}));
 try {
@@ -22,8 +22,8 @@ try {
   const trigger=page.getByRole('button',{name:'Atur tampilan dan warna',exact:true});
   const dialog=page.getByRole('dialog',{name:'Pengaturan tampilan'});
   const pageHeading=label=>page.getByRole('heading',{name:label,exact:true,level:1});
-  for(const [tab,label] of TABS){
-   await page.goto(`http://localhost:3016/?tab=${tab}`,{waitUntil:'networkidle'});
+  for(const [rute,label] of RUTE){
+   await page.goto(`http://localhost:3016${rute}`,{waitUntil:'networkidle'});
    await pageHeading(label).waitFor();
    for(const mode of MODES){
     for(const palette of PALETTES){
@@ -38,18 +38,18 @@ try {
      assert.ok(await trigger.evaluate(e=>e===document.activeElement),'Escape mengembalikan fokus');
      await page.waitForTimeout(200);
      const result=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
-     const report={width,tab,mode,palette,violations:ringkas(result.violations),errors:[...errors]};
+     const report={width,rute,mode,palette,violations:ringkas(result.violations),errors:[...errors]};
      reports.push(report);
      assert.equal(await pageHeading(label).count(),1,'Halaman tetap utuh setelah ganti tema');
-     assert.equal(new URL(page.url()).searchParams.get('tab'),tab,'Ganti tema tidak boleh bernavigasi');
-     assert.deepEqual(errors,[],`${width}/${tab}/${mode}/${palette}: galat runtime`);
-     console.log(JSON.stringify({width,tab,mode,palette,violations:result.violations.length}));
+     assert.equal(new URL(page.url()).pathname,rute,'Ganti tema tidak boleh bernavigasi');
+     assert.deepEqual(errors,[],`${width}/${rute}/${mode}/${palette}: galat runtime`);
+     console.log(JSON.stringify({width,rute,mode,palette,violations:result.violations.length}));
      if(result.violations.length)console.error(JSON.stringify(ringkas(result.violations),null,2));
     }
    }
   }
   // Palet adalah satu pilihan tersimpan, jadi persistensi diverifikasi sekali per lebar.
-  await page.goto('http://localhost:3016/?tab=belajar',{waitUntil:'networkidle'});
+  await page.goto('http://localhost:3016/belajar',{waitUntil:'networkidle'});
   await trigger.click();
   await dialog.getByRole('button',{name:'Auto',exact:true}).click();
   await page.emulateMedia({colorScheme:'dark'});
