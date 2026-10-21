@@ -1,5 +1,0 @@
-# Cloudflare Pages — SPA fallback.
-# Rute aplikasi sudah punya path sendiri (/belajar, /kuis, ...) dan setiap
-# path mendapat HTML hasil prerender. Berkas ini hanya menangkap path yang
-# tidak dikenal supaya tetap masuk ke aplikasi, bukan halaman 404 kosong.
-/*    /index.html   200
