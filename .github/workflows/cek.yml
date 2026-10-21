@@ -45,5 +45,11 @@ jobs:
       # karena CSS tidak melempar galat untuk itu.
       - name: Audit skala desain
         run: npm run audit:skala
+      # Posisi jawaban benar harus seimbang. Sebelum perbaikan level 23, 16 dari
+      # 21 soal bank tambahan menjawab A dan seluruh jenjang SD menjawab A, jadi
+      # kuis bisa dimenangkan tanpa membaca soal. Pengacakan di app/kuis.ts hanya
+      # menyamarkan pola; langkah ini yang menghapusnya, dan mencegahnya kembali.
+      - name: Audit bank soal
+        run: npm run audit:soal
       - name: Laporan dependensi
         run: npm audit || true

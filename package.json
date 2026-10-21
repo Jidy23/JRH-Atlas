@@ -12,7 +12,8 @@
     "check": "tsc --noEmit",
     "audit:kontras": "tsc -p scripts/tsconfig.audit.json && node .audit-build/scripts/audit-kontras.js",
     "audit:token": "node scripts/audit-token.mjs",
-    "audit:skala": "node scripts/audit-skala.mjs"
+    "audit:skala": "node scripts/audit-skala.mjs",
+    "audit:soal": "node scripts/audit-soal.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

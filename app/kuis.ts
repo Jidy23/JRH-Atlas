@@ -1,4 +1,4 @@
-/** JRH Atlas — Kuis & Flashcard (logika murni, mudah diuji) */
+/** JRH Atlas: Kuis & Flashcard (logika murni, mudah diuji) */
 import { ORGAN, type Jenjang, type OrganInfo } from './kurikulum';
 import { soalUntuk, type Soal as SoalTambahan } from './soal-tambahan';
 
@@ -13,7 +13,7 @@ export type Soal = {
   jenjang?: Jenjang;
 };
 
-/** Soal turunan kurikulum — satu butir per organ. */
+/** Soal turunan kurikulum, satu butir per organ. */
 function soalKurikulum(jenjang?: Jenjang): Soal[] {
   return ORGAN.filter((o) => !jenjang || o.jenjang === jenjang).map((o) => ({
     id: o.key,
@@ -48,12 +48,12 @@ export function bankSoal(jenjang?: Jenjang): Soal[] {
   return gabung.filter((s) => (terlihat.has(s.id) ? false : (terlihat.add(s.id), true)));
 }
 
-/** Ambil hanya soal dari bank tambahan — berguna untuk mode latihan baru. */
+/** Ambil hanya soal dari bank tambahan, berguna untuk mode latihan baru. */
 export function bankTambahan(jenjang?: Jenjang): Soal[] {
   return soalUntuk(jenjang).map(dariBank);
 }
 
-/** Fisher–Yates — acak tanpa bias. */
+/** Fisher-Yates, acak tanpa bias. */
 export function acak<T>(arr: T[], seed = Math.random): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -61,6 +61,26 @@ export function acak<T>(arr: T[], seed = Math.random): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+/**
+ * Acak urutan pilihan jawaban dan ikut memindahkan indeks jawaban benarnya.
+ *
+ * Sebelumnya hanya urutan soal yang diacak, sedangkan urutan pilihan dirender apa
+ * adanya dari data. Akibatnya posisi jawaban benar tetap terbaca sebagai pola: pada
+ * bank tambahan, 16 dari 21 soal menjawab A, dan seluruh jenjang SD menjawab A.
+ * Murid bisa menang tanpa membaca soal. Fungsi ini menutup celah itu.
+ */
+export function acakPilihan(s: Soal, seed = Math.random): Soal {
+  const urutan = acak(
+    s.pilihan.map((_, i) => i),
+    seed
+  );
+  return {
+    ...s,
+    pilihan: urutan.map((i) => s.pilihan[i]),
+    jawaban: urutan.indexOf(s.jawaban),
+  };
 }
 
 export function nilai(benar: number, total: number) {
@@ -80,7 +100,7 @@ export type Kartu = { depan: string; belakang: string; sistem: string; organ: st
 
 export function kartuDari(o: OrganInfo, mode: 'nama' | 'fungsi' | 'fakta'): Kartu {
   if (mode === 'nama') return { depan: o.inti, belakang: o.id, sistem: o.sistem, organ: o.key };
-  if (mode === 'fungsi') return { depan: `${o.id} — apa fungsinya?`, belakang: o.fungsi, sistem: o.sistem, organ: o.key };
+  if (mode === 'fungsi') return { depan: `${o.id}: apa fungsinya?`, belakang: o.fungsi, sistem: o.sistem, organ: o.key };
   return { depan: `Fakta tentang ${o.id}`, belakang: o.fakta.join(' • '), sistem: o.sistem, organ: o.key };
 }
 
@@ -88,7 +108,7 @@ export function deck(jenjang?: Jenjang, mode: 'nama' | 'fungsi' | 'fakta' = 'nam
   return ORGAN.filter((o) => !jenjang || o.jenjang === jenjang).map((o) => kartuDari(o, mode));
 }
 
-/** Interval pengulangan sederhana: hafal -> 3 hari, belum -> ulang besok. */
+/** Interval pengulangan sederhana: hafal jadi 3 hari, belum hafal ulang besok. */
 export function nextReview(hafal: boolean, streak: number) {
   const hari = hafal ? Math.min(3 * Math.max(1, streak + 1), 21) : 1;
   const kapan = Date.now() + hari * 86400000;
