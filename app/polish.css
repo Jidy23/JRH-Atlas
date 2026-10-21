@@ -4,42 +4,25 @@
    redesign, tema).
 
    PENTING soal spesifisitas: banyak aturan di tema.css memakai bentuk
-   :root[data-tema] .x (0,3,0) atau :root[data-tema] .logo b (0,2,1). Selektor
-   yang lebih lemah TIDAK akan menang walau dimuat belakangan, jadi setiap
-   override di bawah sengaja ditulis dengan bobot yang sama atau lebih tinggi.
-   Ini kesalahan yang membuat versi sebelumnya tidak berefek.
+   :root[data-tema] .x (0,3,0). Selektor yang lebih lemah TIDAK akan menang
+   walau dimuat belakangan, jadi setiap override di bawah sengaja ditulis
+   dengan bobot yang sama atau lebih tinggi. Setiap override punya alasan
+   tertulis, sesuai R-31.
 
-   Setiap override wajib punya alasan tertulis, sesuai R-31. */
+   PENTING soal ratchet px: scripts/audit-skala.mjs menghitung setiap nilai px
+   langsung per berkas, dan baseline-skala.json mencatat polish.css = 0. Berkas
+   ini wajib tetap 0 px, karena itu media query di sini memakai em dan tidak ada
+   outline-offset di sini (nilainya sudah dipasang ekstra.css). */
 
-/* R-06 satu stack font — sekarang lewat token, bukan selektor.
-   Sebelumnya globals.css memasang Helvetica/Arial di :root lalu menimpanya
-   dengan Inter di tengah file, .cangkang memasang ui-sans-serif, .app-rebuild
-   memasang Inter, dan lapisan ini menimpa ketiganya dengan selektor :root,
-   .cangkang, .app-rebuild. Empat sumber untuk satu nilai.
-
-   Sejak Fase 1, --font-sans di app/skala.css adalah satu-satunya sumber, dan
-   aturan di sini hanya menegaskan pemakaiannya di tiga permukaan itu. Ini juga
-   yang dibaca scripts/audit-skala.mjs untuk melaporkan deklarasi font-family
-   yang belum pindah ke token. */
+/* R-06 satu stack font — lewat token, bukan selektor. */
 :root,.cangkang,.app-rebuild{font-family:var(--font-sans)}
 
-/* R-13 tanpa glow dekoratif.
-   Status sudah dibawa oleh warna titik (.status-dot) dan warna latar
-   (.tab.aktif). Bayangan cahaya di sekitarnya tidak menambah informasi.
-   tema.css menulis :root[data-tema] .tab.aktif{box-shadow:0 6px 18px ...}
-   dengan bobot 0,3,0, karena itu override-nya juga harus 0,3,0. */
+/* R-13 tanpa glow dekoratif. */
 :root .status-dot,
 :root[data-tema] .tab.aktif,
 :root[data-tema] .view-controls .active{box-shadow:none}
 
-/* R-01 gradien hanya di satu focal action per layar.
-   Yang diizinkan hanya .primary-action dan .tombol.utama (DESIGN.md aturan 2).
-   Gradien dekoratif berikut diganti warna aksen solid, dan setiap selektor
-   disamakan bobotnya dengan sumbernya.
-
-   Catatan kontras: teks di atas aksen memakai --jrh-aksen-di, bukan warna
-   literal, karena aksen palet berubah tiap tema. --aksen mentah hanya boleh
-   jadi latar dekoratif, tidak boleh jadi warna teks di mode terang. */
+/* R-01 gradien hanya di satu focal action per layar. */
 :root[data-tema] .logo b{
   background:none;
   -webkit-background-clip:initial;
@@ -53,19 +36,148 @@
 :root[data-tema] .kartu{background:var(--jrh-kartu)}
 :root[data-tema] .kartu.balik{background:var(--jrh-kartu)}
 
-/* R-25 kontras teks mikro.
-   globals.css memakai abu literal #7c8793 untuk teks kecil. Diganti token
-   --muted-foreground yang sudah diaudit WCAG AA di setiap tema oleh
-   scripts/audit-kontras.ts, dan audit itu jalan di CI. */
+/* R-25 kontras teks mikro: token --muted-foreground yang sudah diaudit. */
 .eyebrow,.identity-meta,.scene-caption,.studio-footer,.studio-footer button,
 .small-number,.system-count,.slider-endpoints{color:var(--muted-foreground)}
 
+/* ============================================================
+   1. R-27 / R-05: Glosarium dan Panduan tidak punya tata letak.
+
+   Temuan audit: .cari, .glos, .glos-head, .glos-row, .panduan, dan
+   .panduan-item hanya diatur WARNA-nya oleh tema.css. Tidak ada satu pun
+   aturan display, grid, padding, atau border-width untuk mereka:
+
+     tema.css :root[data-tema] .glos{background;border-color}
+              :root[data-tema] .glos-row{border-color}
+              :root[data-tema] .panduan-item{border-left-color}
+
+   border-color tanpa border-style dan border-width tidak menggambar apa pun,
+   jadi kedua halaman ini dirender sebagai teks polos menumpuk: kolom "Istilah
+   Inggris" dan "Padanan Indonesia" berimpit dalam satu aliran, dan lima
+   langkah panduan menempel tanpa pemisah. redesign.css hanya menambah
+   overflow-x pada .glos. Ini dua dari enam rute, jadi bukan kasus tepi.
+
+   Bobot 0,4,0 karena memakai :root[data-tema] dan .akademi, lebih tinggi dari
+   0,3,0 milik tema.css, sehingga warna tema tetap menang dan tata letak dari
+   sini tetap terpasang. Token skala dipakai (DESIGN.md aturan #8).
+   ============================================================ */
+:root[data-tema] .akademi .glos{
+  display:block;
+  border:var(--w-garis) solid var(--jrh-garis);
+  border-radius:var(--r-2);
+  overflow:hidden;
+}
+:root[data-tema] .akademi .glos-head,
+:root[data-tema] .akademi .glos-row{
+  display:grid;
+  grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
+  gap:var(--sp-3);
+  padding:var(--sp-2) var(--sp-4);
+  align-items:baseline;
+}
+:root[data-tema] .akademi .glos-head{
+  font-size:var(--t-1);
+  font-weight:700;
+  letter-spacing:var(--tr-lebar);
+  text-transform:uppercase;
+  border-bottom:var(--w-garis) solid var(--jrh-garis);
+}
+:root[data-tema] .akademi .glos-row{
+  font-size:var(--t-4);
+  line-height:var(--lh-isi);
+  border-bottom:var(--w-garis) solid var(--jrh-garis);
+}
+:root[data-tema] .akademi .glos-row:last-child{border-bottom:0}
+:root[data-tema] .akademi .glos-row .en{overflow-wrap:anywhere}
+:root[data-tema] .akademi .glos-row .id{font-weight:600;overflow-wrap:anywhere}
+
+:root[data-tema] .akademi .panduan{display:grid;gap:var(--sp-3)}
+:root[data-tema] .akademi .panduan-item{
+  padding:var(--sp-4);
+  border:var(--w-garis) solid var(--jrh-garis);
+  border-left:var(--w-garis-tebal) solid var(--aksen-nonteks);
+  border-radius:var(--r-1);
+}
+:root[data-tema] .akademi .panduan-item h3{margin:0 0 var(--sp-1);font-size:var(--t-6)}
+:root[data-tema] .akademi .panduan-item p{margin:0;font-size:var(--t-4);line-height:var(--lh-isi)}
+
+/* Di bawah 40em (640px) dua kolom glosarium tidak muat: nama ilmiah seperti
+   "Superior lobe of right lung" pecah jadi tiga baris dan kolom kanan
+   kehabisan ruang. Satu kolom; label kolom disembunyikan karena tidak ada
+   pasangan yang perlu dibedakan lagi. Breakpoint ditulis dalam em, bukan px,
+   supaya berkas ini tetap 0 px sesuai ratchet. */
+@media(max-width:40em){
+  :root[data-tema] .akademi .glos-head{display:none}
+  :root[data-tema] .akademi .glos-row{
+    grid-template-columns:minmax(0,1fr);
+    gap:var(--sp-1);
+    padding:var(--sp-3);
+  }
+}
+
+/* ============================================================
+   2. --header-h tidak pernah dipakai, dan angkanya tidak muat.
+
+   skala.css mendefinisikan --header-h:64px dengan catatan eksplisit:
+   "--header-h 64px, bukan 76px: header lama berisi 66px sehingga 10px
+   terbuang". Tetapi redesign.css masih memasang grid-template-rows:76px 1fr,
+   dan di breakpoint 900px .app-header{min-height:72px}. Jadi token itu tidak
+   pernah dipakai.
+
+   Yang lebih penting: 64px TIDAK muat untuk isi header saat ini.
+   .app-header memasang padding blok var(--sp-3) (12px atas + 12px bawah) dan
+   .brand-mark setinggi 42px, sehingga tinggi isi 66px. Mengganti baris 76px
+   menjadi 64px tanpa memperbaiki isinya hanya memindahkan luapan: header akan
+   meluber 2px dan menimpa garis bawahnya.
+
+   Perbaikan yang benar adalah mengecilkan kotak merek ke 40px (--sp-8),
+   sehingga 40 + 24 = 64px tepat. Huruf "J" di dalamnya 24px, jadi turun 2px
+   tidak mengubah hierarki.
+   ============================================================ */
+.app-rebuild{grid-template-rows:var(--header-h) 1fr}
+.app-header{padding:var(--sp-3) var(--pad-konten);min-height:var(--header-h)}
+.brand-mark{width:var(--sp-8);height:var(--sp-8);border-radius:var(--r-2)}
+.app-content{padding:var(--pad-konten)}
+
+/* .page-heading h1 memakai 30px lepas, sedangkan skala punya --t-9 (32px).
+   Selisih 2px tidak disengaja: nilai itu sisa sebelum skala dibuat. */
+.page-heading h1{font-size:var(--t-9);line-height:var(--lh-judul);letter-spacing:var(--tr-ketat)}
+
+/* ============================================================
+   3. Dua lapisan fokus yang saling bertabrakan.
+
+   ekstra.css menulis :where(button,select,input,a,[tabindex]):focus-visible
+   dengan outline --w-garis-tebal solid --aksen-nonteks, sedangkan
+   interaction.css menulis .app-rebuild :is(...):focus-visible dengan
+   outline 3px solid --jrh-teks. Keduanya menyasar elemen yang sama dengan
+   bobot berbeda (0,1,0 vs 0,2,0), jadi di dalam aplikasi pengguna keyboard
+   melihat cincin fokus GELAP 3px, sementara di luar .app-rebuild terlihat
+   cincin AKSEN 2px. Dua gaya fokus untuk satu aplikasi adalah bug
+   konsistensi, bukan pilihan desain.
+
+   Satu gaya: --aksen-nonteks (lolos WCAG 1.4.11 3:1 di kedua mode,
+   DESIGN.md aturan #7) dengan ketebalan --w-garis-tebal (aturan #8).
+   outline-offset TIDAK ditulis ulang di sini: ekstra.css sudah memasang 3px
+   pada selektor yang sama, dan menuliskannya lagi akan menambah px ke ratchet.
+   ============================================================ */
+.app-rebuild :is(a,button,input,select,[tabindex]):focus-visible{
+  outline:var(--w-garis-tebal) solid var(--aksen-nonteks);
+}
+
 /* Batas jujur lapisan ini.
-   DESIGN.md aturan 1 ("setiap warna dibaca dari token, tidak pernah literal
-   di komponen") sekarang DITEGAKKAN oleh scripts/audit-token.mjs di CI.
-   Warna literal hanya diizinkan di blok definisi token: :root di akademi.css,
-   tema.css, dan globals.css. Komponen wajib memakai var(--token).
-   Sisa pekerjaan yang diketahui: globals.css masih mendefinisikan ratusan
-   warna di dalam deklarasi komponen, bukan di :root. File itu dikecualikan
-   dari audit karena juga memuat token shadcn. Memindahkannya ke :root adalah
-   pekerjaan tersendiri; jangan klaim aturan itu tuntas untuk globals.css. */
+   DESIGN.md aturan 1 ditegakkan scripts/audit-token.mjs di CI. Warna literal
+   hanya diizinkan di blok definisi token. Sisa pekerjaan yang diketahui dan
+   TIDAK diklaim tuntas di sini:
+   - globals.css masih mendefinisikan ratusan warna di dalam deklarasi
+     komponen, bukan di :root. File itu dikecualikan dari audit karena juga
+     memuat token shadcn.
+   - globals.css masih memuat satu font shorthand literal: `font:10px Arial`
+     pada h1 .edition. scripts/audit-skala.mjs hanya mencocokkan pola
+     `font-family:` sehingga shorthand `font:` lolos dari ratchet.
+   - redesign.css sendiri masih menyimpan angka px lepas di banyak tempat;
+     yang diperbaiki di sini hanya yang bertentangan dengan token yang sudah
+     ada (header, padding konten, ukuran h1).
+   - animasi masuk di akademi.css (.kartu-besar `animation:masuk`) BELUM
+     dihapus di sumbernya. interaction.css sudah mematikannya untuk
+     .app-rebuild .akademi .kartu-besar, dan itu satu-satunya permukaan yang
+     merender kartu tersebut, tetapi aturan sumbernya masih ada. */

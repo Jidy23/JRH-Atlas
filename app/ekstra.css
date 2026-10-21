@@ -1,9 +1,13 @@
 
 /* ===== Penyempurnaan UX: target sentuh, kontras, gerak ===== */
 
-/* Target sentuh minimal 44px di perangkat sentuh (pedoman aksesibilitas) */
+/* Target sentuh minimal 44px di perangkat sentuh (pedoman aksesibilitas).
+   `.tab` dikeluarkan dari daftar ini: tidak ada komponen yang merender
+   `.tabbar` maupun `.tab` lagi. Navigasi utama memakai `.app-navigation`
+   (redesign.css) dan sub-navigasi memakai `.subtab`/`.sub` (akademi.css).
+   Sebelumnya `.tab` muncul dua kali di blok ini, dan baris kedua menurunkannya
+   ke 40px sehingga menimpa ambang 44px yang baru ditetapkan di baris pertama. */
 @media (pointer: coarse) {
-  .tab,
   .sub,
   .jbtn,
   .tombol,
@@ -15,22 +19,21 @@
   .kartu {
     min-height: 44px;
   }
-  .tab { min-height: 40px; }
 }
 
 /* Kartu jenjang: state aktif ditandai border + warna label.
    Versi sebelumnya menambahkan .jbtn::before berupa garis 3px di tepi KIRI
    kartu. Itu persis pola yang DESIGN.md daftarkan sebagai sengaja tidak dipakai
    ("Side-tab border berwarna di tepi kiri kartu"), dan menambah satu lapisan
-   dekorasi yang tidak membawa informasi baru — border kartu sudah berubah
+   dekorasi yang tidak membawa informasi baru: border kartu sudah berubah
    warna saat aktif. */
 .jbtn {
   position: relative;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  transition: border-color var(--d-cepat) ease, box-shadow var(--d-cepat) ease, transform var(--d-cepat) ease;
 }
 .jbtn:hover { transform: translateY(-1px); }
 .jbtn.aktif {
-  box-shadow: inset 0 0 0 1px var(--w, var(--aksen));
+  box-shadow: inset 0 0 0 var(--w-garis) var(--w, var(--aksen));
 }
 
 /* Kartu besar: tanpa garis aksen dekoratif di atas kartu.
@@ -47,7 +50,8 @@
 /* Fokus keyboard selalu terlihat, termasuk di tema terang.
    Memakai --aksen-nonteks, bukan --aksen mentah: DESIGN.md aturan #7 menetapkan
    cincin fokus sebagai indikator non-teks yang wajib lolos 3:1, dan aksen mentah
-   hanya 1,63:1 di latar terang. */
+   hanya 1,63:1 di latar terang. Ketebalan membaca --w-garis-tebal, bukan 2px
+   lepas, supaya satu perubahan token menggeser semua lapisan sekaligus. */
 :where(button, select, input, a, [tabindex]):focus-visible {
   outline: var(--w-garis-tebal) solid var(--aksen-nonteks);
   outline-offset: 3px;
@@ -57,22 +61,6 @@
 /* Pilihan jawaban: huruf A-D ikut warna status */
 .pilih.benar { color: var(--jrh-teks); }
 .pilih.salah { color: var(--jrh-teks); }
-
-/* Bilah progres tipis di bawah tab aktif (penanda posisi).
-   Indikator non-teks, jadi memakai --aksen-nonteks (DESIGN.md aturan #7). */
-.tab.aktif::after {
-  content: '';
-  position: absolute;
-  bottom: 3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--aksen-nonteks);
-  opacity: 0.5;
-}
-.tab { position: relative; }
 
 /* Panel memuat: indikator progres sudah ada di .loading-track, jadi tidak perlu
    kilau berjalan di atasnya.
@@ -87,7 +75,7 @@
 .loading { overflow: hidden; }
 
 /* Layer & sistem: baris lebih mudah dipindai */
-.system-row { transition: background 150ms ease; }
+.system-row { transition: background var(--d-cepat) ease; }
 .system-row:hover { background: var(--aksen-lembut); }
 
 /* Badge jenjang di kartu detail */
@@ -96,7 +84,7 @@
 /* Teks kecil tetap terbaca di layar sempit */
 @media (max-width: 380px) {
   .palet-asal { display: none; }
-  .tema-panel { width: calc(100vw - 20px); }
+  .tema-panel { width: calc(100vw - var(--sp-5)); }
 }
 
 /* Hormati preferensi gerak minimal */
@@ -113,7 +101,7 @@
    Kertas memang putih dan tinta memang hitam, jadi ini satu-satunya tempat
    yang memakai token cetak, bukan token tema. */
 @media print {
-  .tabbar, .tema, .navigasi, .subtab, .info-jelajah { display: none !important; }
+  .tema, .navigasi, .subtab, .info-jelajah { display: none !important; }
   .cangkang { background: var(--cetak-bg); color: var(--cetak-teks); }
   .kartu-besar, .kartu { border-color: var(--cetak-garis); background: var(--cetak-bg); color: var(--cetak-teks); }
 }
