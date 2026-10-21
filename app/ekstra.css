@@ -49,7 +49,7 @@
    cincin fokus sebagai indikator non-teks yang wajib lolos 3:1, dan aksen mentah
    hanya 1,63:1 di latar terang. */
 :where(button, select, input, a, [tabindex]):focus-visible {
-  outline: 2px solid var(--aksen-nonteks);
+  outline: var(--w-garis-tebal) solid var(--aksen-nonteks);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -91,7 +91,7 @@
 .system-row:hover { background: var(--aksen-lembut); }
 
 /* Badge jenjang di kartu detail */
-.id-card-head span { border: 1px solid var(--aksen-garis); }
+.id-card-head span { border: var(--w-garis) solid var(--aksen-garis); }
 
 /* Teks kecil tetap terbaca di layar sempit */
 @media (max-width: 380px) {

@@ -246,7 +246,7 @@
   align-items: center;
   gap: 6px;
   padding: var(--sp-2) var(--sp-3);
-  border: 1px solid var(--v-kontrol-garis);
+  border: var(--w-garis) solid var(--v-kontrol-garis);
   border-radius: var(--r-pil);
   background: var(--jrh-kartu);
   color: var(--jrh-redup);
@@ -263,7 +263,7 @@
   right: 0;
   width: 288px;
   padding: 14px;
-  border: 1px solid var(--jrh-garis);
+  border: var(--w-garis) solid var(--jrh-garis);
   border-radius: 14px;
   background: var(--jrh-kartu);
   box-shadow: 0 20px 50px rgba(10, 18, 32, 0.28);
@@ -286,7 +286,7 @@
 .mode {
   flex: 1;
   padding: 9px var(--sp-1);
-  border: 1px solid var(--v-kontrol-garis);
+  border: var(--w-garis) solid var(--v-kontrol-garis);
   border-radius: 9px;
   background: transparent;
   color: var(--jrh-redup);
@@ -302,7 +302,7 @@
   align-items: center;
   gap: var(--sp-2);
   padding: var(--sp-2) 9px;
-  border: 1px solid var(--v-kontrol-garis);
+  border: var(--w-garis) solid var(--v-kontrol-garis);
   border-radius: 10px;
   background: transparent;
   color: var(--jrh-teks);

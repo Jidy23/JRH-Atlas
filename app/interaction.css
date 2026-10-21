@@ -10,8 +10,8 @@
 :root[data-tema] .explorer-frame .panel-heading .small-number{color:var(--jrh-teks);background:var(--jrh-bg)}
 .app-rebuild .akademi .kartu-besar{animation:none;color:var(--jrh-teks)}
 .app-rebuild .pilih:disabled{opacity:1;cursor:default}
-.app-rebuild .pilih.benar{border:2px solid var(--jrh-benar)}
-.app-rebuild .pilih.salah{border:2px solid var(--jrh-salah)}
+.app-rebuild .pilih.benar{border: var(--w-garis-tebal) solid var(--jrh-benar)}
+.app-rebuild .pilih.salah{border: var(--w-garis-tebal) solid var(--jrh-salah)}
 .app-rebuild .umpan{margin-top:20px}
 .app-rebuild .glos-row{overflow-wrap:anywhere}
 .explorer-frame .loading{max-width:calc(100% - 32px);z-index:60}
@@ -21,7 +21,7 @@
 :root[data-tema] .app-rebuild .tema .palet{background:var(--jrh-kartu);color:var(--jrh-teks)}
 :root[data-tema] .app-rebuild .tema .palet .palet-nama{color:var(--jrh-teks)}
 :root[data-tema] .app-rebuild .tema .palet .palet-asal{color:var(--jrh-teks)}
-:root[data-tema] .app-rebuild .tema .palet.aktif{border:2px solid var(--aksen);background:var(--jrh-kartu)}
+:root[data-tema] .app-rebuild .tema .palet.aktif{border: var(--w-garis-tebal) solid var(--aksen);background:var(--jrh-kartu)}
 @media(min-width:901px){.explorer-frame .mobile-only{display:none}.explorer-frame .desktop-only{display:flex}}
 @media(max-width:900px){.explorer-frame .desktop-only{display:none}.explorer-frame .layers-panel.mobile-open{background:var(--jrh-kartu);box-shadow:0 12px 40px var(--bayang-panel)}.explorer-frame .system-list{overflow-y:auto;overscroll-behavior:contain}.explorer-frame .system-row{min-height:44px}.explorer-frame .search-panel{background:var(--jrh-kartu)}}
 @media(max-width:480px){.explorer-frame .bottom-dock{gap: var(--sp-2);padding:12px}.explorer-frame .dock-reset{min-width:44px}.explorer-frame .dock-reset span{display:none}.explorer-frame .explode-control{min-width:0}.app-rebuild .app-navigation a{overflow-wrap:anywhere}}
