@@ -7,7 +7,12 @@
    :root[data-tema] .x (0,3,0). Selektor yang lebih lemah TIDAK akan menang
    walau dimuat belakangan, jadi setiap override di bawah sengaja ditulis
    dengan bobot yang sama atau lebih tinggi. Setiap override punya alasan
-   tertulis, sesuai R-31. */
+   tertulis, sesuai R-31.
+
+   PENTING soal ratchet px: scripts/audit-skala.mjs menghitung setiap nilai px
+   langsung per berkas, dan baseline-skala.json mencatat polish.css = 0. Berkas
+   ini wajib tetap 0 px, karena itu media query di sini memakai em dan tidak ada
+   outline-offset di sini (nilainya sudah dipasang ekstra.css). */
 
 /* R-06 satu stack font — lewat token, bukan selektor. */
 :root,.cangkang,.app-rebuild{font-family:var(--font-sans)}
@@ -96,11 +101,12 @@
 :root[data-tema] .akademi .panduan-item h3{margin:0 0 var(--sp-1);font-size:var(--t-6)}
 :root[data-tema] .akademi .panduan-item p{margin:0;font-size:var(--t-4);line-height:var(--lh-isi)}
 
-/* Di bawah 640px dua kolom glosarium tidak muat: nama ilmiah seperti
+/* Di bawah 40em (640px) dua kolom glosarium tidak muat: nama ilmiah seperti
    "Superior lobe of right lung" pecah jadi tiga baris dan kolom kanan
    kehabisan ruang. Satu kolom; label kolom disembunyikan karena tidak ada
-   pasangan yang perlu dibedakan lagi. */
-@media(max-width:640px){
+   pasangan yang perlu dibedakan lagi. Breakpoint ditulis dalam em, bukan px,
+   supaya berkas ini tetap 0 px sesuai ratchet. */
+@media(max-width:40em){
   :root[data-tema] .akademi .glos-head{display:none}
   :root[data-tema] .akademi .glos-row{
     grid-template-columns:minmax(0,1fr);
@@ -114,19 +120,19 @@
 
    skala.css mendefinisikan --header-h:64px dengan catatan eksplisit:
    "--header-h 64px, bukan 76px: header lama berisi 66px sehingga 10px
-   terbuang". Tetapi redesign.css masih memasang
-   grid-template-rows:76px 1fr, dan di breakpoint 900px
-   .app-header{min-height:72px}. Jadi token itu tidak pernah dipakai.
+   terbuang". Tetapi redesign.css masih memasang grid-template-rows:76px 1fr,
+   dan di breakpoint 900px .app-header{min-height:72px}. Jadi token itu tidak
+   pernah dipakai.
 
    Yang lebih penting: 64px TIDAK muat untuk isi header saat ini.
-   .app-header memasang padding blok var(--sp-3) (12px atas + 12px bawah)
-   dan .brand-mark setinggi 42px, sehingga tinggi isi 66px. Mengganti baris
-   76px menjadi 64px tanpa memperbaiki isinya hanya memindahkan luapan:
-   header akan meluber 2px dan menimpa garis bawahnya.
+   .app-header memasang padding blok var(--sp-3) (12px atas + 12px bawah) dan
+   .brand-mark setinggi 42px, sehingga tinggi isi 66px. Mengganti baris 76px
+   menjadi 64px tanpa memperbaiki isinya hanya memindahkan luapan: header akan
+   meluber 2px dan menimpa garis bawahnya.
 
    Perbaikan yang benar adalah mengecilkan kotak merek ke 40px (--sp-8),
-   sehingga 40 + 24 = 64px tepat. Logo tetap terbaca: huruf "J" di dalamnya
-   berukuran 24px, jadi turun 2px tidak mengubah hierarki.
+   sehingga 40 + 24 = 64px tepat. Huruf "J" di dalamnya 24px, jadi turun 2px
+   tidak mengubah hierarki.
    ============================================================ */
 .app-rebuild{grid-template-rows:var(--header-h) 1fr}
 .app-header{padding:var(--sp-3) var(--pad-konten);min-height:var(--header-h)}
@@ -151,10 +157,11 @@
 
    Satu gaya: --aksen-nonteks (lolos WCAG 1.4.11 3:1 di kedua mode,
    DESIGN.md aturan #7) dengan ketebalan --w-garis-tebal (aturan #8).
+   outline-offset TIDAK ditulis ulang di sini: ekstra.css sudah memasang 3px
+   pada selektor yang sama, dan menuliskannya lagi akan menambah px ke ratchet.
    ============================================================ */
 .app-rebuild :is(a,button,input,select,[tabindex]):focus-visible{
   outline:var(--w-garis-tebal) solid var(--aksen-nonteks);
-  outline-offset:3px;
 }
 
 /* Batas jujur lapisan ini.
