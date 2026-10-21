@@ -15,7 +15,8 @@
 //      CI menolak kalau tokennya hilang.
 //
 // Kalau ada penanda yang tidak ketemu, skrip BERHENTI dengan exit 1 daripada
-// diam-diam melewatkan bagian penting.
+// diam-diam melewatkan bagian penting. Idempoten: jalan kedua tidak mengubah
+// apa pun, jadi workflow berhenti sendiri setelah satu putaran.
 
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -64,9 +65,7 @@ function seimbang(teks) {
 // berubah dan tidak mengacaukan hitungan.
 function luarKomentar(teks, ubah) {
   const bagian = teks.split(/(\/\*[\s\S]*?\*\/)/);
-  return bagian
-    .map((b, i) => (i % 2 === 1 ? b : ubah(b)))
-    .join('');
+  return bagian.map((b, i) => (i % 2 === 1 ? b : ubah(b))).join('');
 }
 
 // --- 1. Token masuk ke skala.css -------------------------------------------
@@ -75,18 +74,20 @@ let skala = readFileSync(jalurSkala, 'utf8');
 if (skala.includes('--w-garis:')) {
   console.log('skala.css: token sudah ada, dilewati');
 } else {
-  const penanda = '  /* ---------- Typografi ---------- */';
-  if (!skala.includes(penanda)) {
-    console.error('skala.css: penanda bagian Typografi tidak ketemu. Batal.');
+  // Penanda dicocokkan longgar: yang penting kata "Tipografi" di dalam
+  // komentar bergaris, bukan jumlah persis tanda hubungnya.
+  const cocok = skala.match(/[ \t]*\/\*[ *-]*Tipografi[ *-]*\*\//);
+  if (!cocok) {
+    console.error('skala.css: komentar bagian Tipografi tidak ketemu. Batal.');
     process.exit(1);
   }
-  skala = skala.replace(penanda, TOKEN + penanda);
+  skala = skala.replace(cocok[0], TOKEN + cocok[0]);
   if (!seimbang(skala)) {
     console.error('skala.css: kurung kurawal rusak setelah sisip token. Batal.');
     process.exit(1);
   }
   writeFileSync(jalurSkala, skala);
-  console.log('skala.css: --w-garis + --w-garis-tebal disisipkan');
+  console.log('skala.css: --w-garis + --w-garis-tebal disisipkan sebelum Tipografi');
 }
 
 // --- 2. Migrasi ketebalan garis --------------------------------------------
@@ -144,11 +145,14 @@ if (audit.includes("'--w-garis'")) {
   audit = audit.replace(jangkar, "  '--w-garis', '--w-garis-tebal',\n" + jangkar);
 
   // var(--w-*) yang dipakai tapi tidak terdefinisi juga harus ketahuan.
-  const pola = '/^--(sp|r|t|lh|tr|e|z|d|ease)-/';
+  // Di berkas aslinya ini regex literal (tanpa tanda kutip), bukan string.
+  const polaAsli = '/^--(sp|r|t|lh|tr|e|z|d|ease)-/';
   const polaBaru = '/^--(sp|r|t|lh|tr|e|z|d|ease|w)-/';
-  if (audit.includes(pola)) {
-    audit = audit.replace(pola, polaBaru);
+  if (audit.includes(polaAsli)) {
+    audit = audit.replace(polaAsli, polaBaru);
     console.log('audit-skala.mjs: pola token skala mencakup --w-*');
+  } else {
+    console.warn('audit-skala.mjs: pola POLA_SKALA tidak ketemu, dilewati (token tetap wajib)');
   }
 
   writeFileSync(jalurAudit, audit);
