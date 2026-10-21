@@ -1,16 +1,15 @@
 name: Migrasi token garis sekali-jalan
 
-# Sekali-jalan. Tidak ada pemicu otomatis di main: workflow ini hanya jalan
-# kalau ada push ke branch chore/token-garis, atau dipicu manual. Setelah
-# dipakai, workflow ini dihapus supaya tidak jadi zombie seperti
-# migrasi-px.yml (masih terdaftar aktif padahal berkasnya sudah tidak ada).
+# Sekali-jalan. Tidak ada pemicu di main: workflow ini hanya jalan di branch
+# chore/token-garis, baik lewat push maupun lewat PR ke main. Setelah dipakai,
+# workflow ini dihapus supaya tidak jadi zombie seperti migrasi-px.yml (masih
+# terdaftar aktif padahal berkasnya sudah tidak ada di repo).
 on:
   workflow_dispatch:
   push:
     branches: [chore/token-garis]
-    paths:
-      - 'app/*.css'
-      - 'scripts/token-garis.mjs'
+  pull_request:
+    branches: [main]
 
 permissions:
   contents: write
@@ -19,9 +18,11 @@ jobs:
   migrasi:
     name: Token garis
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/chore/token-garis'
+    if: github.head_ref == 'chore/token-garis' || github.ref == 'refs/heads/chore/token-garis'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: chore/token-garis
 
       - uses: actions/setup-node@v4
         with:
