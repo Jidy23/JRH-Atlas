@@ -33,6 +33,7 @@ const WAJIB = [
   '--t-6', '--t-7', '--t-8', '--t-9', '--t-10',
   '--lh-ketat', '--lh-judul', '--lh-isi', '--lh-longgar',
   '--tr-ketat', '--tr-normal', '--tr-lebar', '--tr-kaps',
+  '--w-garis', '--w-garis-tebal',
   '--font-sans', '--font-mono',
   '--e-1', '--e-2', '--e-3', '--e-4',
   '--z-dasar', '--z-panel', '--z-lengket', '--z-sheet', '--z-nav',
@@ -68,7 +69,7 @@ if (hilang.length) {
 // ---------- 2. Tidak ada token skala hantu ----------
 // Hanya nama yang jelas milik skala. --v-*, --jrh-*, --aksen-* punya rumah lain
 // dan sudah diperiksa audit lain, jadi tidak ikut di sini.
-const POLA_SKALA = /^--(sp|r|t|lh|tr|e|z|d|ease)-/;
+const POLA_SKALA = /^--(sp|r|t|lh|tr|e|z|d|ease|w)-/;
 const semuaCss = readdirSync(dirApp).filter((f) => f.endsWith('.css')).sort();
 
 let hantu = 0;

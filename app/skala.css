@@ -40,6 +40,13 @@
   --r-5: 28px;
   --r-pil: 999px;
 
+  /* ---------- Garis: ketebalan pemisah ---------- */
+  /* DESIGN.md: garis tipis 1px sebagai pemisah struktur. Token ini
+     memisahkan garis struktural dari px lepas supaya ketebalan bisa
+     diubah di satu tempat. 2px hanya untuk garis yang wajib terbaca
+     sebagai bentuk: indikator fokus dan skip-link. */
+  --w-garis: 1px;
+  --w-garis-tebal: 2px;
   /* ---------- Tipografi ---------- */
   /* Skala ini menggantikan 24 ukuran huruf ad-hoc yang sebelumnya tersebar
      (8, 9, 9.5, 10, 10.5, 11, 11.5, 12, 12.5, 13, 13.5, 14, 14.5, 15, 16,

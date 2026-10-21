@@ -1,0 +1,53 @@
+name: Migrasi token garis sekali-jalan
+
+# Sekali-jalan. Tidak ada pemicu di main: workflow ini hanya jalan di branch
+# chore/token-garis, baik lewat push maupun lewat PR ke main. Setelah dipakai,
+# workflow ini dihapus supaya tidak jadi zombie seperti migrasi-px.yml (masih
+# terdaftar aktif padahal berkasnya sudah tidak ada di repo).
+on:
+  workflow_dispatch:
+  push:
+    branches: [chore/token-garis]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  migrasi:
+    name: Token garis
+    runs-on: ubuntu-latest
+    if: github.head_ref == 'chore/token-garis' || github.ref == 'refs/heads/chore/token-garis'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chore/token-garis
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Sisip token dan migrasi ketebalan garis
+        run: node scripts/token-garis.mjs
+
+      - name: Ukur ulang baseline dari hasil migrasi
+        run: node scripts/migrasi-px.mjs --tulis-baseline
+
+      - name: Audit skala (harus lolos)
+        run: npm run audit:skala
+
+      - name: Commit hasil
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app scripts
+          if git diff --staged --quiet; then
+            echo 'Tidak ada perubahan. Selesai.'
+            exit 0
+          fi
+          git commit -m 'chore(design): ketebalan garis jadi token --w-garis / --w-garis-tebal'
+          git push origin HEAD:chore/token-garis
