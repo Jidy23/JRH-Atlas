@@ -11,12 +11,22 @@
  */
 import { SITUS, type Rute } from './rute';
 
+/**
+ * tsconfig memuat @cloudflare/workers-types, yang mendeklarasikan ulang
+ * `document.head` dengan tipe Element milik HTMLRewriter. `append` pada tipe itu
+ * hanya menerima string | ReadableStream | Response, sehingga menyisipkan node
+ * ditolak typecheck walaupun sah di browser. Satu cast sempit di sini jauh lebih
+ * kecil risikonya daripada mengubah `types` di tsconfig dan berpotensi
+ * mengganggu berkas lain.
+ */
+const kepala = () => document.head as unknown as { append(...nodes: unknown[]): void };
+
 function meta(jenis: 'name' | 'property', kunci: string, isi: string) {
   let el = document.head.querySelector<HTMLMetaElement>(`meta[${jenis}="${kunci}"]`);
   if (!el) {
     el = document.createElement('meta');
     el.setAttribute(jenis, kunci);
-    document.head.append(el);
+    kepala().append(el);
   }
   el.setAttribute('content', isi);
 }
@@ -26,7 +36,7 @@ function tautan(rel: string, href: string) {
   if (!el) {
     el = document.createElement('link');
     el.setAttribute('rel', rel);
-    document.head.append(el);
+    kepala().append(el);
   }
   el.setAttribute('href', href);
 }
@@ -38,7 +48,7 @@ function dataTerstruktur(rute: Rute, url: string) {
     el = document.createElement('script');
     el.id = id;
     el.type = 'application/ld+json';
-    document.head.append(el);
+    kepala().append(el);
   }
   el.textContent = JSON.stringify({
     '@context': 'https://schema.org',
