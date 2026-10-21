@@ -7,13 +7,14 @@
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 3016",
-    "build": "vite build",
-    "build:vercel": "vite build",
+    "build": "vite build && node scripts/prerender.mjs",
+    "build:vercel": "vite build && node scripts/prerender.mjs",
     "check": "tsc --noEmit",
     "audit:kontras": "tsc -p scripts/tsconfig.audit.json && node .audit-build/scripts/audit-kontras.js",
     "audit:token": "node scripts/audit-token.mjs",
     "audit:skala": "node scripts/audit-skala.mjs",
-    "audit:soal": "node scripts/audit-soal.mjs"
+    "audit:soal": "node scripts/audit-soal.mjs",
+    "audit:rute": "node scripts/audit-rute.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

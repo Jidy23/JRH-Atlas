@@ -1,0 +1,53 @@
+{
+  "situs": "https://jrh-atlas.pages.dev",
+  "rute": [
+    {
+      "id": "jelajah",
+      "path": "/",
+      "label": "Jelajah 3D",
+      "judul": "Jelajah 3D — Atlas Anatomi Tubuh Manusia Berbahasa Indonesia",
+      "deskripsi": "Jelajahi 2.234 bagian tubuh manusia dalam model 3D interaktif berbahasa Indonesia: 15 sistem organ, pencarian dua bahasa, dan tampilan terpisah per lapisan.",
+      "ringkas": "Kenali tubuh melalui model tiga dimensi."
+    },
+    {
+      "id": "belajar",
+      "path": "/belajar",
+      "label": "Belajar",
+      "judul": "Belajar Anatomi per Jenjang — SD, SMP, SMA",
+      "deskripsi": "Tur terpandu 5–8 menit per topik, dipisah menurut jenjang SD, SMP, dan SMA. Bisa dipakai sendiri maupun bersama guru di kelas.",
+      "ringkas": "Pelajari organ, satu langkah setiap kali."
+    },
+    {
+      "id": "kuis",
+      "path": "/kuis",
+      "label": "Kuis",
+      "judul": "Kuis Anatomi dengan Penjelasan di Setiap Jawaban",
+      "deskripsi": "Soal pilihan ganda per jenjang dengan penjelasan di setiap jawaban, benar maupun salah. Posisi jawaban diacak supaya tidak bisa ditebak.",
+      "ringkas": "Uji pemahaman dan pelajari penjelasannya."
+    },
+    {
+      "id": "flashcard",
+      "path": "/flashcard",
+      "label": "Flashcard",
+      "judul": "Flashcard Anatomi — Latihan Mengingat Nama dan Fungsi",
+      "deskripsi": "Tiga mode latihan: tebak nama organ, tebak fungsi, dan tebak fakta. Tandai kartu yang sudah hafal untuk diulang dengan jeda 1–3–7 hari.",
+      "ringkas": "Latihan mengingat nama, fungsi, dan fakta."
+    },
+    {
+      "id": "glosarium",
+      "path": "/glosarium",
+      "label": "Glosarium",
+      "judul": "Glosarium Istilah Anatomi Inggris–Indonesia",
+      "deskripsi": "Padanan bahasa Indonesia untuk nama ilmiah yang dipakai di atlas, supaya kamu bisa belajar dari buku sekolah tanpa bingung.",
+      "ringkas": "Temukan arti istilah anatomi."
+    },
+    {
+      "id": "panduan",
+      "path": "/panduan",
+      "label": "Panduan",
+      "judul": "Panduan Penggunaan dan Sumber Pembelajaran",
+      "deskripsi": "Cara memakai JRH Atlas, cakupan kurikulum, sumber data BodyParts3D, dan catatan bahwa atlas ini alat belajar, bukan alat diagnosis.",
+      "ringkas": "Panduan penggunaan dan sumber pembelajaran."
+    }
+  ]
+}
