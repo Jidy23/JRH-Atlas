@@ -8,8 +8,13 @@
  *
  * Penyimpanan diakses lewat tipe struktural, bukan `Storage`, supaya berkas
  * ini bisa dikompilasi dan diuji tanpa `lib: DOM`.
+ *
+ * Berkas ini sengaja tidak mengimpor apa pun dari app/kuis.ts. Jadwal ulang
+ * dulu dipinjam dari sana, tetapi tsc menulis impor tanpa ekstensi dan Node
+ * menolak itu saat `npm run audit:progres` menjalankan hasil build di
+ * `.audit-build/` (ERR_MODULE_NOT_FOUND). Kuis juga menarik kurikulum dan bank
+ * soal yang tidak perlu ikut dikompilasi hanya untuk satu fungsi aritmetika.
  */
-import { nextReview } from './kuis';
 
 export type Gudang = {
   getItem(kunci: string): string | null;
@@ -105,8 +110,19 @@ export function simpanProgres(p: Progres, g: Gudang | null = gudangBawaan()) {
 }
 
 /**
- * Menilai satu kartu. Jeda berikutnya diambil dari `nextReview()` di kuis.ts,
- * fungsi yang sebelumnya tidak pernah dipanggil siapa pun.
+ * Interval pengulangan sederhana: hafal menjeda 3 hari, belum hafal ulang
+ * besok. Jeda memanjang 3/6/9/12/15/18 lalu mentok di 21 hari, supaya kartu
+ * yang sudah lama hafal tidak menghilang dari jadwal berbulan-bulan.
+ */
+export function nextReview(hafal: boolean, streak: number) {
+  const hari = hafal ? Math.min(3 * Math.max(1, streak + 1), 21) : 1;
+  const kapan = Date.now() + hari * 86400000;
+  return { hari, kapan, streak: hafal ? streak + 1 : 0 };
+}
+
+/**
+ * Menilai satu kartu. Jeda berikutnya diambil dari `nextReview()` di berkas
+ * ini, satu-satunya pemakainya.
  */
 export function tandaiKartu(
   p: Progres,
