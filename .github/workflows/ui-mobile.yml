@@ -21,11 +21,20 @@ jobs:
     # jadi ini gangguan mirror, bukan cacat workflow.
     #
     # Karena itu apt dan unduhan browser sekarang dipisah:
-    #   - apt diberi `timeout` per percobaan lalu dicoba ulang, sehingga mirror
-    #     yang menggantung gagal cepat alih-alih memakan seluruh jatah job;
+    #   - apt diberi batas waktu per percobaan lalu dicoba ulang, sehingga
+    #     mirror yang menggantung gagal cepat alih-alih memakan seluruh jatah
+    #     job;
     #   - engine di-cache, karena unduhannya deterministik per versi Playwright.
-    # Menaikkan timeout job lagi tanpa batas per percobaan hanya memperpanjang
-    # kegagalan yang sama, bukan mencegahnya.
+    #
+    # Batch 8: pola `timeout 420 cmd | tee log` TERBUKTI tidak membatasi apa pun
+    # di Mobile #109 (melewati 26 menit). Diganti fungsi jalankan_berbatas yang
+    # membunuh seluruh grup proses.
+    #
+    # Batch 9: batas 420 detik itu TERBUKTI BEKERJA di Mobile #110 -- berhenti
+    # pada 420,8 detik, bukan menggantung. Tetapi job tetap gagal: apt-get yang
+    # dipanggil lewat `sudo` berjalan di sesi pty sendiri (sudo use_pty, bawaan
+    # Ubuntu 24.04), jadi lolos dari kill grup. Percobaan 2 dan 3 lalu mati
+    # seketika pada kunci dpkg yang masih dipegang proses yatim itu.
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -59,30 +68,91 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: pw-${{ runner.os }}-${{ steps.pw.outputs.versi }}
+      # Batch 9: akar masalahnya adalah mirror yang berhenti menjawab, bukan
+      # kurangnya batas waktu. apt punya opsi timeout jaringan yang jauh lebih
+      # murah daripada membunuh proses: kalau satu paket tidak menjawab dalam
+      # 30 detik, apt menyerah lalu mencoba lagi, alih-alih menggantung sampai
+      # batas 420 detik habis. DPkg::Lock::Timeout membuat percobaan ulang
+      # menunggu kunci dpkg sebentar, bukan langsung mati seperti di #110.
+      - name: Batasi waktu jaringan apt
+        run: |
+          echo 'Acquire::http::Timeout "30";'  | sudo tee    /etc/apt/apt.conf.d/99jrh-timeouts >/dev/null
+          echo 'Acquire::https::Timeout "30";' | sudo tee -a /etc/apt/apt.conf.d/99jrh-timeouts >/dev/null
+          echo 'Acquire::ftp::Timeout "30";'   | sudo tee -a /etc/apt/apt.conf.d/99jrh-timeouts >/dev/null
+          echo 'Acquire::Retries "2";'         | sudo tee -a /etc/apt/apt.conf.d/99jrh-timeouts >/dev/null
+          echo 'DPkg::Lock::Timeout "120";'    | sudo tee -a /etc/apt/apt.conf.d/99jrh-timeouts >/dev/null
+          sudo cat /etc/apt/apt.conf.d/99jrh-timeouts
       - name: Install system dependencies for browser engines
         run: |
-          set -o pipefail
-          # apt dipisah dari unduhan browser dan dibatasi per percobaan.
-          # 420 detik sangat lapang: unduhan normal selesai dalam 9 detik, dan
-          # percobaan terburuk 3 x 420 detik = 21 menit masih di bawah 40 menit,
-          # jadi langkah tes di bawahnya tetap mendapat jatah waktu.
+          # Batch 9: membunuh grup proses saja TIDAK cukup. playwright memanggil
+          # `sudo apt-get`, dan sudo memakai use_pty secara bawaan, sehingga
+          # apt-get berjalan di sesi terminal sendiri di luar grup yang kita
+          # bunuh. Bukti Mobile #110: batas berhenti tepat waktu (420,8 detik),
+          # tetapi apt-get PID 2881 tetap hidup memegang
+          # /var/lib/dpkg/lock-frontend, jadi percobaan 2 dan 3 mati seketika
+          # dengan exit 100 tanpa mengunduh satu paket pun.
+          #
+          # Karena itu proses yatim dibersihkan menurut NAMA proses, bukan
+          # menurut grup, sebelum tiap percobaan.
+          bersihkan_apt() {
+            sisa=$( { pgrep -a -x apt-get || true; pgrep -a -x dpkg || true; pgrep -a -x apt-helper || true; } )
+            if [ -n "$sisa" ]; then
+              echo "Proses apt yatim dari percobaan sebelumnya:"
+              echo "$sisa"
+              sudo pkill -KILL -x apt-get 2>/dev/null || true
+              sudo pkill -KILL -x dpkg 2>/dev/null || true
+              sudo pkill -KILL -x apt-helper 2>/dev/null || true
+              sleep 2
+            fi
+          }
+          jalankan_berbatas() {
+            batas=$1
+            log=$2
+            shift 2
+            set -m
+            "$@" >"$log" 2>&1 &
+            anak=$!
+            set +m
+            detik=0
+            while kill -0 "$anak" 2>/dev/null; do
+              if [ "$detik" -ge "$batas" ]; then
+                echo "Batas $batas detik lewat; menghentikan grup proses $anak."
+                kill -TERM -- "-$anak" 2>/dev/null || kill -TERM "$anak" 2>/dev/null
+                sleep 10
+                kill -KILL -- "-$anak" 2>/dev/null || kill -KILL "$anak" 2>/dev/null
+                wait "$anak" 2>/dev/null
+                return 124
+              fi
+              sleep 1
+              detik=$((detik + 1))
+            done
+            wait "$anak"
+          }
+
+          # Dengan timeout jaringan 30 detik, batas 420 detik jarang tersentuh:
+          # mirror yang menggantung menggagalkan apt jauh lebih cepat daripada
+          # batas itu. Batas 420 tetap dipertahankan sebagai jaring pengaman
+          # untuk kasus yang tidak tertangani opsi jaringan apt.
           for percobaan in 1 2 3; do
             echo "::group::apt percobaan $percobaan"
-            if timeout 420 /tmp/ui-browser/node_modules/.bin/playwright install-deps chromium webkit firefox 2>&1 | tee "/tmp/apt-$percobaan.log"; then
+            bersihkan_apt
+            if jalankan_berbatas 420 "/tmp/apt-$percobaan.log" \
+                 /tmp/ui-browser/node_modules/.bin/playwright install-deps chromium webkit firefox; then
               echo "::endgroup::"
               echo "Dependensi sistem terpasang pada percobaan $percobaan."
               exit 0
             fi
             echo "::endgroup::"
             echo "Percobaan $percobaan gagal atau melewati 420 detik, ulangi."
+            tail -n 40 "/tmp/apt-$percobaan.log" || true
             sleep 15
           done
           echo "::error::apt gagal tiga kali. Mirror paket kemungkinan sedang bermasalah; periksa /tmp/apt-*.log."
           exit 1
       - name: Download browser engines
         run: |
-          # Tanpa --with-deps: dependensi sistem sudah ditangani langkah di atas,
-          # dan unduhan inilah yang di-cache.
+          # Tanpa --with-deps: dependensi sistem sudah ditangani langkah di
+          # atas, dan unduhan inilah yang di-cache.
           set -o pipefail
           /tmp/ui-browser/node_modules/.bin/playwright install chromium webkit firefox 2>&1 | tee /tmp/browser-install.log
       - name: Test touch and narrow-screen navigation on built assets
