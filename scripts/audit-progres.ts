@@ -10,12 +10,12 @@
  * tidak pernah dijalankan siapa pun: jadwal ulang dari nextReview(), dan
  * penyimpanan yang harus tetap aman saat localStorage rusak atau penuh.
  *
- * Catatan: berkas ini ikut `npm run check` (tsconfig utama menyertakan
- * `**/*.ts`), jadi anotasi tipe di sini bukan formalitas. `let p = {}`
- * disimpulkan sebagai `{}` dan membuat `p['name:heart']` gagal di-index.
- *
- * Berkas ini sengaja ASCII murni: karakter non-ASCII rusak saat blob dibuat
- * lewat API dengan encoding utf-8, dan itu membuat berkas gagal di-parse.
+ * Catatan: berkas ini ikut `npm run check`, karena tsconfig utama menyertakan
+ * semua berkas ts di repo. Anotasi tipe di sini bukan formalitas: `let p = {}`
+ * disimpulkan sebagai objek kosong dan membuat `p['name:heart']` gagal
+ * di-index. Komentar ini juga sengaja tidak menulis pola glob apa pun, sebab
+ * urutan bintang-garis miring di dalamnya menutup komentar lebih awal dan
+ * membuat sisa komentar dibaca sebagai kode.
  */
 import assert from 'node:assert/strict';
 import {
