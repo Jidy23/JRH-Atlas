@@ -119,6 +119,7 @@ lama supaya metadata per rute tidak basi.
 npm run check           # typecheck TypeScript
 npm run build           # build produksi + prerender per rute
 npm run audit:rute      # path, judul, deskripsi tiap rute
+npm run audit:teks      # teks pengguna tidak menjanjikan perilaku usang
 npm run audit:aset      # anggaran ukuran chunk dan katalog model
 npm run audit:kontras   # kontras WCAG AA tiap pasangan warna
 npm run audit:token     # warna komponen harus dari token, bukan literal
