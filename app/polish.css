@@ -12,7 +12,9 @@
    PENTING soal ratchet px: scripts/audit-skala.mjs menghitung setiap nilai px
    langsung per berkas, dan baseline-skala.json mencatat polish.css = 0. Berkas
    ini wajib tetap 0 px, karena itu media query di sini memakai em dan tidak ada
-   outline-offset di sini (nilainya sudah dipasang ekstra.css). */
+   outline-offset di sini (nilainya sudah dipasang ekstra.css). Utilitas
+   .sr-only juga TIDAK ditulis di sini karena butuh 1px/-1px; rumahnya
+   ekstra.css. */
 
 /* R-06 satu stack font — lewat token, bukan selektor. */
 :root,.cangkang,.app-rebuild{font-family:var(--font-sans)}
@@ -60,36 +62,58 @@
    Bobot 0,4,0 karena memakai :root[data-tema] dan .akademi, lebih tinggi dari
    0,3,0 milik tema.css, sehingga warna tema tetap menang dan tata letak dari
    sini tetap terpasang. Token skala dipakai (DESIGN.md aturan #8).
+
+   SEJAK BATCH 3, .glos adalah <table> sungguhan, bukan tumpukan <div>. Markup
+   lama (.glos-head + ratusan .glos-row) tampak seperti tabel tetapi tidak
+   memberi pembaca layar relasi baris-ke-kolom sama sekali. Konsekuensi untuk
+   tata letak di bawah, semuanya disengaja:
+
+   - border-collapse:separate, bukan collapse. Pada collapse, border-radius di
+     <table> diabaikan browser, jadi sudut membulat yang sudah ada hilang.
+     Dengan separate + border-spacing:0 + overflow:hidden, radius kembali
+     memotong sudut seperti sebelumnya.
+   - Border bawah dipasang pada sel (th/td), bukan pada <tr>: saat
+     border-collapse:separate, border pada <tr> tidak digambar.
+   - text-align di-reset pada th. Bawaan browser center dan bold; kolom istilah
+     harus rata kiri seperti teks lain di halaman ini.
+   - Aturan .glos-row .en / .id dihapus karena <span> pembungkusnya tidak ada
+     lagi; perannya diambil overflow-wrap pada sel.
    ============================================================ */
-:root[data-tema] .akademi .glos{
-  display:block;
+:root[data-tema] .akademi table.glos{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
   border:var(--w-garis) solid var(--jrh-garis);
   border-radius:var(--r-2);
   overflow:hidden;
+  text-align:left;
 }
-:root[data-tema] .akademi .glos-head,
-:root[data-tema] .akademi .glos-row{
-  display:grid;
-  grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);
-  gap:var(--sp-3);
+:root[data-tema] .akademi table.glos th,
+:root[data-tema] .akademi table.glos td{
   padding:var(--sp-2) var(--sp-4);
-  align-items:baseline;
+  text-align:left;
+  vertical-align:baseline;
+  border-bottom:var(--w-garis) solid var(--jrh-garis);
 }
-:root[data-tema] .akademi .glos-head{
+:root[data-tema] .akademi table.glos thead th{
   font-size:var(--t-1);
   font-weight:700;
   letter-spacing:var(--tr-lebar);
   text-transform:uppercase;
-  border-bottom:var(--w-garis) solid var(--jrh-garis);
 }
-:root[data-tema] .akademi .glos-row{
+:root[data-tema] .akademi table.glos tbody th{
+  font-size:var(--t-4);
+  font-weight:600;
+  line-height:var(--lh-isi);
+  overflow-wrap:anywhere;
+}
+:root[data-tema] .akademi table.glos tbody td{
   font-size:var(--t-4);
   line-height:var(--lh-isi);
-  border-bottom:var(--w-garis) solid var(--jrh-garis);
+  overflow-wrap:anywhere;
 }
-:root[data-tema] .akademi .glos-row:last-child{border-bottom:0}
-:root[data-tema] .akademi .glos-row .en{overflow-wrap:anywhere}
-:root[data-tema] .akademi .glos-row .id{font-weight:600;overflow-wrap:anywhere}
+:root[data-tema] .akademi table.glos tbody tr:last-child th,
+:root[data-tema] .akademi table.glos tbody tr:last-child td{border-bottom:0}
 
 :root[data-tema] .akademi .panduan{display:grid;gap:var(--sp-3)}
 :root[data-tema] .akademi .panduan-item{
@@ -101,18 +125,20 @@
 :root[data-tema] .akademi .panduan-item h3{margin:0 0 var(--sp-1);font-size:var(--t-6)}
 :root[data-tema] .akademi .panduan-item p{margin:0;font-size:var(--t-4);line-height:var(--lh-isi)}
 
-/* Di bawah 40em (640px) dua kolom glosarium tidak muat: nama ilmiah seperti
-   "Superior lobe of right lung" pecah jadi tiga baris dan kolom kanan
-   kehabisan ruang. Satu kolom; label kolom disembunyikan karena tidak ada
-   pasangan yang perlu dibedakan lagi. Breakpoint ditulis dalam em, bukan px,
-   supaya berkas ini tetap 0 px sesuai ratchet. */
+/* Di bawah 40em (640px) dua kolom glosarium sempit, tetapi TIDAK lagi diubah
+   menjadi satu kolom dan header kolomnya TIDAK lagi disembunyikan.
+
+   Versi sebelumnya menyembunyikan .glos-head di bawah 40em. Itu bisa dilakukan
+   karena markupnya div: tidak ada relasi yang hilang. Pada <table>, menyembunyikan
+   <thead> justru menghapus satu-satunya penanda kolom, tepat pada lebar layar
+   yang paling banyak dipakai pelajar (ponsel). Jadi yang dikecilkan hanya
+   ukuran huruf dan padding, sementara nama kolom tetap terbaca. Nama ilmiah
+   panjang tetap utuh karena sel memakai overflow-wrap:anywhere.
+   Breakpoint ditulis dalam em, bukan px, supaya berkas ini tetap 0 px. */
 @media(max-width:40em){
-  :root[data-tema] .akademi .glos-head{display:none}
-  :root[data-tema] .akademi .glos-row{
-    grid-template-columns:minmax(0,1fr);
-    gap:var(--sp-1);
-    padding:var(--sp-3);
-  }
+  :root[data-tema] .akademi table.glos{font-size:var(--t-3)}
+  :root[data-tema] .akademi table.glos th,
+  :root[data-tema] .akademi table.glos td{padding:var(--sp-2) var(--sp-3)}
 }
 
 /* ============================================================

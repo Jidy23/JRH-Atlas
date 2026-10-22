@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { JENJANG, ORGAN, organByName, type Jenjang } from './kurikulum';
 import { TUR, organLangkah, turUntuk } from './belajar';
 import { acak, acakPilihan, bankSoal, deck, nilai, predikat, type Soal } from './kuis';
@@ -134,6 +134,24 @@ export function Belajar({
 
 /* -------------------------------- KUIS -------------------------------- */
 
+/* Tiga hal yang diperbaiki di sini, semuanya hanya terasa oleh pengguna
+   keyboard dan pembaca layar:
+
+   1. Pertanyaan dan pilihan jawaban kini terhubung. Sebelumnya empat tombol
+      jawaban berdiri sendiri tanpa nama kelompok, jadi pembaca layar tidak
+      pernah tahu tombol-tombol itu milik pertanyaan mana. Sekarang pilihan
+      dibungkus role="group" dengan aria-labelledby ke judul pertanyaan.
+
+   2. Status benar/salah tidak lagi hanya dibawa warna dan border. Tiap tombol
+      jawaban mendapat teks tersembunyi ("jawaban benar", "pilihanmu, belum
+      tepat", "bukan pilihanmu"), sehingga informasinya tetap utuh tanpa
+      melihat warna. Ini syarat WCAG 1.4.1.
+
+   3. Fokus dipindahkan ke judul soal saat soal berganti. Sebelumnya menekan
+      "Soal berikutnya" membuang fokus ke <body> karena tombolnya hilang dari
+      DOM, dan pengguna keyboard harus menekan Tab dari awal halaman setiap
+      soal. */
+
 export function Kuis({
   jenjang,
   setJenjang,
@@ -148,6 +166,22 @@ export function Kuis({
   const [benar, setBenar] = useState(0);
   const [selesai, setSelesai] = useState(false);
 
+  // Fokus hanya dipindahkan setelah pengguna benar-benar berpindah soal, bukan
+  // saat kuis pertama kali dirender — memindahkan fokus pada render awal akan
+  // melompati navigasi halaman dan membingungkan pengguna pembaca layar.
+  const judulSoal = useRef<HTMLHeadingElement>(null);
+  const judulHasil = useRef<HTMLHeadingElement>(null);
+  const sudahJalan = useRef(false);
+
+  useEffect(() => {
+    if (!sudahJalan.current) return;
+    judulSoal.current?.focus();
+  }, [n]);
+
+  useEffect(() => {
+    if (selesai) judulHasil.current?.focus();
+  }, [selesai]);
+
   function mulaiKuis() {
     // Dua lapis pengacakan: urutan soal, lalu urutan pilihan tiap soal.
     // Tanpa lapis kedua, posisi jawaban benar tetap terbaca sebagai pola
@@ -158,6 +192,7 @@ export function Kuis({
     setPilih(null);
     setSelesai(false);
     setMulai(true);
+    sudahJalan.current = false;
   }
 
   function jawab(idx: number) {
@@ -169,6 +204,7 @@ export function Kuis({
   function lanjut() {
     if (n + 1 >= soal.length) setSelesai(true);
     else {
+      sudahJalan.current = true;
       setN(n + 1);
       setPilih(null);
     }
@@ -197,7 +233,7 @@ export function Kuis({
       <section className="akademi">
         <div className="hasil">
           <span className="emoji-besar" aria-hidden>{p.emoji}</span>
-          <h2>{p.label}</h2>
+          <h2 ref={judulHasil} tabIndex={-1}>{p.label}</h2>
           <p className="skor">{skor}<small>/100</small></p>
           <p>{benar} benar dari {soal.length} soal</p>
           <p className="leads">{p.pesan}</p>
@@ -211,6 +247,8 @@ export function Kuis({
   }
 
   const s = soal[n];
+  const sudahDijawab = pilih !== null;
+
   return (
     <section className="akademi">
       <div className="kuis-head">
@@ -219,26 +257,39 @@ export function Kuis({
       </div>
 
       <article className="kartu-besar" key={s.id}>
-        <h3>{s.pertanyaan}</h3>
-        <div className="pilihan">
+        <h3 id="soal-pertanyaan" ref={judulSoal} tabIndex={-1}>{s.pertanyaan}</h3>
+        <div className="pilihan" role="group" aria-labelledby="soal-pertanyaan">
           {s.pilihan.map((p, idx) => {
             let kelas = 'pilih';
-            if (pilih !== null) {
+            if (sudahDijawab) {
               if (idx === s.jawaban) kelas += ' benar';
               else if (idx === pilih) kelas += ' salah';
             }
             return (
-              <button key={p} type="button" className={kelas} onClick={() => jawab(idx)} disabled={pilih !== null}>
+              <button key={p} type="button" className={kelas} onClick={() => jawab(idx)} disabled={sudahDijawab}>
                 <span className="huruf">{String.fromCharCode(65 + idx)}</span>
                 {p}
+                {/* Status dibacakan sebagai bagian dari nama tombol, bukan hanya
+                    diumumkan lewat live region: pengguna bisa menelusuri ulang
+                    pilihan kapan saja dan tetap tahu mana yang benar. */}
+                {sudahDijawab && idx === s.jawaban && (
+                  <span className="sr-only"> — jawaban benar</span>
+                )}
+                {sudahDijawab && idx === pilih && idx !== s.jawaban && (
+                  <span className="sr-only"> — pilihanmu, belum tepat</span>
+                )}
               </button>
             );
           })}
         </div>
 
-        {pilih !== null && (
-          <div className="umpan" role="status" aria-live="polite">
-            <p>
+        {sudahDijawab && (
+          <div className="umpan">
+            {/* Satu-satunya role="status" di layar kuis. Tombol "Soal
+                berikutnya" sengaja diletakkan DI LUAR live region: elemen
+                interaktif di dalam live region membuat pembaca layar
+                mengumumkan tombol itu setiap kali isi berubah. */}
+            <p role="status" aria-live="polite">
               <b>{pilih === s.jawaban ? 'Benar. ' : 'Belum tepat. '}</b>
               {s.alasan}
             </p>

@@ -5,6 +5,19 @@ import './akademi.css';
 
 /* ------------------------------ GLOSARIUM ------------------------------ */
 
+/* Padanan istilah adalah data tabular, jadi dirender sebagai <table> asli.
+
+   Sebelumnya seluruh daftar berupa <div class="glos"> berisi <div class="glos-head">
+   dan ratusan <div class="glos-row">. Secara visual hasilnya dua kolom, tetapi bagi
+   pembaca layar tidak ada tabel sama sekali: tanpa relasi baris-ke-kolom, tanpa nama
+   kolom yang dibacakan, dan tanpa navigasi antar-sel. Glosarium adalah halaman yang
+   paling bergantung pada struktur itu karena isinya ratusan pasangan istilah.
+
+   <th scope="row"> dipakai untuk istilah Inggris, bukan <td>: tiap baris adalah SATU
+   istilah, sehingga pembaca layar membacakan nama istilah itu lebih dulu saat
+   pengguna berpindah sel. <caption> memberi tabel nama yang dibacakan saat tabel
+   difokuskan, dan sekaligus menjelaskan isinya tanpa teks tambahan di layar. */
+
 export function Glosarium() {
   const [q, setQ] = useState('');
 
@@ -32,19 +45,37 @@ export function Glosarium() {
         aria-label="Cari istilah"
       />
 
-      <div className="glos">
-        <div className="glos-head">
-          <span>Istilah Inggris</span>
-          <span>Padanan Indonesia</span>
-        </div>
-        {baris.map((r) => (
-          <div className="glos-row" key={r.en}>
-            <span className="en">{r.en}</span>
-            <span className="id">{r.id}</span>
-          </div>
-        ))}
-        {baris.length === 0 && <p className="leads">Istilah tidak ditemukan.</p>}
-      </div>
+      {/* Hasil penyaringan diumumkan sendiri. Tanpa ini, mengetik di kolom cari hanya
+          mengubah DOM secara senyap bagi pengguna pembaca layar. */}
+      <p className="sr-only" role="status">
+        {baris.length === 0
+          ? 'Tidak ada istilah yang cocok'
+          : `${baris.length} istilah cocok dengan pencarian`}
+      </p>
+
+      {baris.length === 0 ? (
+        <p className="leads">Istilah tidak ditemukan. Coba kata lain, misal “jantung” atau “femur”.</p>
+      ) : (
+        <table className="glos">
+          <caption className="sr-only">
+            Padanan istilah anatomi dari bahasa Inggris ke bahasa Indonesia
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Istilah Inggris</th>
+              <th scope="col">Padanan Indonesia</th>
+            </tr>
+          </thead>
+          <tbody>
+            {baris.map((r) => (
+              <tr key={r.en}>
+                <th scope="row">{r.en}</th>
+                <td>{r.id}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <h3 style={{ marginTop: 28 }}>Contoh penerjemahan nama mesh</h3>
       <p className="leads">
