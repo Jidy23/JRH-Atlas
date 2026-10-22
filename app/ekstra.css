@@ -1,6 +1,33 @@
 
 /* ===== Penyempurnaan UX: target sentuh, kontras, gerak ===== */
 
+/* Teks khusus pembaca layar.
+
+   Dipakai oleh markup yang butuh label tak terlihat: <caption> pada tabel
+   glosarium, status hasil pencarian, dan status benar/salah pada tombol
+   jawaban kuis. Sebelumnya repo ini tidak punya utilitas semacam ini, jadi
+   informasi tersebut hanya dibawa warna dan posisi — tidak terbaca sama sekali
+   tanpa penglihatan.
+
+   Kenapa ditulis di sini, bukan di polish.css: pola ini butuh 1px dan -1px,
+   sedangkan baseline ratchet mencatat polish.css = 0 px dan berkas itu wajib
+   tetap 0. Menaruhnya di sini menaikkan hitungan ekstra.css dari 14 ke 17, dan
+   baseline-skala.json dinaikkan pada commit yang sama supaya kenaikannya
+   tercatat, bukan tersembunyi.
+
+   clip-path dipakai, bukan `clip: rect(0 0 0 0)` yang sudah deprecated. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Target sentuh minimal 44px di perangkat sentuh (pedoman aksesibilitas).
    `.tab` dikeluarkan dari daftar ini: tidak ada komponen yang merender
    `.tabbar` maupun `.tab` lagi. Navigasi utama memakai `.app-navigation`
@@ -56,6 +83,15 @@
   outline: var(--w-garis-tebal) solid var(--aksen-nonteks);
   outline-offset: 3px;
   border-radius: 6px;
+}
+
+/* Judul soal kuis menerima fokus terprogram saat soal berganti (tabIndex=-1),
+   supaya pengguna keyboard tidak mulai dari awal halaman setiap soal. Judul
+   bukan kontrol, jadi cincin fokus penuh di sana hanya bising: cukup garis
+   tipis di bawah teks yang menandai "kamu di sini". */
+:where(h2, h3)[tabindex='-1']:focus-visible {
+  outline: none;
+  border-bottom: var(--w-garis-tebal) solid var(--aksen-nonteks);
 }
 
 /* Pilihan jawaban: huruf A-D ikut warna status */
