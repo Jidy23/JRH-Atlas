@@ -1,5 +1,5 @@
 {
-  "_catatan": "Batas atas anggaran aset. Angka ini penilaian, bukan hasil pengukuran otomatis: dipilih di atas ukuran nyata saat anggaran ditulis supaya CI menangkap pertumbuhan tak sengaja, bukan menggagalkan data yang sudah ada.",
+  "_catatan": "Batas atas anggaran aset. Angka ini penilaian, bukan hasil benchmark: dipilih di atas ukuran nyata saat anggaran ditulis supaya CI menangkap pertumbuhan tak sengaja, bukan menggagalkan data yang sudah ada. defaultVisibleGzipBytes hanya ditegakkan setelah manifes di-repack per sistem organ (lihat scripts/audit-aset.mjs).",
   "totalGzipBytes": 35000000,
   "chunkGzipBytes": 2600000,
   "chunkRawBytes": 5200000,

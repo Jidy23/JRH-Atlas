@@ -24,6 +24,12 @@ jobs:
         run: node scripts/repack-chunks.mjs
       - name: Verify chunk packing matches organ systems
         run: node scripts/validate-chunks.mjs
+      # Setelah repack, "tampilan awal" benar-benar berarti tujuh chunk, jadi
+      # anggaran biaya unduhan kunjungan pertama baru bisa ditegakkan di sini.
+      # Di `Cek` langkah yang sama hanya melaporkan angka, karena manifes di
+      # repo masih memakai packing lama.
+      - name: Audit asset budget on repacked layout
+        run: npm run audit:aset
       - run: npm run build
       # Prerender menulis HTML per rute, sitemap, dan menyalin aset publik.
       # Diperiksa terhadap keluaran nyata: rute yang lupa punya judul sendiri
