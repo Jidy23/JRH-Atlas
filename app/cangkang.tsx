@@ -4,7 +4,7 @@ import {Akademi} from './akademi';
 import {Glosarium,Panduan} from './halaman';
 import Tema from './tombol-tema';
 import {turUntuk,organLangkah} from './belajar';
-import type {Jenjang} from './kurikulum';
+import {organByName,type Jenjang} from './kurikulum';
 import {RUTE,ruteDariPath,pathUntuk,idRuteSah,type IdRute} from './rute';
 import {terapkanMeta} from './meta';
 import './ekstra.css';
@@ -37,8 +37,21 @@ function readTab():Tab{
  return ruteDariPath(location.pathname).id;
 }
 function readLevel():Jenjang{const value=new URLSearchParams(location.search).get('jenjang');return value==='smp'||value==='sma'?value:'sd';}
+/* Tautan langsung ke satu organ: /jelajah?organ=heart.
+   Nilainya DIPERIKSA ke kurikulum, bukan diteruskan apa adanya. page.tsx memang
+   mencocokkan nama dengan startsWith/includes sebagai cadangan, jadi kata
+   sembarang seperti "a" akan diam-diam membuka konsep pertama yang cocok —
+   pengguna membuka tautan "jantung" lalu mendarat di struktur lain tanpa tahu
+   ada yang salah. organByName hanya menerima kunci atau nama Indonesia yang
+   persis, sehingga parameter tak dikenal diabaikan. */
+function readOrgan():Sorotan|null{
+ const nama=new URLSearchParams(location.search).get('organ');
+ if(!nama)return null;
+ const o=organByName(nama);
+ return o?{sistem:[o.sistem],organ:o.key}:null;
+}
 export default function Cangkang(){
- const [tab,setTab]=useState<Tab>(readTab),[level,setLevel]=useState<Jenjang>(readLevel),[sorotan,setSorotan]=useState<Sorotan|null>(null);
+ const [tab,setTab]=useState<Tab>(readTab),[level,setLevel]=useState<Jenjang>(readLevel),[sorotan,setSorotan]=useState<Sorotan|null>(readOrgan);
  const heading=useRef<HTMLHeadingElement>(null);
  const previousTab=useRef(tab);
  // Focus only after React commits a route change; also covers back/forward.
@@ -54,7 +67,8 @@ export default function Cangkang(){
   const sisa=params.toString();
   history.replaceState(null,'',pathUntuk(lama)+(sisa?`?${sisa}`:''));
  },[]);
- useEffect(()=>{const pop=()=>{setTab(readTab());setLevel(readLevel());};addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop);},[]);
+ // organ ikut dibaca ulang supaya tombol back/forward membawa sorotan lagi.
+ useEffect(()=>{const pop=()=>{setTab(readTab());setLevel(readLevel());setSorotan(readOrgan());};addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop);},[]);
  function navigate(next:Tab){const path=pathUntuk(next);if(path===location.pathname)return;const url=new URL(location.href);url.searchParams.delete('tab');history.pushState(null,'',path+url.search);setTab(next);}
  function changeLevel(next:Jenjang){setLevel(next);const url=new URL(location.href);url.searchParams.set('jenjang',next);history.replaceState(null,'',url);}
  function show3D(j:Jenjang,index:number){const step=turUntuk(j).langkah[index];if(!step)return;const organ=organLangkah(step);if(!organ)return;setSorotan({sistem:step.sorot,organ:organ.key});navigate('jelajah');}
