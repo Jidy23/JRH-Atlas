@@ -9,7 +9,12 @@ permissions:
 jobs:
   mobile:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    # Dinaikkan dari 20 ke 40 menit. Mobile #100 dan #101 sama-sama mati tepat
+    # di menit ke-20 pada langkah "Install browser engines", sementara run #96
+    # di main menyelesaikan langkah yang sama dalam 5 menit 03 detik. Yang
+    # kehabisan waktu adalah unduhan Chromium+WebKit+Firefox, bukan tesnya:
+    # langkah 10 selalu ter-skip, jadi tidak ada asersi yang sempat gagal.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,9 +33,17 @@ jobs:
         run: node scripts/validate-chunks.mjs
       - run: npm run build
       - name: Install browser engines
+        env:
+          # Batas per koneksi unduhan Playwright (milidetik). Tanpa ini,
+          # koneksi yang menggantung dibiarkan sampai timeout job.
+          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '180000'
         run: |
           npm install --prefix /tmp/ui-browser --no-package-lock playwright @axe-core/playwright
-          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium webkit firefox > /tmp/browser-install.log 2>&1 || { tail -80 /tmp/browser-install.log; exit 1; }
+          # tee, bukan redirect murni. Dengan "> berkas", seluruh keluaran
+          # disembunyikan; kalau langkah ini kena timeout job, berkasnya ikut
+          # hilang dan kita tidak pernah tahu engine mana yang macet.
+          set -o pipefail
+          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium webkit firefox 2>&1 | tee /tmp/browser-install.log
       - name: Test touch and narrow-screen navigation on built assets
         run: |
           npx vite preview --host 127.0.0.1 --port 3016 > /tmp/vite-mobile.log 2>&1 &
