@@ -36,6 +36,11 @@ jobs:
       # melewati batas panjang hasil pencarian tanpa ada yang menolak.
       - name: Audit rute & metadata
         run: npm run audit:rute
+      # Setiap chunk disimpan dua kali (mentah + .gz) karena penampil memilih
+      # salah satunya tergantung DecompressionStream. Artinya setiap penambahan
+      # chunk membebani repo dua kali, dan dulu tidak ada yang mengukurnya.
+      - name: Audit anggaran aset
+        run: npm run audit:aset
       - name: Audit kontras WCAG
         run: npm run audit:kontras
       # DESIGN.md aturan #1: warna komponen harus dibaca dari token, bukan

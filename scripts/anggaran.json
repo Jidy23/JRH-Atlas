@@ -1,0 +1,8 @@
+{
+  "_catatan": "Batas atas anggaran aset. Angka ini penilaian, bukan hasil pengukuran otomatis: dipilih di atas ukuran nyata saat anggaran ditulis supaya CI menangkap pertumbuhan tak sengaja, bukan menggagalkan data yang sudah ada.",
+  "totalGzipBytes": 35000000,
+  "chunkGzipBytes": 2600000,
+  "chunkRawBytes": 5200000,
+  "defaultVisibleGzipBytes": 17000000,
+  "atlasJsonBytes": 1400000
+}

@@ -14,7 +14,8 @@
     "audit:token": "node scripts/audit-token.mjs",
     "audit:skala": "node scripts/audit-skala.mjs",
     "audit:soal": "node scripts/audit-soal.mjs",
-    "audit:rute": "node scripts/audit-rute.mjs"
+    "audit:rute": "node scripts/audit-rute.mjs",
+    "audit:aset": "node scripts/audit-aset.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
