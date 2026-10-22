@@ -1,8 +1,8 @@
 {
   "font_declarations": 0,
-  "generated_from": "log CI run 115 (Cek, commit b4d7dae) — diukur ulang, bukan diwarisi",
-  "_catatan": "Angka per berkas sebelumnya (ekstra 14, interaction 14, total 861) TIDAK cocok dengan kenyataan: log CI pada b4d7dae mencetak ekstra 10, interaction 10, total 853. Selisih 11 px itu sudah ada sebelum Batch 3 dan membuat ratchet punya kelonggaran yang tidak pernah dipakai. Nilai di sini adalah hasil cetak scripts/audit-skala.mjs apa adanya, sehingga ratchet mengunci angka nyata. Kalau angka ini perlu naik, naikkan sadar dan sebutkan alasannya.",
-  "akademi.css": 102,
+  "generated_from": "log CI run 116 (Cek, commit d54c626) — diukur ulang, bukan diwarisi",
+  "_catatan": "Batch 4 menurunkan total dari 853 ke 852 karena satu-satunya px di aturan fokus mati akademi.css (outline-offset: 2px) ikut terhapus bersama aturannya. Ratchet sengaja diketatkan pada commit yang sama supaya kelonggaran baru tidak muncul tanpa tercatat: baseline harus sama dengan angka yang dicetak, bukan lebih longgar. Kalau angka ini perlu naik, naikkan sadar dan sebutkan alasannya.",
+  "akademi.css": 101,
   "ekstra.css": 10,
   "globals.css": 523,
   "interaction.css": 10,
@@ -10,5 +10,5 @@
   "redesign.css": 132,
   "skala.css": 43,
   "tema.css": 33,
-  "px_total": 853
+  "px_total": 852
 }

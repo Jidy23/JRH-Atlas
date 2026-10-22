@@ -9,6 +9,10 @@
 //      lapisan yang dimuat lebih dulu membaca token yang belum ada.
 //   4. app/skala.css tidak memuat warna (DESIGN.md aturan #10). Rumah warna
 //      tema.css, dan itu sudah dijaga scripts/audit-token.mjs.
+//   5. Ratchet: jumlah px langsung dan deklarasi font-family literal tidak
+//      boleh naik melewati scripts/baseline-skala.json.
+//   6. Tidak ada aturan :focus / :focus-visible yang menggambar cincin memakai
+//      aksen MENTAH. Ditambahkan Batch 4 — lihat catatan di bagian 6.
 //
 // Yang DICETAK sebagai utang (tidak menggagalkan CI):
 //   - Jumlah nilai px ajaib per berkas.
@@ -154,6 +158,50 @@ if (fontBermasalah.length > baseline.font_declarations) {
 } else {
   console.log(`✓ ratchet font: ${fontBermasalah.length} <= ${baseline.font_declarations}`);
 }
+
+// ---------- 6. Cincin fokus tidak boleh memakai aksen mentah ----------
+// DESIGN.md aturan #7: cincin fokus adalah indikator NON-TEKS, wajib 3:1.
+//
+// Kenapa aturan ini perlu ada padahal sudah ada ratchet px dan audit kontras:
+// keduanya tidak bisa menangkapnya. Audit kontras menguji TOKEN (--v-fokus,
+// --aksen-nonteks), bukan aturan outline yang ditulis di komponen. Ratchet px
+// tidak menangkapnya karena nilainya berupa var(), bukan angka. Jadi aturan
+// fokus yang salah bisa hidup lama tanpa satu pun tes berbunyi — persis yang
+// terjadi pada akademi.css sebelum Batch 4:
+//
+//   :where(button, select):focus-visible {
+//     outline: var(--w-garis-tebal) solid var(--jrh-aksen);
+//   }
+//
+// --jrh-aksen adalah aksen mentah (#22d3ee) = 1,63:1 di latar terang. Aturan
+// itu kebetulan kalah cascade (spesifisitas 0,1,0 sama dengan ekstra.css yang
+// dimuat belakangan), jadi tidak terlihat di layar. Tetapi ia hidup sebagai
+// ranjau: satu perubahan urutan impor cukup untuk menjatuhkan cincin fokus
+// seluruh aplikasi ke 1,63:1.
+//
+// Pola di bawah menuntut ") " tepat setelah nama token, sehingga varian yang
+// BENAR tidak ikut tertangkap:
+//   var(--aksen-nonteks)   → tidak cocok (ada akhiran)
+//   var(--jrh-aksen-teks)  → tidak cocok (ada akhiran)
+//   var(--aksen)           → cocok  ✗
+//   var(--jrh-aksen)       → cocok  ✗
+const AKSEN_MENTAH = /var\(\s*--(?:jrh-)?aksen\s*\)/;
+let fokusSalah = 0;
+for (const file of semuaCss) {
+  const isi = readFileSync(join(dirApp, file), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  for (const blok of isi.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    if (!/:focus(?:-visible)?\b/.test(blok[1])) continue;
+    for (const m of blok[2].matchAll(/outline(?:-color)?\s*:\s*([^;}]+)/gi)) {
+      if (AKSEN_MENTAH.test(m[1])) {
+        catat(
+          `${file}: outline fokus memakai aksen mentah (${m[1].trim()}) pada "${blok[1].trim().replace(/\s+/g, ' ').slice(0, 70)}" — pakai --aksen-nonteks`,
+        );
+        fokusSalah++;
+      }
+    }
+  }
+}
+if (!fokusSalah) console.log('✓ Cincin fokus tidak ada yang memakai aksen mentah');
 
 if (gagal) {
   console.error(`\n${gagal} pelanggaran skala desain.`);

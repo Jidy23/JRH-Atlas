@@ -45,3 +45,19 @@
 :root[data-tema] .app-rebuild .akademi .jbtn:hover{color:var(--jrh-teks)}
 :root[data-tema] .app-rebuild .akademi .jbtn small,
 :root[data-tema] .app-rebuild .akademi .jbtn .jbtn-tagline{color:var(--jrh-teks)}
+
+/* Batch 4 — status hover pada pilihan jawaban dan kartu flashcard memakai
+   --aksen-nonteks, bukan --aksen mentah.
+
+   akademi.css menulis border-color:var(--jrh-aksen) pada :hover untuk kedua
+   komponen ini. --jrh-aksen adalah aksen mentah (#22d3ee) yang hanya 1,63:1
+   di latar terang. Border itu satu-satunya penanda "elemen ini sedang kamu
+   tunjuk" saat pointer berada di atasnya, jadi ia indikator non-teks dan
+   wajib 3:1 (WCAG 1.4.11, DESIGN.md aturan #7) — bukan sekadar dekorasi.
+
+   Bobot di sini 0,6,0 (:root[data-tema] + .app-rebuild + .pilih + :hover)
+   terhadap 0,5,0 milik akademi.css, jadi menang tanpa perlu menyentuh
+   akademi.css. :not(:disabled) dipertahankan supaya tombol yang sudah dijawab
+   tidak ikut berubah warna saat kursor lewat. */
+:root[data-tema] .app-rebuild .pilih:hover:not(:disabled){border-color:var(--aksen-nonteks)}
+:root[data-tema] .app-rebuild .kartu:hover{border-color:var(--aksen-nonteks)}
