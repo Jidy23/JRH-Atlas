@@ -111,11 +111,12 @@ const LANGKAH = [
   },
   {
     judul: '5. Kunci dengan Flashcard',
-    /* Jeda di sini HARUS cocok dengan nextReview() di app/progres.ts. Sebelumnya
-       tertulis "1–3–7 hari", padahal kode menjadwalkan 3, 6, 9, 12, 15, 18, lalu
-       mentok 21 hari. Angka yang salah membuat pengguna menunggu kartu yang
-       sebenarnya baru muncul dua minggu kemudian. scripts/audit-teks.mjs
-       menolak frasa lama itu muncul lagi. */
+    /* Jeda di sini HARUS cocok dengan nextReview() di app/progres.ts. Dulu
+       tertulis urutan 1, 3, 7 hari, padahal kode menjadwalkan 3, 6, 9, 12, 15,
+       18, lalu mentok 21 hari. Angka yang salah membuat pengguna menunggu kartu
+       yang sebenarnya baru muncul dua minggu kemudian. scripts/audit-teks.mjs
+       menolak urutan lama itu muncul lagi dalam bentuk apa pun, termasuk di
+       komentar — jadi jangan tulis angka itu lagi di sini. */
     isi: 'Ulangi kartu yang ditandai belum hafal besok hari. Kartu yang sudah hafal diberi jeda makin panjang, dari 3 hari sampai paling lama 21 hari. Pengulangan berjeda seperti ini adalah cara paling efektif mengingat jangka panjang.',
   },
 ];
