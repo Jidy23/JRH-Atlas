@@ -9,7 +9,12 @@ permissions:
 jobs:
   production:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Dinaikkan dari 20 ke 40 menit di Batch 7. Sejak apt dipisah dari unduhan
+    # browser, percobaan terburuknya 3 x 420 detik = 21 menit, dan itu belum
+    # termasuk build serta tes. Batas 20 menit akan membunuh job di tengah apt
+    # justru pada hari ketika mirror bermasalah, yaitu hari ketika diagnosa
+    # paling dibutuhkan.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,8 +36,8 @@ jobs:
       - name: Audit asset budget on repacked layout
         run: npm run audit:aset
       - run: npm run build
-      # Prerender menulis HTML per rute, sitemap, dan menyalin aset publik.
-      # Diperiksa terhadap keluaran nyata: rute yang lupa punya judul sendiri
+      # Prerender menulis HTML per route, sitemap, dan menyalin aset publik.
+      # Diperiksa terhadap keluaran nyata: route yang lupa punya judul sendiri
       # sebelumnya hanya terlihat di produksi.
       - name: Verify prerendered routes and public assets
         run: |
@@ -52,10 +57,55 @@ jobs:
           if(gagal.length){console.error(gagal.join('\n'));process.exit(1);}
           console.log(`✓ ${data.rute.length} rute + aset publik lengkap`);
           JS
-      - name: Install browser tools
+      # Batch 7: sebelumnya satu langkah berisi `playwright install --with-deps`,
+      # pola yang sama dengan Mobile #104. Di sana terbukti bahwa yang
+      # menggantung bukan unduhan Chromium melainkan apt (119 MB paket sistem,
+      # mirror azure.archive.ubuntu.com berhenti menjawab), dan karena keduanya
+      # digabung dalam satu langkah tanpa batas waktu, tidak ada cara membedakan
+      # "lambat" dari "mati". Production #107 dan #108 lolos hanya karena
+      # mirror-nya sehat saat itu; workflow ini belum pernah kena.
+      - name: Install Playwright package
+        id: pw
         run: |
           npm install --prefix /tmp/ui-browser --no-package-lock playwright @axe-core/playwright
-          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium
+          # Versi dibaca dari paket yang benar-benar terpasang, bukan ditebak,
+          # supaya kunci cache ikut berubah saat Playwright naik versi.
+          versi=$(node -p "require('/tmp/ui-browser/node_modules/playwright/package.json').version")
+          echo "versi=$versi" >> "$GITHUB_OUTPUT"
+          echo "Playwright $versi terpasang."
+      - name: Cache browser engines
+        id: cache-engine
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          # Hanya chromium: job ini tidak menguji WebKit atau Firefox.
+          key: pw-${runner.os}-chromium-${{ steps.pw.outputs.versi }}
+      - name: Install system dependencies for Chromium
+        run: |
+          set -o pipefail
+          # apt dipisah dari unduhan browser dan dibatasi per percobaan.
+          # 420 detik sangat lapang: unduhan normal selesai dalam hitungan detik,
+          # sedangkan percobaan terburuk 3 x 420 = 21 menit masih di bawah
+          # timeout job 40 menit, jadi langkah tes di bawahnya tetap kebagian.
+          for percobaan in 1 2 3; do
+            echo "::group::apt percobaan $percobaan"
+            if timeout 420 /tmp/ui-browser/node_modules/.bin/playwright install-deps chromium 2>&1 | tee "/tmp/apt-$percobaan.log"; then
+              echo "::endgroup::"
+              echo "Dependensi sistem terpasang pada percobaan $percobaan."
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Percobaan $percobaan gagal atau melewati 420 detik, ulangi."
+            sleep 15
+          done
+          echo "::error::apt gagal tiga kali. Mirror paket kemungkinan sedang bermasalah; periksa /tmp/apt-*.log."
+          exit 1
+      - name: Download Chromium engine
+        run: |
+          # Tanpa --with-deps: dependensi sistem sudah ditangani langkah di atas,
+          # dan unduhan inilah yang di-cache.
+          set -o pipefail
+          /tmp/ui-browser/node_modules/.bin/playwright install chromium 2>&1 | tee /tmp/browser-install.log
       - name: Test built production assets
         run: |
           npx vite preview --host 127.0.0.1 --port 3016 > /tmp/vite-production.log 2>&1 &
