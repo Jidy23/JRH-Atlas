@@ -24,7 +24,34 @@ jobs:
         run: node scripts/repack-chunks.mjs
       - name: Verify chunk packing matches organ systems
         run: node scripts/validate-chunks.mjs
+      # Setelah repack, "tampilan awal" benar-benar berarti tujuh chunk, jadi
+      # anggaran biaya unduhan kunjungan pertama baru bisa ditegakkan di sini.
+      # Di `Cek` langkah yang sama hanya melaporkan angka, karena manifes di
+      # repo masih memakai packing lama.
+      - name: Audit asset budget on repacked layout
+        run: npm run audit:aset
       - run: npm run build
+      # Prerender menulis HTML per rute, sitemap, dan menyalin aset publik.
+      # Diperiksa terhadap keluaran nyata: rute yang lupa punya judul sendiri
+      # sebelumnya hanya terlihat di produksi.
+      - name: Verify prerendered routes and public assets
+        run: |
+          node --input-type=module - <<'JS'
+          import {existsSync, readFileSync} from 'node:fs';
+          const data=JSON.parse(readFileSync('app/rute.json','utf8'));
+          const gagal=[];
+          for(const r of data.rute){
+            const f=r.path==='/'?'dist/index.html':`dist${r.path}/index.html`;
+            if(!existsSync(f)){gagal.push(`${r.path}: tidak ada ${f}`);continue;}
+            const html=readFileSync(f,'utf8');
+            if(!html.includes(`<link rel="canonical" href="${data.situs}${r.path}" />`))gagal.push(`${r.path}: kanonik salah`);
+            if(!html.includes('application/ld+json'))gagal.push(`${r.path}: JSON-LD hilang`);
+            if(!html.includes('rel="manifest"'))gagal.push(`${r.path}: manifest hilang`);
+          }
+          for(const a of ['dist/manifest.webmanifest','dist/robots.txt','dist/sitemap.xml'])if(!existsSync(a))gagal.push(`hilang: ${a}`);
+          if(gagal.length){console.error(gagal.join('\n'));process.exit(1);}
+          console.log(`✓ ${data.rute.length} rute + aset publik lengkap`);
+          JS
       - name: Install browser tools
         run: |
           npm install --prefix /tmp/ui-browser --no-package-lock playwright @axe-core/playwright

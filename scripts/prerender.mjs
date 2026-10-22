@@ -14,7 +14,7 @@
  * Selain itu skrip ini menulis dist/sitemap.xml dari daftar rute yang sama,
  * supaya sitemap tidak pernah menyimpang dari aplikasi.
  */
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -121,3 +121,35 @@ const sitemap = [
 ].join('\n');
 writeFileSync(join(dist, 'sitemap.xml'), sitemap, 'utf8');
 console.log(`✓ sitemap.xml (${RUTE.length} URL)`);
+
+// Verifikasi hasil, bukan sekadar menulis. Tanpa ini, kegagalan penulisan
+// (mis. rute baru lupa punya path unik) hanya terlihat di produksi sebagai
+// halaman dengan metadata rute lain.
+const gagal = [];
+for (const rute of RUTE) {
+  const tujuan =
+    rute.path === '/' ? join(dist, 'index.html') : join(dist, rute.path, 'index.html');
+  if (!existsSync(tujuan)) {
+    gagal.push(`${rute.path}: berkas hasil tidak ada`);
+    continue;
+  }
+  const isi = readFileSync(tujuan, 'utf8');
+  const kanonik = `<link rel="canonical" href="${SITUS}${rute.path}" />`;
+  if (!isi.includes(kanonik)) gagal.push(`${rute.path}: kanonik tidak cocok`);
+  if (!isi.includes(`<title>${lompat(rute.judul)}</title>`)) {
+    gagal.push(`${rute.path}: judul tidak cocok`);
+  }
+}
+
+// Manifes dan ikon harus ikut tersalin; kalau tidak, aplikasi tetap berjalan
+// tetapi tidak bisa dipasang dan tidak punya ikon di layar utama.
+for (const aset of ['manifest.webmanifest', 'favicon.svg', 'robots.txt', 'sitemap.xml']) {
+  if (!existsSync(join(dist, aset))) gagal.push(`${aset}: tidak tersalin ke dist`);
+}
+
+if (gagal.length) {
+  console.error('✗ Verifikasi hasil prerender gagal:');
+  for (const pesan of gagal) console.error(`  - ${pesan}`);
+  process.exit(1);
+}
+console.log(`✓ Verifikasi hasil: ${RUTE.length} rute + 4 aset publik`);

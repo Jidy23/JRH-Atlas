@@ -1,0 +1,26 @@
+# Header cache untuk Cloudflare Pages. Berkas ini dibaca Pages sebagai
+# konfigurasi, bukan disajikan sebagai aset.
+#
+# Catatan: _redirects sengaja TIDAK dipakai. Pages memproses _redirects
+# sebelum aset statis, sehingga aturan catch-all akan menimpa setiap
+# dist/<path>/index.html hasil prerender. Header tidak menulis ulang rute,
+# jadi aman.
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Nama berkas chunk berisi hash isi, jadi isinya tidak pernah berubah.
+/models/body-*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Katalog dan manifes chunk ikut berubah setiap kali data berubah.
+/models/atlas.json
+  Cache-Control: public, max-age=300, must-revalidate
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=3600
+
+# HTML per rute membawa metadata yang berbeda; jangan sampai basi.
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

@@ -17,7 +17,9 @@ Dibangun di atas [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d
 | 📚 **Glosarium** | Kamus istilah anatomi Inggris ke Indonesia, pencarian dua bahasa |
 | ℹ️ **Panduan** | Cara pakai, alur belajar, dan catatan penting |
 
-Setiap tab punya URL sendiri, misal `?tab=kuis` atau `?tab=belajar`.
+Setiap tab punya path sendiri (`/belajar`, `/kuis`, `/flashcard`, `/glosarium`,
+`/panduan`, `/`). Tautan lama berbentuk `?tab=kuis` tetap dihormati dan
+dipindahkan ke path aslinya tanpa menambah riwayat.
 
 ---
 
@@ -62,12 +64,34 @@ app/
   istilah.ts        kamus Inggris-Indonesia + pencarian dua bahasa
   akademi.tsx       UI Belajar / Kuis / Flashcard
   halaman.tsx       halaman Glosarium dan Panduan
-  cangkang.tsx      tab bar dan routing ?tab=
+  rute.json         satu sumber path, judul, deskripsi, dan sitemap
+  meta.ts           metadata per rute (title, kanonik, og, twitter, JSON-LD)
+  cangkang.tsx      tab bar dan routing berbasis path
   akademi.css       gaya ruang belajar
   ekstra.css        gaya glosarium, pencarian, panduan
 ```
 
 Lapisan ini terpisah dari viewer 3D (`page.tsx`, `scene.tsx`), jadi update pembelajaran tidak menyentuh engine render.
+
+---
+
+## Aset model dan cache
+
+Setiap chunk disimpan **dua kali** di `public/models/`: `body-N.bin` (mentah)
+dan `body-N.bin.gz`. Keduanya wajib ada, karena penampil memakai `.gz` bila
+browser punya `DecompressionStream` dan jatuh ke `.bin` bila tidak. Konsekuensinya
+repo ini menyimpan sekitar 93 MB dari total 111 MB, dan setiap chunk baru
+membebani dua kali. `npm run audit:aset` mengukur ukuran nyata dan gagal bila
+melewati `scripts/anggaran.json`.
+
+Header cache ada di dua tempat karena formatnya berbeda per host:
+
+- `public/_headers` untuk Cloudflare Pages.
+- `vercel.json` bagian `headers` untuk Vercel.
+
+Keduanya memberi `immutable` hanya pada `/assets/*` dan `/models/body-*` (nama
+berkas berisi hash isi), sementara `atlas.json` dan HTML sengaja tidak di-cache
+lama supaya metadata per rute tidak basi.
 
 ---
 
@@ -85,10 +109,13 @@ Lapisan ini terpisah dari viewer 3D (`page.tsx`, `scene.tsx`), jadi update pembe
 
 ```sh
 npm run check          # typecheck TypeScript
-npm run build          # build produksi
+npm run build          # build produksi + prerender per rute
+npm run audit:rute     # path, judul, deskripsi tiap rute
+npm run audit:aset     # anggaran ukuran chunk dan katalog model
 npm run audit:kontras  # kontras WCAG AA tiap pasangan warna
 npm run audit:token    # warna komponen harus dari token, bukan literal
 npm run audit:skala    # token spasi/radius/huruf/gerak, ratchet px ajaib
+npm run audit:soal     # sebaran kunci jawaban bank soal
 ```
 
 Semua perintah audit di atas dijalankan di CI (`.github/workflows/cek.yml`) pada setiap push ke `main` dan setiap pull request.

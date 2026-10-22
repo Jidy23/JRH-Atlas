@@ -1,0 +1,8 @@
+{
+  "_catatan": "Batas atas anggaran aset. Angka ini bukan hasil benchmark: masing-masing disetel ~5% di atas ukuran nyata yang terukur pada commit 23d7c38 setelah repack per sistem organ, supaya CI menangkap pertumbuhan tak sengaja tanpa menggagalkan data yang sudah ada. Batas per chunk ditentukan oleh sistem otot (402 bagian, 20,1 MB mentah / 10,8 MB .gz), bukan oleh chunk biasa yang di bawah 1,5 MB. defaultVisibleGzipBytes ditegakkan hanya setelah manifes di-repack; lihat scripts/audit-aset.mjs.",
+  "totalGzipBytes": 35000000,
+  "chunkGzipBytes": 11500000,
+  "chunkRawBytes": 21000000,
+  "defaultVisibleGzipBytes": 21500000,
+  "atlasJsonBytes": 1400000
+}

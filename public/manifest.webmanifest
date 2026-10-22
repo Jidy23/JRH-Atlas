@@ -1,0 +1,42 @@
+{
+  "name": "JRH Atlas — Atlas Anatomi 3D",
+  "short_name": "JRH Atlas",
+  "description": "Jelajahi 2.234 bagian tubuh manusia dalam model 3D interaktif berbahasa Indonesia: 15 sistem organ, kuis, flashcard, dan glosarium.",
+  "lang": "id",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0f1c",
+  "theme_color": "#0a0f1c",
+  "categories": ["education", "medical", "reference"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Belajar",
+      "short_name": "Belajar",
+      "url": "/belajar",
+      "description": "Tur terpandu per jenjang SD, SMP, SMA"
+    },
+    {
+      "name": "Kuis",
+      "short_name": "Kuis",
+      "url": "/kuis",
+      "description": "Uji pemahaman dengan penjelasan di setiap jawaban"
+    },
+    {
+      "name": "Glosarium",
+      "short_name": "Glosarium",
+      "url": "/glosarium",
+      "description": "Istilah anatomi Inggris ke Indonesia"
+    }
+  ]
+}

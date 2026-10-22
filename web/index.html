@@ -6,6 +6,12 @@
     <meta name="theme-color" content="#0a0f1c" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f7f5f0" media="(prefers-color-scheme: light)" />
     <link rel="icon" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <!--
+      Manifes aplikasi web. Terletak DI LUAR penanda SEO supaya salinan per
+      rute oleh scripts/prerender.mjs tetap memuatnya apa adanya.
+    -->
+    <link rel="manifest" href="/manifest.webmanifest" />
     <!--
       Blok di antara penanda SEO:MULAI dan SEO:SELESAI diganti per rute oleh
       scripts/prerender.mjs setelah vite build. Jangan hapus penandanya: tanpa
