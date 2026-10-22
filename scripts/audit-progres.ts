@@ -9,6 +9,10 @@
  * Yang diuji bukan "apakah fungsinya ada", melainkan perilaku yang sebelumnya
  * tidak pernah dijalankan siapa pun: jadwal ulang dari nextReview(), dan
  * penyimpanan yang harus tetap aman saat localStorage rusak atau penuh.
+ *
+ * Catatan: berkas ini ikut `npm run check` (tsconfig utama menyertakan
+ * `**/*.ts`), jadi anotasi tipe di sini bukan formalitas — `let p = {}`
+ * disimpulkan sebagai `{}` dan membuat `p['name:heart']` gagal di-index.
  */
 import assert from 'node:assert/strict';
 import {
@@ -22,6 +26,7 @@ import {
   tandaiKartu,
   VERSI_PROGRES,
   type Gudang,
+  type Progres,
 } from '../app/progres.js';
 
 const HARI = 86_400_000;
@@ -55,7 +60,7 @@ uji('hafal menjadwalkan ulang 3 hari, streak naik', () => {
 });
 
 uji('hafal berulang memperpanjang jeda sampai batas 21 hari', () => {
-  let p = {};
+  let p: Progres = {};
   const jeda: number[] = [];
   for (let i = 0; i < 10; i++) {
     p = tandaiKartu(p, 'name:heart', true, 0);
