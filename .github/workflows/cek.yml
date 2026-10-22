@@ -57,5 +57,12 @@ jobs:
         run: npm run audit:skala
       - name: Audit bank soal
         run: npm run audit:soal
+      # nextReview() di app/kuis.ts sudah lama ada dan tidak pernah dipanggil
+      # siapa pun, jadi jadwal ulang 1 sampai 21 hari tidak pernah diuji. Tes ini
+      # menguji perilaku itu, plus penyimpanan progres yang harus tetap aman saat
+      # localStorage rusak, penuh, atau tidak ada sama sekali. Tanpa langkah ini,
+      # regresi pada progres belajar hanya terasa oleh pengguna.
+      - name: Tes progres belajar
+        run: npm run audit:progres
       - name: Laporan dependensi
         run: npm audit || true
