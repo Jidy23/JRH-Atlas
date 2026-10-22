@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { JENJANG, ORGAN, organByName, type Jenjang } from './kurikulum';
 import { TUR, organLangkah, turUntuk } from './belajar';
 import { acak, acakPilihan, bankSoal, deck, nilai, predikat, type Soal } from './kuis';
+import { bacaProgres, jatuhTempo, jumlahHafal, kunciKartu, simpanProgres, tandaiKartu, type Progres } from './progres';
 import './akademi.css';
 import './interaction.css';
 
@@ -313,12 +314,21 @@ const MODE = [
 
 type ModeKartu = (typeof MODE)[number]['id'];
 
+/* Sebelumnya `dihafal` hanya useState<Set<string>>, jadi setiap centang hilang
+   begitu pengguna menekan refresh atau berpindah tab — padahal seluruh gunanya
+   pengulangan berjeda adalah bertahan lintas hari. Sekarang progres dibaca dari
+   localStorage lewat app/progres.ts, dan setiap perubahan ditulis kembali.
+
+   Membaca localStorage saat inisialisasi state aman di sini karena
+   web/main.tsx memakai createRoot().render(), bukan hydrateRoot(): tidak ada
+   HTML server yang bisa berbeda dari hasil render pertama. */
+
 export function Flashcard() {
   const [jenjang, setJenjang] = useState<Jenjang | 'semua'>('semua');
   const [mode, setMode] = useState<ModeKartu>('nama');
   const [i, setI] = useState(0);
   const [balik, setBalik] = useState(false);
-  const [dihafal, setDihafal] = useState<Set<string>>(() => new Set());
+  const [progres, setProgres] = useState<Progres>(() => bacaProgres());
 
   const kartu = useMemo(
     () => deck(jenjang === 'semua' ? undefined : jenjang, mode),
@@ -327,7 +337,19 @@ export function Flashcard() {
 
   const total = kartu.length;
   const k = kartu[i % total];
-  const hafalTerlihat = kartu.filter(c => dihafal.has(`${mode}:${c.organ}`)).length;
+
+  const kunciTerlihat = useMemo(
+    () => kartu.map((c) => kunciKartu(mode, c.organ)),
+    [kartu, mode]
+  );
+  const hafalTerlihat = jumlahHafal(progres, kunciTerlihat);
+  const perluDiulang = jatuhTempo(progres).filter((x) => kunciTerlihat.includes(x)).length;
+
+  // simpanProgres menelan galat penyimpanan (kuota penuh, mode privat), jadi
+  // progres tetap berjalan di memori walau penulisan gagal.
+  useEffect(() => {
+    simpanProgres(progres);
+  }, [progres]);
 
   function geser(arah: 1 | -1) {
     setBalik(false);
@@ -335,12 +357,9 @@ export function Flashcard() {
   }
 
   function tandai(hafal: boolean) {
-    setDihafal(previous => {
-      const next = new Set(previous);
-      const key = `${mode}:${k.organ}`;
-      if (hafal) next.add(key); else next.delete(key);
-      return next;
-    });
+    // tandaiKartu memakai nextReview() di app/kuis.ts: hafal menjeda 3 sampai
+    // 21 hari tergantung streak, belum hafal mengulang besok.
+    setProgres((p) => tandaiKartu(p, kunciKartu(mode, k.organ), hafal));
     geser(1);
   }
 
@@ -405,7 +424,10 @@ export function Flashcard() {
 
       <p className="catatan-kecil">
         {`${hafalTerlihat} dari ${total} kartu unik ditandai hafal pada filter ini. `}
-        Ulangi besok untuk mengunci ingatan.
+        {perluDiulang > 0
+          ? `${perluDiulang} kartu sudah waktunya diulang hari ini. `
+          : 'Ulangi besok untuk mengunci ingatan. '}
+        Progres tersimpan di peramban ini, jadi tidak hilang saat halaman dimuat ulang.
       </p>
     </section>
   );

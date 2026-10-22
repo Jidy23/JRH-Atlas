@@ -13,7 +13,7 @@ Dibangun di atas [BodyParts3D](https://dbarchive.biosciencedbc.jp/en/bodyparts3d
 | 🧭 **Jelajah 3D** | 2.234 mesh dapat dipilih, 15 sistem organ, pencarian, exploded view |
 | 📖 **Belajar** | Tur terpandu 5 sampai 8 menit, terpisah per jenjang SD / SMP / SMA |
 | 🎯 **Kuis** | Soal pilihan ganda dengan penjelasan di setiap jawaban |
-| 🃏 **Flashcard** | Tiga mode: tebak nama, fungsi, atau fakta organ |
+| 🗂️ **Flashcard** | Tiga mode: tebak nama, fungsi, atau fakta organ. Progres tersimpan |
 | 📚 **Glosarium** | Kamus istilah anatomi Inggris ke Indonesia, pencarian dua bahasa |
 | ℹ️ **Panduan** | Cara pakai, alur belajar, dan catatan penting |
 
@@ -21,11 +21,17 @@ Setiap tab punya path sendiri (`/belajar`, `/kuis`, `/flashcard`, `/glosarium`,
 `/panduan`, `/`). Tautan lama berbentuk `?tab=kuis` tetap dihormati dan
 dipindahkan ke path aslinya tanpa menambah riwayat.
 
+Satu organ juga bisa ditautkan langsung: `/jelajah?organ=heart`. Nilainya
+diperiksa ke kurikulum, jadi nama yang tidak dikenal diabaikan alih-alih
+membuka struktur lain secara diam-diam.
+
 ---
 
 ## Mengapa dibuat
 
-Materi anatomi di sekolah memakai istilah ilmiah (bahasa Inggris/Latin), sedangkan aplikasi atlas populer juga berbahasa Inggris. JRH Atlas menutup celah itu:
+Materi anatomi di sekolah memakai istilah ilmiah (bahasa Inggris/Latin),
+sedangkan aplikasi atlas populer juga berbahasa Inggris. JRH Atlas menutup
+celah itu:
 
 - **Bahasa Indonesia baku** di seluruh antarmuka dan penjelasan.
 - **Disusun per jenjang**, mengikuti kapan materi itu muncul di sekolah.
@@ -60,7 +66,8 @@ app/
   kurikulum.ts      data organ: istilah Indonesia, jenjang, fungsi, fakta, mitos, soal
   soal-tambahan.ts  bank soal tambahan, 21 butir, 7 per jenjang
   belajar.ts        3 tur terpandu (SD, SMP, SMA)
-  kuis.ts           bank soal, penilaian, predikat, deck flashcard
+  kuis.ts           bank soal, penilaian, predikat, deck flashcard, jadwal ulang
+  progres.ts        progres belajar di localStorage: skema berversi, jadwal ulang
   istilah.ts        kamus Inggris-Indonesia + pencarian dua bahasa
   akademi.tsx       UI Belajar / Kuis / Flashcard
   halaman.tsx       halaman Glosarium dan Panduan
@@ -71,7 +78,8 @@ app/
   ekstra.css        gaya glosarium, pencarian, panduan
 ```
 
-Lapisan ini terpisah dari viewer 3D (`page.tsx`, `scene.tsx`), jadi update pembelajaran tidak menyentuh engine render.
+Lapisan ini terpisah dari viewer 3D (`page.tsx`, `scene.tsx`), jadi update
+pembelajaran tidak menyentuh engine render.
 
 ---
 
@@ -108,17 +116,19 @@ lama supaya metadata per rute tidak basi.
 ## Validasi
 
 ```sh
-npm run check          # typecheck TypeScript
-npm run build          # build produksi + prerender per rute
-npm run audit:rute     # path, judul, deskripsi tiap rute
-npm run audit:aset     # anggaran ukuran chunk dan katalog model
-npm run audit:kontras  # kontras WCAG AA tiap pasangan warna
-npm run audit:token    # warna komponen harus dari token, bukan literal
-npm run audit:skala    # token spasi/radius/huruf/gerak, ratchet px ajaib
-npm run audit:soal     # sebaran kunci jawaban bank soal
+npm run check           # typecheck TypeScript
+npm run build           # build produksi + prerender per rute
+npm run audit:rute      # path, judul, deskripsi tiap rute
+npm run audit:aset      # anggaran ukuran chunk dan katalog model
+npm run audit:kontras   # kontras WCAG AA tiap pasangan warna
+npm run audit:token     # warna komponen harus dari token, bukan literal
+npm run audit:skala     # token spasi/radius/huruf/gerak, ratchet px ajaib
+npm run audit:soal      # sebaran kunci jawaban bank soal
+npm run audit:progres   # jadwal ulang dan penyimpanan progres belajar
 ```
 
-Semua perintah audit di atas dijalankan di CI (`.github/workflows/cek.yml`) pada setiap push ke `main` dan setiap pull request.
+Semua perintah audit di atas dijalankan di CI (`.github/workflows/cek.yml`) pada
+setiap push ke `main` dan setiap pull request.
 
 ---
 

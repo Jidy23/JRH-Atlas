@@ -10,5 +10,5 @@
     "outDir": "../.audit-build",
     "types": ["node"]
   },
-  "include": ["../app/kontras.ts", "./audit-kontras.ts"]
+  "include": ["../app/kontras.ts", "./audit-kontras.ts", "../app/progres.ts", "./audit-progres.ts"]
 }

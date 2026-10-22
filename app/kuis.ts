@@ -108,9 +108,12 @@ export function deck(jenjang?: Jenjang, mode: 'nama' | 'fungsi' | 'fakta' = 'nam
   return ORGAN.filter((o) => !jenjang || o.jenjang === jenjang).map((o) => kartuDari(o, mode));
 }
 
-/** Interval pengulangan sederhana: hafal jadi 3 hari, belum hafal ulang besok. */
-export function nextReview(hafal: boolean, streak: number) {
-  const hari = hafal ? Math.min(3 * Math.max(1, streak + 1), 21) : 1;
-  const kapan = Date.now() + hari * 86400000;
-  return { hari, kapan, streak: hafal ? streak + 1 : 0 };
-}
+/**
+ * Interval pengulangan sederhana: hafal jadi 3 hari, belum hafal ulang besok.
+ *
+ * Definisi aslinya pindah ke app/progres.ts, satu-satunya pemakainya. Impor
+ * antar-berkas TypeScript ditulis tsc tanpa ekstensi, dan Node menolak itu saat
+ * hasil build dijalankan untuk audit, jadi progres.ts tidak boleh mengimpor
+ * kuis.ts. Re-export di bawah menjaga nama lama tetap tersedia dari sini.
+ */
+export { nextReview } from './progres';
