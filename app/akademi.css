@@ -426,7 +426,26 @@
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 
-:where(button, select):focus-visible {
-  outline: var(--w-garis-tebal) solid var(--jrh-aksen);
-  outline-offset: 2px;
-}
+/* Cincin fokus keyboard TIDAK didefinisikan di berkas ini.
+
+   Sampai Batch 4 berkas ini ditutup dengan
+     :where(button, select):focus-visible {
+       outline: var(--w-garis-tebal) solid var(--jrh-aksen);
+       outline-offset: 2px;
+     }
+   dan aturan itu tidak pernah menang. :where() menyumbang spesifisitas 0, jadi
+   bobotnya 0,1,0 — sama dengan aturan di ekstra.css untuk elemen yang sama.
+   Seri spesifisitas berarti yang dimuat belakangan menang, dan cangkang.tsx
+   mengimpor './akademi' di baris ke-3 tetapi './ekstra.css' di baris ke-10,
+   sehingga yang selalu dirender adalah --aksen-nonteks 3px dari ekstra.css.
+
+   Yang membuat aturan mati itu berbahaya bukan kematiannya, melainkan nilainya:
+   --jrh-aksen adalah aksen mentah (#22d3ee) yang hanya 1,63:1 di latar terang
+   dan gagal WCAG 1.4.11. Aturan itu adalah ranjau — begitu urutan impor
+   berubah (dan scripts/audit-skala.mjs hanya mengunci posisi skala.css), cincin
+   fokus SELURUH aplikasi jatuh ke 1,63:1 tanpa satu pun tes berbunyi.
+
+   Satu sumber cincin fokus sekarang: app/ekstra.css, dengan --aksen-nonteks,
+   --w-garis-tebal, dan offset 3px. scripts/audit-skala.mjs bagian 6 menolak
+   aturan fokus yang membaca aksen mentah, jadi ranjau ini tidak bisa kembali
+   diam-diam. */
