@@ -79,23 +79,60 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           # Hanya chromium: job ini tidak menguji WebKit atau Firefox.
-          key: pw-${runner.os}-chromium-${{ steps.pw.outputs.versi }}
+          # Batch 8: `${{ runner.os }}`, bukan `${runner.os}`. Yang kedua adalah
+          # sintaks shell, bukan ekspresi Actions, jadi kunci cache akan berisi
+          # teks literal dan tidak pernah cocok antar-run.
+          key: pw-${{ runner.os }}-chromium-${{ steps.pw.outputs.versi }}
       - name: Install system dependencies for Chromium
         run: |
-          set -o pipefail
-          # apt dipisah dari unduhan browser dan dibatasi per percobaan.
+          # Batch 8: pola `timeout 420 cmd | tee log` yang saya tulis di Batch 7
+          # DIGANTI, karena Batch 8 membuktikan pola itu tidak membatasi apa pun
+          # di Mobile #109 (lihat catatan di ui-mobile.yml). `timeout` hanya
+          # membunuh anak langsungnya, sedangkan apt-get tetap hidup memegang
+          # ujung tulis pipa; `tee` menunggu EOF yang tidak pernah datang.
+          #
+          # Gantinya: jalankan perintah sebagai pemimpin grup proses sendiri
+          # (set -m), lalu bunuh GRUP itu saat batas lewat, sehingga apt-get dan
+          # seluruh turunannya ikut mati. Tanpa tee, keluaran ditulis ke berkas;
+          # kalau gagal, ekornya dicetak supaya penyebabnya tetap terbaca.
+          jalankan_berbatas() {
+            batas=$1
+            log=$2
+            shift 2
+            set -m
+            "$@" >"$log" 2>&1 &
+            anak=$!
+            set +m
+            detik=0
+            while kill -0 "$anak" 2>/dev/null; do
+              if [ "$detik" -ge "$batas" ]; then
+                echo "Batas $batas detik lewat; menghentikan grup proses $anak."
+                kill -TERM -- "-$anak" 2>/dev/null || kill -TERM "$anak" 2>/dev/null
+                sleep 10
+                kill -KILL -- "-$anak" 2>/dev/null || kill -KILL "$anak" 2>/dev/null
+                wait "$anak" 2>/dev/null
+                return 124
+              fi
+              sleep 1
+              detik=$((detik + 1))
+            done
+            wait "$anak"
+          }
+
           # 420 detik sangat lapang: unduhan normal selesai dalam hitungan detik,
           # sedangkan percobaan terburuk 3 x 420 = 21 menit masih di bawah
           # timeout job 40 menit, jadi langkah tes di bawahnya tetap kebagian.
           for percobaan in 1 2 3; do
             echo "::group::apt percobaan $percobaan"
-            if timeout 420 /tmp/ui-browser/node_modules/.bin/playwright install-deps chromium 2>&1 | tee "/tmp/apt-$percobaan.log"; then
+            if jalankan_berbatas 420 "/tmp/apt-$percobaan.log" \
+                 /tmp/ui-browser/node_modules/.bin/playwright install-deps chromium; then
               echo "::endgroup::"
               echo "Dependensi sistem terpasang pada percobaan $percobaan."
               exit 0
             fi
             echo "::endgroup::"
             echo "Percobaan $percobaan gagal atau melewati 420 detik, ulangi."
+            tail -n 40 "/tmp/apt-$percobaan.log" || true
             sleep 15
           done
           echo "::error::apt gagal tiga kali. Mirror paket kemungkinan sedang bermasalah; periksa /tmp/apt-*.log."
