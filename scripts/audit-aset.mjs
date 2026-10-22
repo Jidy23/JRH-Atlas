@@ -3,7 +3,7 @@
 // Repo ini menyimpan setiap chunk dua kali: `body-N.bin` (mentah) dan
 // `body-N.bin.gz`. Itu memang perlu — penampil memilih `.gz` bila browser
 // punya DecompressionStream dan jatuh ke `.bin` bila tidak, jadi keduanya
-// harus ada atau sistem yang mula-mula disembunyikan lalu ditampilkan akan
+// harus ada atau sistem yang mulai-mula disembunyikan lalu ditampilkan akan
 // 404. Implikasinya: tiap chunk yang bertambah membebani repo dua kali.
 //
 // PENTING soal tampilan awal: atlas.json yang tersimpan di repo masih memakai
@@ -59,8 +59,11 @@ for (const chunk of atlas.chunks) {
   if (rawBytes && rawBytes !== chunk.bytes) {
     bad.push({ chunk: chunk.url, masalah: `ukuran mentah ${rawBytes} != manifes ${chunk.bytes}` });
   }
-  if (gzBytes && chunk.gzBytes && gzBytes !== chunk.gzBytes) {
-    bad.push({ chunk: chunk.url, masalah: `ukuran .gz ${gzBytes} != manifes ${chunk.gzBytes}` });
+  // repack-chunks.mjs menulis `gzipBytes`, bukan `gzBytes`. Memakai nama yang
+  // salah di sini membuat pemeriksaan ini tidak pernah berjalan tanpa pernah
+  // tampak gagal — jadi namanya harus persis sama dengan manifes.
+  if (gzBytes && chunk.gzipBytes && gzBytes !== chunk.gzipBytes) {
+    bad.push({ chunk: chunk.url, masalah: `ukuran .gz ${gzBytes} != manifes ${chunk.gzipBytes}` });
   }
   if (rawBytes > anggaran.chunkRawBytes) {
     bad.push({ chunk: chunk.url, masalah: `mentah ${rawBytes} > anggaran ${anggaran.chunkRawBytes}` });
@@ -84,6 +87,13 @@ const defaultGzip = chunkReports
   .filter((_, index) => defaultChunks.has(index))
   .reduce((sum, c) => sum + (c.gzBytes || c.rawBytes), 0);
 
+// Dicetak supaya siapa pun yang menyetel ulang anggaran tahu bagian mana yang
+// menentukan batas per chunk, tanpa harus menjalankan ulang skrip sendiri.
+const terbesar = chunkReports.reduce(
+  (max, c) => ((c.gzBytes || c.rawBytes) > (max.gzBytes || max.rawBytes) ? c : max),
+  { chunk: '-', rawBytes: 0, gzBytes: 0 },
+);
+
 const laporan = {
   chunks: atlas.chunks.length,
   parts: atlas.parts.length,
@@ -93,6 +103,11 @@ const laporan = {
   totalGzipBytes: totalGzip,
   defaultVisibleChunks: defaultChunks.size,
   defaultVisibleGzipBytes: defaultGzip,
+  chunkTerbesar: {
+    chunk: terbesar.chunk,
+    rawBytes: terbesar.rawBytes,
+    gzipBytes: terbesar.gzBytes,
+  },
   anggaran,
   pelanggaran: bad,
 };
@@ -108,7 +123,8 @@ if (sudahRepack) {
     `.gz tampilan awal ${defaultGzip} melebihi anggaran ${anggaran.defaultVisibleGzipBytes}`,
   );
   console.log(
-    `✓ Anggaran aset dipatuhi: ${atlas.chunks.length} chunk, .gz total ${(totalGzip / 1e6).toFixed(1)} MB, tampilan awal ${(defaultGzip / 1e6).toFixed(1)} MB (${defaultChunks.size} chunk).`,
+    `✓ Anggaran aset dipatuhi: ${atlas.chunks.length} chunk, .gz total ${(totalGzip / 1e6).toFixed(1)} MB, ` +
+      `tampilan awal ${(defaultGzip / 1e6).toFixed(1)} MB (${defaultChunks.size} chunk).`,
   );
 } else {
   console.log(
@@ -116,7 +132,5 @@ if (sudahRepack) {
       `ukurannya saat ini ${(defaultGzip / 1e6).toFixed(1)} MB untuk ${defaultChunks.size} dari ${atlas.chunks.length} chunk, ` +
       'dan angka itu turun setelah scripts/repack-chunks.mjs dijalankan saat build.',
   );
-  console.log(
-    `✓ Anggaran aset dipatuhi: ${atlas.chunks.length} chunk, .gz total ${(totalGzip / 1e6).toFixed(1)} MB.`,
-  );
+  console.log(`✓ Anggaran aset dipatuhi: ${atlas.chunks.length} chunk, .gz total ${(totalGzip / 1e6).toFixed(1)} MB.`);
 }
