@@ -11,8 +11,11 @@
  * penyimpanan yang harus tetap aman saat localStorage rusak atau penuh.
  *
  * Catatan: berkas ini ikut `npm run check` (tsconfig utama menyertakan
- * `**/*.ts`), jadi anotasi tipe di sini bukan formalitas — `let p = {}`
+ * `**/*.ts`), jadi anotasi tipe di sini bukan formalitas. `let p = {}`
  * disimpulkan sebagai `{}` dan membuat `p['name:heart']` gagal di-index.
+ *
+ * Berkas ini sengaja ASCII murni: karakter non-ASCII rusak saat blob dibuat
+ * lewat API dengan encoding utf-8, dan itu membuat berkas gagal di-parse.
  */
 import assert from 'node:assert/strict';
 import {
@@ -35,7 +38,7 @@ let lulus = 0;
 function uji(nama: string, fn: () => void) {
   fn();
   lulus++;
-  console.log(`✓ ${nama}`);
+  console.log(`OK ${nama}`);
 }
 
 function gudangPalsu(awal: Record<string, string> = {}) {
@@ -161,4 +164,4 @@ uji('serializeProgres menulis versi skema', () => {
   assert.deepEqual(data.kartu, {});
 });
 
-console.log(`\n${lulus} tes progres belajar lulus.`);
+console.log(`${lulus} tes progres belajar lulus.`);
