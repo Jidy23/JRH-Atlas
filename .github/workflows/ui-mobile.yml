@@ -9,11 +9,23 @@ permissions:
 jobs:
   mobile:
     runs-on: ubuntu-24.04
-    # Dinaikkan dari 20 ke 40 menit. Mobile #100 dan #101 sama-sama mati tepat
-    # di menit ke-20 pada langkah "Install browser engines", sementara run #96
-    # di main menyelesaikan langkah yang sama dalam 5 menit 03 detik. Yang
-    # kehabisan waktu adalah unduhan Chromium+WebKit+Firefox, bukan tesnya:
-    # langkah 10 selalu ter-skip, jadi tidak ada asersi yang sempat gagal.
+    # Dinaikkan dari 20 ke 40 menit di Batch 5. Mobile #100 dan #101 mati tepat
+    # di menit ke-20 pada langkah "Install browser engines".
+    #
+    # Mobile #104 lalu menghabiskan seluruh 40 menit di langkah yang sama tanpa
+    # satu pun asersi berjalan. Penyebabnya bukan unduhan Chromium, melainkan
+    # apt: `playwright install --with-deps` menarik 119 MB arsip sistem, dan
+    # mirror azure.archive.ubuntu.com berhenti menjawab untuk beberapa paket
+    # (fonts-ipafont-gothic 2m08s, fonts-freefont-ttf 2m39s, libflite1 2m06s)
+    # sampai job dibunuh. Run #105 mengunduh 119 MB yang sama dalam 9 detik,
+    # jadi ini gangguan mirror, bukan cacat workflow.
+    #
+    # Karena itu apt dan unduhan browser sekarang dipisah:
+    #   - apt diberi `timeout` per percobaan lalu dicoba ulang, sehingga mirror
+    #     yang menggantung gagal cepat alih-alih memakan seluruh jatah job;
+    #   - engine di-cache, karena unduhannya deterministik per versi Playwright.
+    # Menaikkan timeout job lagi tanpa batas per percobaan hanya memperpanjang
+    # kegagalan yang sama, bukan mencegahnya.
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
@@ -32,18 +44,47 @@ jobs:
       - name: Verify chunk packing matches organ systems
         run: node scripts/validate-chunks.mjs
       - run: npm run build
-      - name: Install browser engines
-        env:
-          # Batas per koneksi unduhan Playwright (milidetik). Tanpa ini,
-          # koneksi yang menggantung dibiarkan sampai timeout job.
-          PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT: '180000'
+      - name: Install Playwright package
+        id: pw
         run: |
           npm install --prefix /tmp/ui-browser --no-package-lock playwright @axe-core/playwright
-          # tee, bukan redirect murni. Dengan "> berkas", seluruh keluaran
-          # disembunyikan; kalau langkah ini kena timeout job, berkasnya ikut
-          # hilang dan kita tidak pernah tahu engine mana yang macet.
+          # Versi dibaca dari paket yang benar-benar terpasang, bukan ditebak,
+          # supaya kunci cache ikut berubah saat Playwright naik versi.
+          versi=$(node -p "require('/tmp/ui-browser/node_modules/playwright/package.json').version")
+          echo "versi=$versi" >> "$GITHUB_OUTPUT"
+          echo "Playwright $versi terpasang."
+      - name: Cache browser engines
+        id: cache-engines
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ steps.pw.outputs.versi }}
+      - name: Install system dependencies for browser engines
+        run: |
           set -o pipefail
-          /tmp/ui-browser/node_modules/.bin/playwright install --with-deps chromium webkit firefox 2>&1 | tee /tmp/browser-install.log
+          # apt dipisah dari unduhan browser dan dibatasi per percobaan.
+          # 420 detik sangat lapang: unduhan normal selesai dalam 9 detik, dan
+          # percobaan terburuk 3 x 420 detik = 21 menit masih di bawah 40 menit,
+          # jadi langkah tes di bawahnya tetap mendapat jatah waktu.
+          for percobaan in 1 2 3; do
+            echo "::group::apt percobaan $percobaan"
+            if timeout 420 /tmp/ui-browser/node_modules/.bin/playwright install-deps chromium webkit firefox 2>&1 | tee "/tmp/apt-$percobaan.log"; then
+              echo "::endgroup::"
+              echo "Dependensi sistem terpasang pada percobaan $percobaan."
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "Percobaan $percobaan gagal atau melewati 420 detik, ulangi."
+            sleep 15
+          done
+          echo "::error::apt gagal tiga kali. Mirror paket kemungkinan sedang bermasalah; periksa /tmp/apt-*.log."
+          exit 1
+      - name: Download browser engines
+        run: |
+          # Tanpa --with-deps: dependensi sistem sudah ditangani langkah di atas,
+          # dan unduhan inilah yang di-cache.
+          set -o pipefail
+          /tmp/ui-browser/node_modules/.bin/playwright install chromium webkit firefox 2>&1 | tee /tmp/browser-install.log
       - name: Test touch and narrow-screen navigation on built assets
         run: |
           npx vite preview --host 127.0.0.1 --port 3016 > /tmp/vite-mobile.log 2>&1 &

@@ -36,6 +36,13 @@ jobs:
       # melewati batas panjang hasil pencarian tanpa ada yang menolak.
       - name: Audit rute & metadata
         run: npm run audit:rute
+      # Audit rute hanya memeriksa PANJANG judul dan deskripsi, bukan isinya.
+      # Akibatnya dua teks yang menjanjikan jeda ulang 1-3-7 hari tetap lolos
+      # CI meskipun app/progres.ts sudah menjadwalkan 3 sampai 21 hari sejak
+      # Batch 5. Janji yang salah lebih merugikan daripada tidak menjanjikan
+      # apa pun, jadi frasa terlarangnya sekarang ditolak di sini.
+      - name: Audit teks pengguna
+        run: npm run audit:teks
       # Setiap chunk disimpan dua kali (mentah + .gz) karena penampil memilih
       # salah satunya tergantung DecompressionStream. Artinya setiap penambahan
       # chunk membebani repo dua kali, dan dulu tidak ada yang mengukurnya.
