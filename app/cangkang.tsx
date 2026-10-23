@@ -2,6 +2,7 @@ import {Component,Suspense,lazy,useEffect,useLayoutEffect,useRef,useState,type R
 import type {Sorotan} from './page';
 import {Akademi} from './akademi';
 import {Glosarium,Panduan} from './halaman';
+import {Dukungan} from './dukungan';
 import Tema from './tombol-tema';
 import {turUntuk,organLangkah} from './belajar';
 import {organByName,type Jenjang} from './kurikulum';
@@ -26,6 +27,7 @@ const IKON:Record<string,ReactNode>={
  flashcard:<><rect x="3.4" y="7.2" width="12.6" height="9.4" rx="2.2"/><path d="M8 4.4h9.4A2.2 2.2 0 0 1 19.6 6.6v7.2"/></>,
  glosarium:<><path d="M5 4.6h8.2A2.4 2.4 0 0 1 15.6 7v12.4H7.4A2.4 2.4 0 0 1 5 17z"/><path d="M15.6 9.4H18a1.6 1.6 0 0 1 1.6 1.6v8.4H15.6"/><path d="M8.2 9h4.2M8.2 12.4h4.2"/></>,
  panduan:<><circle cx="12" cy="12" r="8.4"/><path d="M9.7 9.4a2.4 2.4 0 1 1 3.3 2.2c-.6.3-1 .9-1 1.6v.5"/><path d="M12 16.9h.01"/></>,
+ dukungan:<><path d="M12 20.2s-7.4-4.5-7.4-9.4A4.3 4.3 0 0 1 12 8.3a4.3 4.3 0 0 1 7.4 2.5c0 4.9-7.4 9.4-7.4 9.4z"/></>,
 };
 type Tab=IdRute;
 /* Rute dibaca dari path, bukan query. Tautan lama ?tab=kuis tetap dihormati
@@ -77,8 +79,8 @@ export default function Cangkang(){
   <a className="skip-link" href="#konten-utama">Lewati navigasi</a>
   <header className="app-header"><a className="brand" href={pathUntuk('jelajah')} onClick={e=>{e.preventDefault();navigate('jelajah');}}><span className="brand-mark" aria-hidden="true">J</span><span><strong>JRH Atlas</strong><small>Anatomi untuk dipahami</small></span></a><Tema/></header>
   <nav className="app-navigation" aria-label="Navigasi utama">{RUTE.map(t=><a key={t.id} href={t.path} aria-current={tab===t.id?'page':undefined} onClick={e=>{if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();navigate(t.id);}}><span className="nav-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">{IKON[t.id]}</svg></span><span className="nav-label">{t.label}</span></a>)}<p className="nav-note">Untuk belajar.<br/>Bukan alat diagnosis.</p></nav>
-  <main id="konten-utama" className="app-content" tabIndex={-1}><div className="page-heading"><div><span className="page-kicker">RUANG EKSPLORASI & BELAJAR</span><h1 ref={heading} tabIndex={-1}>{current.label}</h1><p>{current.ringkas}</p></div>{tab==='jelajah'&&<button className="tombol" type="button" onClick={()=>navigate('belajar')}>Mulai tur belajar →</button>}</div>
-   {tab==='jelajah'?<div className="explorer-frame"><ViewerBoundary><Suspense fallback={<div className="kartu-besar" role="status">Menyiapkan penjelajah 3D…</div>}><Home sorotan={sorotan}/></Suspense></ViewerBoundary></div>:tab==='glosarium'?<div className="akademi-wrap"><Glosarium/></div>:tab==='panduan'?<div className="akademi-wrap"><Panduan/></div>:<Akademi key={`${tab}-${level}`} awal={tab} awalJenjang={level} onJenjang={changeLevel} onLihat3D={show3D}/>}
+  <main id="konten-utama" className="app-content" tabIndex={-1}><div className="page-heading"><div><span className="page-kicker">{current.kicker}</span><h1 ref={heading} tabIndex={-1}>{current.label}</h1><p>{current.ringkas}</p></div>{tab==='jelajah'&&<button className="tombol" type="button" onClick={()=>navigate('belajar')}>Mulai tur belajar →</button>}</div>
+   {tab==='jelajah'?<div className="explorer-frame"><ViewerBoundary><Suspense fallback={<div className="kartu-besar" role="status">Menyiapkan penjelajah 3D…</div>}><Home sorotan={sorotan}/></Suspense></ViewerBoundary></div>:tab==='glosarium'?<div className="akademi-wrap"><Glosarium/></div>:tab==='panduan'?<div className="akademi-wrap"><Panduan/></div>:tab==='dukungan'?<div className="akademi-wrap"><Dukungan/></div>:<Akademi key={`${tab}-${level}`} awal={tab} awalJenjang={level} onJenjang={changeLevel} onLihat3D={show3D}/>}
   </main>
  </div>;
 }

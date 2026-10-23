@@ -1,0 +1,85 @@
+/* Halaman Dukungan.
+   Nol nilai px literal: ratchet audit-skala sudah mentok di 852.
+   Nol warna literal: seluruhnya lewat token tema (audit-token). */
+
+.dukungan-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-6);
+  margin-top: var(--sp-7);
+}
+
+.dukungan-kartu {
+  flex: 1 1 18rem;
+  min-width: 0;
+  padding: var(--sp-6);
+  border: var(--w-garis) solid var(--jrh-garis);
+  border-radius: var(--r-4);
+  background: var(--jrh-kartu);
+}
+
+.dukungan-kartu h3 {
+  margin: 0 0 var(--sp-3);
+  font-size: var(--t-6);
+}
+
+.dukungan-kartu p {
+  margin: 0;
+  font-size: var(--t-5);
+  line-height: var(--lh-isi);
+  color: var(--jrh-redup);
+}
+
+.dukungan-kartu p + p {
+  margin-top: var(--sp-3);
+}
+
+.dukungan-list {
+  margin: var(--sp-4) 0 0;
+  padding-left: var(--sp-6);
+  line-height: var(--lh-isi);
+  color: var(--jrh-redup);
+}
+
+.dukungan-list li + li {
+  margin-top: var(--sp-2);
+}
+
+.qris {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-4);
+  margin: var(--sp-8) 0;
+  padding: var(--sp-7) var(--sp-5);
+  border: var(--w-garis) solid var(--jrh-garis);
+  border-radius: var(--r-4);
+  background: var(--jrh-kartu);
+  text-align: center;
+}
+
+.qris-gambar {
+  display: block;
+  width: 15rem;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--r-2);
+  background: var(--jrh-bg);
+}
+
+.qris-catatan {
+  margin: 0;
+  max-width: var(--lebar-baca);
+  font-size: var(--t-4);
+  line-height: var(--lh-isi);
+  color: var(--jrh-redup);
+}
+
+.dukungan-tutup {
+  margin-top: var(--sp-7);
+  padding-top: var(--sp-5);
+  border-top: var(--w-garis) solid var(--jrh-garis);
+  font-size: var(--t-4);
+  line-height: var(--lh-isi);
+  color: var(--jrh-redup);
+}
