@@ -21,10 +21,31 @@ try {
   const errors=[],models=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('request',r=>{if(r.url().includes('/models/'))models.push(r.url());});
-  const report={browser:test.name,engine:test.engine.name(),version,touch:test.touch,pages:[],errors};reports.push(report);
+  const report={browser:test.name,engine:test.engine.name(),version,touch:test.touch,pages:[],errors,tangkapan:[]};reports.push(report);
   const activate=locator=>test.touch?locator.tap():locator.click();
   // Match the page heading, not a same-named section heading (e.g. Flashcard).
   const pageHeading=label=>page.getByRole('heading',{name:label,exact:true,level:1});
+  // Tangkapan layar adalah bukti, bukan asersi. /panduan sangat tinggi dan
+  // Chromium Android memakai DPR 2,75, jadi full-page bisa melewati batas 15
+  // detik. Beri 60 detik, lalu jatuh ke tangkapan viewport saja, dan catat
+  // hasilnya apa adanya alih-alih menggagalkan uji yang asersinya sudah lolos.
+  const tangkapan=async(berkas,penuh=true)=>{
+   const catatan=[];
+   try{
+    await page.screenshot({path:`ui-evidence/${berkas}.png`,fullPage:penuh,timeout:60000});
+    report.tangkapan.push({berkas,penuh});
+    return;
+   }catch(error){catatan.push(String(error));}
+   if(penuh){
+    try{
+     await page.screenshot({path:`ui-evidence/${berkas}.png`,fullPage:false,timeout:60000});
+     report.tangkapan.push({berkas,penuh:false,catatan});
+     return;
+    }catch(error){catatan.push(String(error));}
+   }
+   report.tangkapan.push({berkas,penuh:null,catatan});
+   console.log(`${test.name}: tangkapan ${berkas} gagal: ${catatan.join(' | ')}`);
+  };
   try {
    // Rute sekarang berupa path asli, bukan query ?tab=. Tautan ?tab= lama tetap
    // diterima aplikasi, tetapi uji ini sengaja memakai bentuk path supaya
@@ -77,7 +98,7 @@ try {
    assert.equal(new URL(page.url()).pathname,'/panduan','Outside dismissal must not navigate');
    assert.equal(models.length,0,'Educational routes must not fetch anatomy models');
    assert.deepEqual(errors,[]);
-   await page.screenshot({path:`ui-evidence/${test.name}.png`,fullPage:true});
+   await tangkapan(test.name);
    // The 3D route is the one place where WebGL, pointer events and lazy chunks meet.
    // Record what each engine actually does instead of assuming parity with Chromium.
    const viewer={};
@@ -113,7 +134,7 @@ try {
     }catch(error){viewer.pointerGestureSurvived=false;viewer.pointerGestureError=String(error);}
     assert.equal(viewer.pointerGestureSurvived,true,`${test.name}: pointer orbit threw`);
     assert.deepEqual(errors,[],`${test.name}: runtime errors on the 3D route`);
-    await page.screenshot({path:`ui-evidence/${test.name}-jelajah.png`,fullPage:false});
+    await tangkapan(`${test.name}-jelajah`,false);
    } catch(error) {
     viewer.failure=String(error);
     throw error;
@@ -121,7 +142,7 @@ try {
     report.viewer=viewer;
    }
    report.passed=true;console.log(JSON.stringify(report));
-  }catch(error){report.failure=String(error);await page.screenshot({path:`ui-evidence/${test.name}-failure.png`,fullPage:true}).catch(()=>{});throw error;}
+  }catch(error){report.failure=String(error);await tangkapan(`${test.name}-failure`);throw error;}
   finally{await context.close();await browser.close();}
  }
  assert.equal(reports.length,3);assert.ok(reports.every(r=>r.passed));
