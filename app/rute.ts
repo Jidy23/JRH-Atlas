@@ -15,7 +15,8 @@ export type IdRute =
   | 'kuis'
   | 'flashcard'
   | 'glosarium'
-  | 'panduan';
+  | 'panduan'
+  | 'dukungan';
 
 export type Rute = {
   id: IdRute;
@@ -24,6 +25,9 @@ export type Rute = {
   judul: string;
   deskripsi: string;
   ringkas: string;
+  /** Label kecil di atas judul halaman. Berbeda per rute supaya keenam
+   *  halaman tidak lagi dibuka dengan kalimat yang sama. */
+  kicker: string;
 };
 
 export const SITUS: string = data.situs;
